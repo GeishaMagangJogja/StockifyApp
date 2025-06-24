@@ -8,7 +8,7 @@
           </button>
           <a href="{{ url('/') }}" class="flex ml-2 md:mr-24">
             <img src="{{ asset('static/images/logo.svg')}}" class="h-8 mr-3" alt="FlowBite Logo" />
-            <span class="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap dark:text-white">Flowbite</span>
+            <span class="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap dark:text-white">Stockify</span>
           </a>
           <form action="#" method="GET" class="hidden lg:block lg:pl-3.5">
             <label for="topbar-search" class="sr-only">Search</label>
