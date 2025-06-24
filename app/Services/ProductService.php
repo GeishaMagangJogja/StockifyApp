@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Product;
 use App\Repositories\Interfaces\ProductRepositoryInterface;
 
 class ProductService
@@ -19,9 +20,9 @@ class ProductService
     }
 
     public function findById($id)
-    {
-        return $this->productRepo->findById($id);
-    }
+{
+    return Product::find($id); // Ini return null jika tidak ada
+}
 
     public function create(array $data)
     {
