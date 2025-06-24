@@ -7,6 +7,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductAttributeController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\StockTransactionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -39,5 +40,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('products', ProductController::class);
     Route::apiResource('categories', CategoryController::class);
     Route::apiResource('product_attributes', ProductAttributeController::class);
-
+    Route::apiResource('stock-transactions', StockTransactionController::class);
+    
+    Route::get('dashboard-summary', [StockTransactionController::class, 'dashboardSummary']);
+    Route::post('stock-transactions/{id}/confirm', [StockTransactionController::class, 'confirm']);
+    Route::post('stock-transactions/report', [StockTransactionController::class, 'report']);
 });
