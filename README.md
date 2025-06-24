@@ -40,7 +40,7 @@ Pastikan komputer sudah ada:
 **1. Download aplikasi**
 
 ```bash
-git clone [https://github.com/GeishaMagangJogja/StockifyApp.git]
+git clone https://github.com/GeishaMagangJogja/StockifyApp.git
 cd StockifyApp
 ```
 
