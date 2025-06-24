@@ -47,4 +47,28 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('dashboard-summary', [StockTransactionController::class, 'dashboardSummary']);
     Route::post('stock-transactions/{id}/confirm', [StockTransactionController::class, 'confirm']);
     Route::post('stock-transactions/report', [StockTransactionController::class, 'report']);
+    Route::middleware(['auth:sanctum', 'role:manajergudang'])
+    ->prefix('manajergudang')
+    ->group(function () {
+
+    // Dashboard summary data (jika diperlukan)
+    Route::get('/dashboard', [\App\Http\Controllers\StockTransactionController::class, 'dashboardSummary']);
+
+    // Produk (readonly)
+    Route::get('/products', [\App\Http\Controllers\ProductController::class, 'index']);
+    Route::get('/products/{id}', [\App\Http\Controllers\ProductController::class, 'show']);
+
+    // Stok
+    Route::get('/stock/in', [\App\Http\Controllers\StockTransactionController::class, 'in']);
+    Route::get('/stock/out', [\App\Http\Controllers\StockTransactionController::class, 'out']);
+    Route::get('/stock/opname', [\App\Http\Controllers\StockTransactionController::class, 'opname']);
+    Route::post('/stock/{id}/confirm', [\App\Http\Controllers\StockTransactionController::class, 'confirm']);
+
+    // Supplier (readonly)
+    Route::get('/suppliers', [\App\Http\Controllers\SupplierController::class, 'index']);
+
+    // Laporan (via POST jika filter digunakan, atau GET jika hanya view)
+    Route::post('/reports/stock', [\App\Http\Controllers\StockTransactionController::class, 'reportStock']);
+    Route::post('/reports/transactions', [\App\Http\Controllers\StockTransactionController::class, 'reportTransactions']);
+});
 });
