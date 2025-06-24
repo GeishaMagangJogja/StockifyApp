@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 
@@ -17,10 +18,24 @@ use App\Http\Controllers\ProfileController;
 |
 */
 
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
+// ================================
+// PUBLIC ROUTES (No Authentication)
+// ================================
+Route::prefix('auth')->group(function () {
+    Route::post('register', [AuthController::class, 'register']);
+    Route::post('login', [AuthController::class, 'login']);
+});
 
-Route::middleware('auth:sanctum')->get('/profile', [ProfileController::class, 'me']);
+// ================================
+// PROTECTED ROUTES (Authentication Required)
+// ================================
 Route::middleware('auth:sanctum')->group(function () {
+
+    // Profile Routes
+    Route::get('profile', [ProfileController::class, 'me']);
+
+    // Resource Routes
     Route::apiResource('products', ProductController::class);
+    Route::apiResource('categories', CategoryController::class);
+
 });

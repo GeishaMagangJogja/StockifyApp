@@ -156,7 +156,7 @@ class ProductController extends Controller
 
             $product = $this->productService->update($id, $validated);
 
-            if (!$product) {
+           if (!$product) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Produk tidak ditemukan',
