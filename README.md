@@ -40,8 +40,8 @@ Pastikan komputer sudah ada:
 **1. Download aplikasi**
 
 ```bash
-git clone https://github.com/your-org/stockify-backend.git
-cd stockify-backend
+git clone [https://github.com/GeishaMagangJogja/StockifyApp.git]
+cd StockifyApp
 ```
 
 **2. Install komponen Laravel**
@@ -66,7 +66,7 @@ DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_DATABASE=stockify
 DB_USERNAME=root
-DB_PASSWORD=password_mysql_kamu
+DB_PASSWORD=
 ```
 
 **5. Buat tabel database**
