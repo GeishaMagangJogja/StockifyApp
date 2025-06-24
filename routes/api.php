@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\StockTransactionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -35,7 +36,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('profile', [ProfileController::class, 'me']);
 
     // Resource Routes
+    
+    Route::get('dashboard-summary', [StockTransactionController::class, 'dashboardSummary']);
+    Route::post('stock-transactions/{id}/confirm', [StockTransactionController::class, 'confirm']);
+    Route::post('stock-transactions/report', [StockTransactionController::class, 'report']);
+
     Route::apiResource('products', ProductController::class);
     Route::apiResource('categories', CategoryController::class);
+    Route::apiResource('stock-transactions', StockTransactionController::class);
 
 });
