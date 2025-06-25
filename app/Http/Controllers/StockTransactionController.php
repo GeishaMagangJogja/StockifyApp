@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\StockTransaction;
 use Illuminate\Http\Request;
 use App\Services\StockTransactionService;
 
@@ -76,4 +77,21 @@ class StockTransactionController extends Controller
             $this->service->approve($id, $validated['status'], $validated['notes'] ?? null)
         );
     }
+    public function confirm($id)
+{
+    $transaction = StockTransaction::findOrFail($id);
+
+    if ($transaction->user_id !== auth()->id()) {
+        return response()->json(['message' => 'Unauthorized'], 403);
+    }
+
+    $transaction->status = 'Diterima';
+    $transaction->save();
+
+    return response()->json([
+        'message' => 'Transaksi berhasil dikonfirmasi.',
+        'data' => $transaction
+    ]);
+}
+
 }

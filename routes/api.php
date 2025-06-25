@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
@@ -12,13 +11,8 @@ use App\Http\Controllers\SupplierController;
 
 /*
 |--------------------------------------------------------------------------
-| API Routes
+| API Routes - Role-Based Access Control
 |--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "api" middleware group. Make something great!
-|
 */
 
 // ================================
@@ -30,46 +24,110 @@ Route::prefix('auth')->group(function () {
 });
 
 // ================================
-// PROTECTED ROUTES (Authentication Required)
+// PROTECTED ROUTES (Requires Authentication)
 // ================================
 Route::middleware('auth:sanctum')->group(function () {
 
-    // Profile Routes
+    // Profile - All authenticated users
     Route::get('profile', [ProfileController::class, 'me']);
+    Route::post('auth/logout', [AuthController::class, 'logout']);
 
-    // Resource Routes
-    Route::apiResource('products', ProductController::class);
-    Route::apiResource('categories', CategoryController::class);
-    Route::apiResource('product_attributes', ProductAttributeController::class);
-    Route::apiResource('stock-transactions', StockTransactionController::class);
-    Route::apiResource('suppliers', SupplierController::class);
-     Route::apiResource('stock-transactions', StockTransactionController::class);
-    Route::get('stock-transactions/type/{type}', [StockTransactionController::class, 'filterByType']);
-    Route::patch('stock-transactions/{id}/approve', [StockTransactionController::class, 'approve']);
+    // ================================
+    // ADMIN ONLY ROUTES
+    // ================================
+    Route::prefix('admin')->middleware('role:Admin')->group(function () {
 
-    Route::get('dashboard-summary', [StockTransactionController::class, 'dashboardSummary']);
-    Route::middleware(['auth:sanctum', 'role:manajergudang'])
-    ->prefix('manajergudang')
-    ->group(function () {
+        // Full CRUD for all resources
+        Route::apiResource('categories', CategoryController::class);
+        Route::apiResource('suppliers', SupplierController::class);
+        Route::apiResource('products', ProductController::class);
+        Route::apiResource('product_attributes', ProductAttributeController::class);
+        Route::apiResource('stock-transactions', StockTransactionController::class);
 
-    // Dashboard summary data (jika diperlukan)
-    Route::get('/dashboard', [\App\Http\Controllers\StockTransactionController::class, 'dashboardSummary']);
+        // Stock operations
+        Route::get('stock-transactions/type/{type}', [StockTransactionController::class, 'filterByType']);
+        Route::patch('stock-transactions/{id}/approve', [StockTransactionController::class, 'approve']);
+        Route::post('stock-transactions/{id}/confirm', [StockTransactionController::class, 'confirm']);
 
-    // Produk (readonly)
-    Route::get('/products', [\App\Http\Controllers\ProductController::class, 'index']);
-    Route::get('/products/{id}', [\App\Http\Controllers\ProductController::class, 'show']);
+        // Stock views
+        Route::get('stock/in', [StockTransactionController::class, 'in']);
+        Route::get('stock/out', [StockTransactionController::class, 'out']);
+        Route::get('stock/opname', [StockTransactionController::class, 'opname']);
 
-    // Stok
-    Route::get('/stock/in', [\App\Http\Controllers\StockTransactionController::class, 'in']);
-    Route::get('/stock/out', [\App\Http\Controllers\StockTransactionController::class, 'out']);
-    Route::get('/stock/opname', [\App\Http\Controllers\StockTransactionController::class, 'opname']);
-    Route::post('/stock/{id}/confirm', [\App\Http\Controllers\StockTransactionController::class, 'confirm']);
+        // Dashboard & Reports
+        Route::get('dashboard-summary', [StockTransactionController::class, 'dashboardSummary']);
+        Route::post('reports/stock', [StockTransactionController::class, 'reportStock']);
+        Route::post('reports/transactions', [StockTransactionController::class, 'reportTransactions']);
 
-    // Supplier (readonly)
-    Route::get('/suppliers', [\App\Http\Controllers\SupplierController::class, 'index']);
+        // User Management (when implemented)
+        // Route::apiResource('users', UserController::class);
+    });
 
-    // Laporan (via POST jika filter digunakan, atau GET jika hanya view)
-    Route::post('/reports/stock', [\App\Http\Controllers\StockTransactionController::class, 'reportStock']);
-    Route::post('/reports/transactions', [\App\Http\Controllers\StockTransactionController::class, 'reportTransactions']);
-});
+    // ================================
+    // MANAJER GUDANG ROUTES
+    // ================================
+    Route::prefix('manager')->middleware('role:Manajer Gudang')->group(function () {
+
+        // Dashboard
+        Route::get('dashboard-summary', [StockTransactionController::class, 'dashboardSummary']);
+
+        // Products - Read + Create new products from incoming goods
+        Route::get('products', [ProductController::class, 'index']);
+        Route::get('products/{id}', [ProductController::class, 'show']);
+        Route::post('products', [ProductController::class, 'store']);
+
+        // Categories - Read Only
+        Route::get('categories', [CategoryController::class, 'index']);
+        Route::get('categories/{id}', [CategoryController::class, 'show']);
+
+        // Suppliers - Read Only
+        Route::get('suppliers', [SupplierController::class, 'index']);
+        Route::get('suppliers/{id}', [SupplierController::class, 'show']);
+
+        // Stock Management - Full CRUD (main responsibility)
+        Route::apiResource('stock-transactions', StockTransactionController::class);
+        Route::get('stock-transactions/type/{type}', [StockTransactionController::class, 'filterByType']);
+        Route::patch('stock-transactions/{id}/approve', [StockTransactionController::class, 'approve']);
+        Route::post('stock-transactions/{id}/confirm', [StockTransactionController::class, 'confirm']);
+
+        // Stock views
+        Route::get('stock/in', [StockTransactionController::class, 'in']);
+        Route::get('stock/out', [StockTransactionController::class, 'out']);
+        Route::get('stock/opname', [StockTransactionController::class, 'opname']);
+
+        // Reports
+        Route::post('reports/stock', [StockTransactionController::class, 'reportStock']);
+        Route::post('reports/transactions', [StockTransactionController::class, 'reportTransactions']);
+    });
+
+    // ================================
+    // STAFF GUDANG ROUTES
+    // ================================
+    Route::prefix('staff')->middleware('role:Staff Gudang')->group(function () {
+
+        // Products - Read Only (for operational reference)
+        Route::get('products', [ProductController::class, 'index']);
+        Route::get('products/{id}', [ProductController::class, 'show']);
+
+        // Categories - Read Only (for reference)
+        Route::get('categories', [CategoryController::class, 'index']);
+        Route::get('categories/{id}', [CategoryController::class, 'show']);
+
+        // Suppliers - Read Only (for reference)
+        Route::get('suppliers', [SupplierController::class, 'index']);
+        Route::get('suppliers/{id}', [SupplierController::class, 'show']);
+
+        // Stock Transactions - Limited operations
+        Route::get('stock-transactions', [StockTransactionController::class, 'index']);
+        Route::get('stock-transactions/{id}', [StockTransactionController::class, 'show']);
+        Route::post('stock-transactions', [StockTransactionController::class, 'store']); // Create for receiving/sending
+
+        // Stock operations - Operational level
+        Route::get('stock/in', [StockTransactionController::class, 'in']);
+        Route::get('stock/out', [StockTransactionController::class, 'out']);
+        Route::get('stock/opname', [StockTransactionController::class, 'opname']);
+        Route::post('stock-transactions/{id}/confirm', [StockTransactionController::class, 'confirm']);
+    });
+
+
 });

@@ -16,6 +16,7 @@ class ProductController extends Controller
 
     public function index()
     {
+
         try {
             $products = $this->productService->getAll();
 
