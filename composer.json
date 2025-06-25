@@ -16,8 +16,7 @@
         "yaza/laravel-repository-service": "4.0"
     },
     "require-dev": {
-        "laravel/passport": "^13.0",
-        "lcobucci/jwt": "^5.5",
+        "laravel/passport": "^11.0",
         "barryvdh/laravel-debugbar": "^3.14",
         "fakerphp/faker": "^1.9.1",
         "laravel/breeze": "*",

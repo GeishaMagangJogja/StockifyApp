@@ -1,10 +1,13 @@
+i// resources/js/axios.js
 import axios from "axios";
 
-const instance = axios.create({
-    baseURL: "http://127.0.0.1:8000/api",
-    headers: {
-        Accept: "application/json",
-    },
+const web = axios.create({
+  baseURL: "http://127.0.0.1:8000",  // root aplikasi Laravel
+  withCredentials: true,              // kirim cookie & XSRF-TOKEN
+  headers: {
+    Accept: "application/json",
+  },
 });
 
-export default instance;
+export default web;
+
