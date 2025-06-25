@@ -2,12 +2,13 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
-use App\Http\Controllers\ProductAttributeController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\StockTransactionController;
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\UserManagementController;
+use App\Http\Controllers\ProductAttributeController;
+use App\Http\Controllers\StockTransactionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -62,6 +63,20 @@ Route::middleware('auth:sanctum')->group(function () {
         // User Management (when implemented)
         // Route::apiResource('users', UserController::class);
     });
+
+     Route::middleware(['admin'])->prefix('admin')->group(function () {
+
+        // User management
+        Route::prefix('users')->group(function () {
+            Route::get('/', [UserManagementController::class, 'index']); // GET /api/admin/users
+            Route::get('/statistics', [UserManagementController::class, 'statistics']); // GET /api/admin/users/statistics
+            Route::get('/{id}', [UserManagementController::class, 'show']); // GET /api/admin/users/{id}
+            Route::put('/{id}/role', [UserManagementController::class, 'updateRole']); // PUT /api/admin/users/{id}/role
+            Route::put('/{id}/info', [UserManagementController::class, 'updateInfo']); // PUT /api/admin/users/{id}/info
+            Route::delete('/{id}', [UserManagementController::class, 'destroy']); // DELETE /api/admin/users/{id}
+        });
+    });
+
 
     // ================================
     // MANAJER GUDANG ROUTES
