@@ -17,12 +17,24 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
-        $validated = $request->validate([
+        // Validasi dasar tanpa role dulu
+        $rules = [
             'name' => 'required|string|max:100',
             'email' => 'required|email|unique:users',
             'password' => 'required|string|min:6',
-            'role' => 'required|in:Admin,Staff Gudang,Manajer Gudang'
-        ]);
+        ];
+
+        // Tambahkan validasi role hanya jika ada di request
+        if ($request->has('role')) {
+            $rules['role'] = 'required|in:Admin,Staff Gudang,Manajer Gudang';
+        }
+
+        $validated = $request->validate($rules);
+
+        // Set default role jika tidak ada role yang dikirim
+        if (!isset($validated['role'])) {
+            $validated['role'] = 'Staff Gudang';
+        }
 
         $user = $this->auth->register($validated);
 
