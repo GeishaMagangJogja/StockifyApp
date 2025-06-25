@@ -43,10 +43,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('product_attributes', ProductAttributeController::class);
     Route::apiResource('stock-transactions', StockTransactionController::class);
     Route::apiResource('suppliers', SupplierController::class);
-    
+     Route::apiResource('stock-transactions', StockTransactionController::class);
+    Route::get('stock-transactions/type/{type}', [StockTransactionController::class, 'filterByType']);
+    Route::patch('stock-transactions/{id}/approve', [StockTransactionController::class, 'approve']);
+
     Route::get('dashboard-summary', [StockTransactionController::class, 'dashboardSummary']);
-    Route::post('stock-transactions/{id}/confirm', [StockTransactionController::class, 'confirm']);
-    Route::post('stock-transactions/report', [StockTransactionController::class, 'report']);
     Route::middleware(['auth:sanctum', 'role:manajergudang'])
     ->prefix('manajergudang')
     ->group(function () {

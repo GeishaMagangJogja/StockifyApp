@@ -2,19 +2,17 @@
 
 namespace App\Repositories;
 
+use App\Repositories\Interfaces\StockTransactionRepositoryInterface;
 use App\Models\StockTransaction;
-use App\Models\Product;
-use App\Repositories\Interfaces\StockTransactionInterface;
-use Illuminate\Support\Facades\DB;
 
-class StockTransactionRepository implements StockTransactionInterface
+class StockTransactionRepository implements StockTransactionRepositoryInterface
 {
     public function getAll()
     {
         return StockTransaction::with(['product', 'user'])->latest()->get();
     }
 
-    public function find($id)
+    public function findById($id)
     {
         return StockTransaction::with(['product', 'user'])->findOrFail($id);
     }
@@ -33,32 +31,20 @@ class StockTransactionRepository implements StockTransactionInterface
 
     public function delete($id)
     {
-        return StockTransaction::findOrFail($id)->delete();
+        return StockTransaction::destroy($id);
     }
 
-    public function updateStatus($id, $status)
+    public function getByType($type)
+    {
+        return StockTransaction::where('type', $type)->with(['product', 'user'])->get();
+    }
+
+    public function approve($id, string $status, ?string $notes = null)
     {
         $transaction = StockTransaction::findOrFail($id);
         $transaction->status = $status;
+        $transaction->notes = $notes;
         $transaction->save();
         return $transaction;
-    }
-
-    public function getByDateRange($from, $to)
-    {
-        return StockTransaction::with(['product', 'user'])
-            ->whereBetween('date', [$from, $to])
-            ->orderBy('date', 'asc')
-            ->get();
-    }
-
-    public function getSummary()
-    {
-        return [
-            'total_products' => Product::count(),
-            'total_in' => StockTransaction::where('type', 'in')->sum('quantity'),
-            'total_out' => StockTransaction::where('type', 'out')->sum('quantity'),
-            'recent_users' => DB::table('users')->latest()->limit(5)->get(),
-        ];
     }
 }

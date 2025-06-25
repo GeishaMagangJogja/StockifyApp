@@ -1,9 +1,5 @@
 <?php
 
-
-
-
-// routes/web.php
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\StockTransactionController;
@@ -15,10 +11,10 @@ Route::name('index-practice')->get('/', function () {
 
 // --- GRUP UNTUK ADMIN ---
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
-    
+
     // Dashboard
     Route::get('/dashboard', function () {
-        return view('pages.admin.dashboard.index'); // Sesuaikan path jika berbeda
+        return view('pages.admin.dashboard.index');
     })->name('dashboard');
 
     // Produk
@@ -53,8 +49,23 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // Pengaturan
     Route::get('/settings', function () { /* Logika Controller */ return view('pages.admin.settings.index'); })->name('settings.index');
 
-    
+
 });
+
+
+// Auth UI Pages
+Route::get('/login', function () {
+    return view('auth.login');
+})->name('login');
+
+Route::get('/register', function () {
+    return view('auth.register');
+});
+
+Route::get('/dashboard', function () {
+    return view('layouts.dashboard');
+});
+
 
 // --- GRUP UNTUK MANAJER GUDANG ---
 // ... (buat rute serupa dengan prefix 'manager' dan role 'manager')
@@ -77,8 +88,6 @@ Route::middleware(['auth', 'role:manajergudang'])
     Route::get('/stock/out', [StockTransactionController::class, 'out'])->name('stock.out');
     Route::get('/stock/opname', [StockTransactionController::class, 'opname'])->name('stock.opname');
 
-    // Supplier
-    Route::get('/suppliers', [SupplierController::class, 'index'])->name('suppliers.index');
 
     // Laporan
     Route::get('/reports/stock', [StockTransactionController::class, 'reportStock'])->name('reports.stock');

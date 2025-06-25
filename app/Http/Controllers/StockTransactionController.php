@@ -1,12 +1,9 @@
 <?php
 
-
-
 namespace App\Http\Controllers;
 
-
-use App\Services\StockTransactionService;
 use Illuminate\Http\Request;
+use App\Services\StockTransactionService;
 
 class StockTransactionController extends Controller
 {
@@ -19,65 +16,64 @@ class StockTransactionController extends Controller
 
     public function index()
     {
-        return response()->json($this->service->getAllTransactions());
+        return response()->json($this->service->getAll());
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
             'product_id' => 'required|exists:products,id',
-            'type'       => 'required|in:in,out',
-            'quantity'   => 'required|integer|min:1',
-            'date'       => 'required|date',
-            'status'     => 'nullable|string',
-            'notes'      => 'nullable|string',
+            'user_id' => 'required|exists:users,id',
+            'type' => 'required|in:Masuk,Keluar',
+            'quantity' => 'required|integer|min:1',
+            'date' => 'required|date',
+            'status' => 'required|in:Pending,Diterima,Ditolak,Dikeluarkan',
+            'notes' => 'nullable|string'
         ]);
 
-        return response()->json($this->service->createTransaction($validated, auth()->id()), 201);
+        return response()->json($this->service->create($validated), 201);
     }
 
     public function show($id)
     {
-        return response()->json($this->service->getTransactionById($id));
+        return response()->json($this->service->findById($id));
     }
 
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
-            'product_id' => 'required|exists:products,id',
-            'type'       => 'required|in:in,out',
-            'quantity'   => 'required|integer|min:1',
-            'date'       => 'required|date',
-            'status'     => 'nullable|string',
-            'notes'      => 'nullable|string',
+            'product_id' => 'sometimes|exists:products,id',
+            'user_id' => 'sometimes|exists:users,id',
+            'type' => 'sometimes|in:Masuk,Keluar',
+            'quantity' => 'sometimes|integer|min:1',
+            'date' => 'sometimes|date',
+            'status' => 'sometimes|in:Pending,Diterima,Ditolak,Dikeluarkan',
+            'notes' => 'nullable|string'
         ]);
 
-        return response()->json($this->service->updateTransaction($id, $validated));
+        return response()->json($this->service->update($id, $validated));
     }
 
     public function destroy($id)
     {
-        $this->service->deleteTransaction($id);
-        return response()->json(['message' => 'Transaction deleted']);
+        $this->service->delete($id);
+        return response()->json(['message' => 'Transaksi berhasil dihapus.']);
     }
 
-    public function confirm($id)
+    public function filterByType($type)
     {
-        return response()->json($this->service->confirmTransaction($id));
+        return response()->json($this->service->getByType($type));
     }
 
-    public function report(Request $request)
+    public function approve(Request $request, $id)
     {
         $validated = $request->validate([
-            'from' => 'required|date',
-            'to'   => 'required|date|after_or_equal:from',
+            'status' => 'required|in:Diterima,Ditolak,Dikeluarkan',
+            'notes' => 'nullable|string'
         ]);
 
-        return response()->json($this->service->getReport($validated['from'], $validated['to']));
-    }
-
-    public function dashboardSummary()
-    {
-        return response()->json($this->service->getDashboardSummary());
+        return response()->json(
+            $this->service->approve($id, $validated['status'], $validated['notes'] ?? null)
+        );
     }
 }

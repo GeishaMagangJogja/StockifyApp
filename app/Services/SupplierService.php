@@ -6,33 +6,35 @@ use App\Repositories\Interfaces\SupplierRepositoryInterface;
 
 class SupplierService
 {
-    // Gunakan constructor property promotion untuk kode yang lebih bersih
-    public function __construct(protected SupplierRepositoryInterface $supplierRepository)
+    protected $repo;
+
+    public function __construct(SupplierRepositoryInterface $repo)
     {
+        $this->repo = $repo;
     }
 
     public function getAll()
     {
-        return $this->supplierRepository->getAll();
+        return $this->repo->getAll();
     }
 
     public function findById($id)
     {
-        return $this->supplierRepository->findById($id);
+        return $this->repo->findById($id);
     }
 
     public function create(array $data)
     {
-        return $this->supplierRepository->create($data);
+        return $this->repo->create($data);
     }
 
     public function update($id, array $data)
     {
-        return $this->supplierRepository->update($id, $data);
+        return $this->repo->update($id, $data);
     }
 
     public function delete($id)
     {
-        return $this->supplierRepository->delete($id);
+        return $this->repo->delete($id);
     }
 }

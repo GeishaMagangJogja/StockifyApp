@@ -2,55 +2,49 @@
 
 namespace App\Services;
 
-use App\Repositories\Interfaces\StockTransactionInterface;
+use App\Repositories\Interfaces\StockTransactionRepositoryInterface;
 
 class StockTransactionService
 {
-    protected $repository;
+    protected $repo;
 
-    public function __construct(StockTransactionInterface $repository)
+    public function __construct(StockTransactionRepositoryInterface $repo)
     {
-        $this->repository = $repository;
+        $this->repo = $repo;
     }
 
-    public function getAllTransactions()
+    public function getAll()
     {
-        return $this->repository->getAll();
+        return $this->repo->getAll();
     }
 
-    public function createTransaction($data, $userId)
+    public function findById($id)
     {
-        $data['user_id'] = $userId;
-        return $this->repository->create($data);
+        return $this->repo->findById($id);
     }
 
-    public function getTransactionById($id)
+    public function create(array $data)
     {
-        return $this->repository->find($id);
+        return $this->repo->create($data);
     }
 
-    public function updateTransaction($id, $data)
+    public function update($id, array $data)
     {
-        return $this->repository->update($id, $data);
+        return $this->repo->update($id, $data);
     }
 
-    public function deleteTransaction($id)
+    public function delete($id)
     {
-        return $this->repository->delete($id);
+        return $this->repo->delete($id);
     }
 
-    public function confirmTransaction($id)
+    public function getByType($type)
     {
-        return $this->repository->updateStatus($id, 'confirmed');
+        return $this->repo->getByType($type);
     }
 
-    public function getReport($from, $to)
+    public function approve($id, string $status, ?string $notes = null)
     {
-        return $this->repository->getByDateRange($from, $to);
-    }
-
-    public function getDashboardSummary()
-    {
-        return $this->repository->getSummary();
+        return $this->repo->approve($id, $status, $notes);
     }
 }
