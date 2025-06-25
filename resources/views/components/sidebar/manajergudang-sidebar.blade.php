@@ -1,5 +1,3 @@
-{{-- resources/views/components/sidebar/manajergudang-sidebar.blade.php --}}
-
 <x-sidebar-dashboard>
     {{-- Dashboard --}}
     <x-sidebar-menu-dashboard 
@@ -9,14 +7,12 @@
     />
 
     {{-- Produk --}}
-    <x-sidebar-menu-dropdown-dashboard 
-        :routeName="'manajergudang.products.*'" 
-        title="Produk"
+    {{-- Dropdown ini sekarang hanya punya satu item --}}
+    <x-sidebar-menu-dashboard 
+        :routeName="'manajergudang.products.index'" 
+        title="Daftar Produk"
         icon="archive-box"
-    >
-        <x-sidebar-menu-dropdown-item-dashboard :routeName="'manajergudang.products.index'" title="Daftar Produk"/>
-        <x-sidebar-menu-dropdown-item-dashboard :routeName="'manajergudang.products.show'" title="Detail Produk"/>
-    </x-sidebar-menu-dropdown-dashboard>
+    />
 
     {{-- Stok --}}
     <x-sidebar-menu-dropdown-dashboard 

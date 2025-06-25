@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AdminDashboardController;
+use App\Http\Controllers\ManagerDashboardController; 
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\StockTransactionController;
 use App\Http\Controllers\SupplierController;
@@ -15,8 +16,7 @@ use App\Http\Controllers\AuthController;
 */
 
 // Halaman utama
-Route::get('/', fn() => view('pages.practice.index'))
-    ->name('index-practice');
+Route::get('/', fn() => view('layouts.welcome'))->middleware('guest')->name('welcome');
 
 // Tampilkan form login & register
 Route::get('/login', fn() => view('auth.login'))
@@ -97,26 +97,25 @@ Route::middleware(['auth', 'role:Admin'])
 Route::middleware(['auth', 'role:Manajer Gudang'])
     ->prefix('manajergudang')
     ->name('manajergudang.')
-    ->group(function () {
-        Route::get('/dashboard', fn() => view('pages.manajergudang.dashboard.index'))
-             ->name('dashboard');
+    ->group(function () {     
+        // Dashboard: Menampilkan ringkasan (stok menipis, dll)
+        Route::get('/dashboard', [ManagerDashboardController::class, 'index'])->name('dashboard');
 
-        Route::get('/products', [ProductController::class, 'index'])
-             ->name('products.index');
-        Route::get('/products/{id}', [ProductController::class, 'show'])
-             ->name('products.show');
+        // Produk: Hanya melihat daftar dan detail
+        Route::get('/products', [ManagerDashboardController::class, 'productList'])->name('products.index');
+        Route::get('/products/{product}', [ManagerDashboardController::class, 'productShow'])->name('products.show');
 
-        Route::get('/stock/in', [StockTransactionController::class, 'in'])
-             ->name('stock.in');
-        Route::get('/stock/out', [StockTransactionController::class, 'out'])
-             ->name('stock.out');
-        Route::get('/stock/opname', [StockTransactionController::class, 'opname'])
-             ->name('stock.opname');
+        // Stok: Halaman untuk mencatat transaksi masuk, keluar, dan opname
+        Route::get('/stock/in', [ManagerDashboardController::class, 'stockIn'])->name('stock.in');
+        Route::get('/stock/out', [ManagerDashboardController::class, 'stockOut'])->name('stock.out');
+        Route::get('/stock/opname', [ManagerDashboardController::class, 'stockOpname'])->name('stock.opname');
 
-        Route::get('/reports/stock', [StockTransactionController::class, 'reportStock'])
-             ->name('reports.stock');
-        Route::get('/reports/transactions', [StockTransactionController::class, 'reportTransactions'])
-             ->name('reports.transactions');
+        // Supplier: Hanya melihat daftar
+        Route::get('/suppliers', [ManagerDashboardController::class, 'supplierList'])->name('suppliers.index');
+        
+        // Laporan: Halaman untuk menampilkan form & hasil laporan
+        Route::get('/reports/stock', [ManagerDashboardController::class, 'reportStock'])->name('reports.stock');
+        Route::get('/reports/transactions', [ManagerDashboardController::class, 'reportTransactions'])->name('reports.transactions');
     });
 
 /*
