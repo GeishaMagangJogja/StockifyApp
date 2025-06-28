@@ -87,38 +87,37 @@
                     <div class="space-y-4">
                         <div>
                             <div class="flex justify-between text-sm mb-1">
-                                <span class="text-gray-500 dark:text-gray-400">Produk Aktif</span>
+                                <span class="text-gray-500 dark:text-gray-400">Total Produk</span>
                                 <span class="font-medium text-gray-900 dark:text-white">
-                                    {{ $activeProductsCount ?? $category->products()->where('is_active', true)->count() }}
+                                    {{ $category->products()->count() }}
                                 </span>
                             </div>
                             <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
-                                <div class="bg-green-600 h-2.5 rounded-full"
-                                     style="width: {{ ($activeProductsCount / max(1, $category->products_count)) * 100 }}%"></div>
+                                <div class="bg-blue-600 h-2.5 rounded-full" style="width: 100%"></div>
                             </div>
                         </div>
                         <div>
                             <div class="flex justify-between text-sm mb-1">
                                 <span class="text-gray-500 dark:text-gray-400">Stok Rendah</span>
                                 <span class="font-medium text-gray-900 dark:text-white">
-                                    {{ $lowStockProductsCount ?? $category->products()->whereColumn('stock', '<=', 'min_stock')->count() }}
+                                    {{ $category->products()->whereColumn('stock', '<=', 'min_stock')->count() }}
                                 </span>
                             </div>
                             <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
                                 <div class="bg-yellow-500 h-2.5 rounded-full"
-                                     style="width: {{ ($lowStockProductsCount / max(1, $category->products_count)) * 100 }}%"></div>
+                                     style="width: {{ $category->products()->count() > 0 ? ($category->products()->whereColumn('stock', '<=', 'min_stock')->count() / $category->products()->count()) * 100 : 0 }}%"></div>
                             </div>
                         </div>
                         <div>
                             <div class="flex justify-between text-sm mb-1">
                                 <span class="text-gray-500 dark:text-gray-400">Stok Habis</span>
                                 <span class="font-medium text-gray-900 dark:text-white">
-                                    {{ $outOfStockProductsCount ?? $category->products()->where('stock', 0)->count() }}
+                                    {{ $category->products()->where('stock', 0)->count() }}
                                 </span>
                             </div>
                             <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
                                 <div class="bg-red-600 h-2.5 rounded-full"
-                                     style="width: {{ ($outOfStockProductsCount / max(1, $category->products_count)) * 100 }}%"></div>
+                                     style="width: {{ $category->products()->count() > 0 ? ($category->products()->where('stock', 0)->count() / $category->products()->count()) * 100 : 0 }}%"></div>
                             </div>
                         </div>
                     </div>
@@ -160,14 +159,14 @@
                                 {{ $product->name }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                {{ $product->stock }} {{ $product->unit }}
+                                {{ $product->stock ?? 0 }} {{ $product->unit }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                @if($product->stock == 0)
+                                @if(($product->stock ?? 0) == 0)
                                     <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
                                         Habis
                                     </span>
-                                @elseif($product->stock <= $product->min_stock)
+                                @elseif(($product->stock ?? 0) <= ($product->min_stock ?? 0))
                                     <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
                                         Stok Rendah
                                     </span>

@@ -162,70 +162,145 @@ class AdminDashboardController extends Controller
     // Products Management
     public function productList(Request $request)
     {
-        $query = Product::with('category');
+        $query = Product::with(['category', 'supplier']);
 
         if ($request->has('search')) {
             $search = $request->get('search');
             $query->where('name', 'like', "%{$search}%")
-                  ->orWhere('code', 'like', "%{$search}%");
+                  ->orWhere('sku', 'like', "%{$search}%");
+        }
+
+        if ($request->has('category') && $request->category != '') {
+            $query->where('category_id', $request->category);
+        }
+
+        if ($request->has('status') && $request->status != '') {
+            if ($request->status == 'low_stock') {
+                $query->whereRaw('stock <= min_stock');
+            } elseif ($request->status == 'out_of_stock') {
+                $query->where('stock', 0);
+            } elseif ($request->status == 'active') {
+                $query->where('is_active', true);
+            } elseif ($request->status == 'inactive') {
+                $query->where('is_active', false);
+            }
         }
 
         $products = $query->paginate(10);
-        return view('pages.admin.products.index', compact('products'));
+        $categories = Category::all();
+
+        return view('pages.admin.products.index', compact('products', 'categories'));
     }
 
     public function productCreate()
     {
         $categories = Category::all();
-        return view('pages.admin.products.create', compact('categories'));
+        $suppliers = Supplier::all();
+        return view('pages.admin.products.create', compact('categories', 'suppliers'));
     }
 
     public function productStore(Request $request)
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'code' => 'required|string|max:100|unique:products',
-            'category_id' => 'required|exists:categories,id',
+            'sku' => 'required|string|max:100|unique:products',
+            'category_id' => 'nullable|exists:categories,id',
+            'supplier_id' => 'nullable|exists:suppliers,id',
             'description' => 'nullable|string',
-            'unit' => 'required|string|max:50',
+            'purchase_price' => 'nullable|numeric|min:0',
+            'selling_price' => 'nullable|numeric|min:0',
             'min_stock' => 'required|integer|min:0',
+            'initial_stock' => 'nullable|integer|min:0',
+            'is_active' => 'boolean',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        Product::create($request->all());
+        $data = [
+            'name' => $request->name,
+            'sku' => $request->sku,
+            'category_id' => $request->category_id,
+            'supplier_id' => $request->supplier_id,
+            'description' => $request->description,
+            'purchase_price' => $request->purchase_price ?? 0,
+            'selling_price' => $request->selling_price ?? 0,
+            'min_stock' => $request->min_stock,
+            'stock' => $request->initial_stock ?? 0,
+            'is_active' => $request->boolean('is_active', true),
+        ];
+
+        // Handle image upload
+        if ($request->hasFile('image')) {
+            $data['image'] = $request->file('image')->store('products', 'public');
+        }
+
+        Product::create($data);
 
         return redirect()->route('admin.products.index')->with('success', 'Produk berhasil ditambahkan');
     }
 
     public function productShow(Product $product)
     {
-        $product->load('category');
+        $product->load(['category', 'supplier']);
         return view('pages.admin.products.show', compact('product'));
     }
 
     public function productEdit(Product $product)
     {
         $categories = Category::all();
-        return view('pages.admin.products.edit', compact('product', 'categories'));
+        $suppliers = Supplier::all();
+        return view('pages.admin.products.edit', compact('product', 'categories', 'suppliers'));
     }
 
     public function productUpdate(Request $request, Product $product)
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'code' => 'required|string|max:100|unique:products,code,' . $product->id,
-            'category_id' => 'required|exists:categories,id',
+            'sku' => 'required|string|max:100|unique:products,sku,' . $product->id,
+            'category_id' => 'nullable|exists:categories,id',
+            'supplier_id' => 'nullable|exists:suppliers,id',
             'description' => 'nullable|string',
-            'unit' => 'required|string|max:50',
+            'purchase_price' => 'nullable|numeric|min:0',
+            'selling_price' => 'nullable|numeric|min:0',
             'min_stock' => 'required|integer|min:0',
+            'stock' => 'nullable|integer|min:0',
+            'is_active' => 'boolean',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        $product->update($request->all());
+        $data = [
+            'name' => $request->name,
+            'sku' => $request->sku,
+            'category_id' => $request->category_id,
+            'supplier_id' => $request->supplier_id,
+            'description' => $request->description,
+            'purchase_price' => $request->purchase_price ?? $product->purchase_price,
+            'selling_price' => $request->selling_price ?? $product->selling_price,
+            'min_stock' => $request->min_stock,
+            'stock' => $request->stock ?? $product->stock,
+            'is_active' => $request->boolean('is_active'),
+        ];
+
+        // Handle image upload
+        if ($request->hasFile('image')) {
+            // Delete old image if exists
+            if ($product->image) {
+                Storage::disk('public')->delete($product->image);
+            }
+            $data['image'] = $request->file('image')->store('products', 'public');
+        }
+
+        $product->update($data);
 
         return redirect()->route('admin.products.index')->with('success', 'Produk berhasil diupdate');
     }
 
     public function productDestroy(Product $product)
     {
+        // Delete image if exists
+        if ($product->image) {
+            Storage::disk('public')->delete($product->image);
+        }
+
         $product->delete();
         return redirect()->route('admin.products.index')->with('success', 'Produk berhasil dihapus');
     }
@@ -292,7 +367,9 @@ class AdminDashboardController extends Controller
 
     public function supplierCreate()
     {
-        return view('pages.admin.suppliers.create');
+        $title = 'Tambah Supplier';
+        $action = route('admin.suppliers.store');
+        return view('pages.admin.suppliers.create', compact('title', 'action'));
     }
 
     public function supplierStore(Request $request)
@@ -310,14 +387,11 @@ class AdminDashboardController extends Controller
         return redirect()->route('admin.suppliers.index')->with('success', 'Supplier berhasil ditambahkan');
     }
 
-    public function supplierShow(Supplier $supplier)
-    {
-        return view('pages.admin.suppliers.show', compact('supplier'));
-    }
-
     public function supplierEdit(Supplier $supplier)
     {
-        return view('pages.admin.suppliers.edit', compact('supplier'));
+        $title = 'Edit Supplier';
+        $action = route('admin.suppliers.update', $supplier->id);
+        return view('pages.admin.suppliers.form', compact('title', 'action', 'supplier'));
     }
 
     public function supplierUpdate(Request $request, Supplier $supplier)
@@ -339,6 +413,11 @@ class AdminDashboardController extends Controller
     {
         $supplier->delete();
         return redirect()->route('admin.suppliers.index')->with('success', 'Supplier berhasil dihapus');
+    }
+
+    public function supplierShow(Supplier $supplier)
+    {
+        return view('pages.admin.suppliers.show', compact('supplier'));
     }
 
     // Reports

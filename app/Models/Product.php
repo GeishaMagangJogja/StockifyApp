@@ -2,34 +2,52 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Product extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'category_id',
-        'supplier_id',
         'name',
         'sku',
+        'category_id',
+        'supplier_id',
         'description',
         'purchase_price',
         'selling_price',
         'image',
-        'stock', // [PENTING] Tambahkan 'stock' jika belum ada
-        'minimum_stock',
+        'min_stock',
+        'stock',
+        'is_active'
     ];
 
-    public function category(): BelongsTo
+    protected $casts = [
+        'is_active' => 'boolean',
+        'purchase_price' => 'decimal:2',
+        'selling_price' => 'decimal:2',
+    ];
+
+    public function category()
     {
         return $this->belongsTo(Category::class);
     }
 
-    public function supplier(): BelongsTo
+    public function supplier()
     {
         return $this->belongsTo(Supplier::class);
+    }
+
+    // Accessor for backward compatibility if you want to use 'code' in views
+    public function getCodeAttribute()
+    {
+        return $this->sku;
+    }
+
+    // Mutator for backward compatibility
+    public function setCodeAttribute($value)
+    {
+        $this->attributes['sku'] = $value;
     }
 }

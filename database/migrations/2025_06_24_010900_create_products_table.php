@@ -18,8 +18,9 @@ return new class extends Migration
             $table->decimal('purchase_price', 12, 2)->default(0);
             $table->decimal('selling_price', 12, 2)->default(0);
             $table->string('image')->nullable();
-            $table->integer('stock')->default(0); // [PENTING] Kolom untuk menyimpan stok saat ini
-            $table->integer('minimum_stock')->default(0);
+            $table->integer('stock')->default(0);
+            $table->integer('min_stock')->default(0);
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }

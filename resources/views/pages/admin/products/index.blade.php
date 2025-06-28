@@ -1,157 +1,178 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Kelola Produk')
+@section('title', 'Manajemen Produk')
 
 @section('content')
-    <div class="flex justify-between items-center mb-6">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Kelola Produk</h1>
-            <p class="text-gray-600 dark:text-gray-400">Kelola semua produk dalam sistem gudang</p>
+    <div class="mb-6">
+        <div class="flex items-center mb-2 space-x-2 text-sm text-gray-600 dark:text-gray-400">
+            <a href="{{ route('admin.dashboard') }}" class="hover:text-blue-600">Dashboard</a>
+            <span>/</span>
+            <span>Produk</span>
         </div>
-        <a href="{{ route('admin.products.create') }}"
-           class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-            <i class="fas fa-plus mr-2"></i>Tambah Produk
-        </a>
+        <div class="flex items-center justify-between">
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Daftar Produk</h1>
+            <a href="{{ route('admin.products.create') }}" class="px-4 py-2 text-white transition duration-150 bg-blue-600 rounded-lg hover:bg-blue-700">
+                <i class="mr-2 fas fa-plus"></i>Tambah Produk
+            </a>
+        </div>
     </div>
 
-    {{-- Filter & Search --}}
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow mb-6 p-6">
-        <form method="GET" action="{{ route('admin.products.index') }}">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Cari Produk</label>
+    <div class="overflow-hidden bg-white rounded-lg shadow dark:bg-gray-800">
+                                <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+            <form action="{{ route('admin.products.index') }}" method="GET">
+                <div class="flex flex-wrap items-center gap-4">
                     <input type="text" name="search" value="{{ request('search') }}"
-                           placeholder="Nama atau kode produk..."
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                </div>
-                <div class="flex items-end">
-                    <button type="submit" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors mr-2">
-                        <i class="fas fa-search mr-2"></i>Cari
+                           placeholder="Cari produk berdasarkan nama atau SKU..."
+                           class="flex-1 min-w-64 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+
+                    <select name="category" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <option value="">Semua Kategori</option>
+                        @foreach($categories as $category)
+                            <option value="{{ $category->id }}" {{ request('category') == $category->id ? 'selected' : '' }}>
+                                {{ $category->name }}
+                            </option>
+                        @endforeach
+                    </select>
+
+                    <select name="status" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <option value="">Semua Status</option>
+                        <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Aktif</option>
+                        <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Tidak Aktif</option>
+                        <option value="low_stock" {{ request('status') == 'low_stock' ? 'selected' : '' }}>Stok Rendah</option>
+                        <option value="out_of_stock" {{ request('status') == 'out_of_stock' ? 'selected' : '' }}>Stok Habis</option>
+                    </select>
+
+                    <button type="submit" class="px-4 py-2 text-white transition duration-150 bg-blue-600 rounded-lg hover:bg-blue-700">
+                        <i class="fas fa-search"></i>
                     </button>
-                    <a href="{{ route('admin.products.index') }}" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors">
-                        Reset
-                    </a>
                 </div>
-            </div>
-        </form>
-    </div>
-
-    {{-- Success Message --}}
-    @if(session('success'))
-        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
-            {{ session('success') }}
+            </form>
         </div>
-    @endif
 
-    {{-- Products Table --}}
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="w-full table-auto">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead class="bg-gray-50 dark:bg-gray-700">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                            Produk
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                            Kategori
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                            Stok
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                            Unit
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                            Status
-                        </th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                            Aksi
-                        </th>
+                        <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-300">Produk</th>
+                        <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-300">Kategori</th>
+                        <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-300">Supplier</th>
+                        <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-300">Harga</th>
+                        <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-300">Stok</th>
+                        <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-300">Status</th>
+                        <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-right text-gray-500 uppercase dark:text-gray-300">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
                     @forelse($products as $product)
-                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div>
-                                    <div class="text-sm font-medium text-gray-900 dark:text-white">
-                                        {{ $product->name }}
-                                    </div>
-                                    <div class="text-sm text-gray-500 dark:text-gray-400">
-                                        {{ $product->code }}
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                                    {{ $product->category->name ?? 'Tidak ada kategori' }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                                <div class="flex flex-col">
-                                    <span class="font-medium">{{ $product->current_stock ?? 0 }}</span>
-                                    <span class="text-xs text-gray-500">Min: {{ $product->min_stock }}</span>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                                {{ $product->unit }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                @php
-                                    $currentStock = $product->current_stock ?? 0;
-                                    $minStock = $product->min_stock;
-                                @endphp
-                                @if($currentStock <= 0)
-                                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
-                                        Habis
-                                    </span>
-                                @elseif($currentStock <= $minStock)
-                                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                                        Stok Rendah
-                                    </span>
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                @if($product->image)
+                                    <img class="w-10 h-10 rounded-lg object-cover mr-4" src="{{ Storage::url($product->image) }}" alt="{{ $product->name }}">
                                 @else
-                                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                                        Normal
-                                    </span>
+                                    <div class="w-10 h-10 bg-gray-300 rounded-lg flex items-center justify-center mr-4">
+                                        <i class="fas fa-box text-gray-500"></i>
+                                    </div>
                                 @endif
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <div class="flex justify-end space-x-2">
-                                    <a href="{{ route('admin.products.show', $product) }}"
-                                       class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                    <a href="{{ route('admin.products.edit', $product) }}"
-                                       class="text-yellow-600 hover:text-yellow-900 dark:text-yellow-400 dark:hover:text-yellow-300">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <form action="{{ route('admin.products.destroy', $product) }}" method="POST" class="inline"
-                                          onsubmit="return confirm('Yakin ingin menghapus produk ini?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </form>
+                                <div>
+                                    <div class="font-medium text-gray-900 dark:text-white">{{ $product->name }}</div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">SKU: {{ $product->sku }}</div>
                                 </div>
-                            </td>
-                        </tr>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap dark:text-gray-400">
+                            {{ $product->category->name ?? 'Tidak ada kategori' }}
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap dark:text-gray-400">
+                            {{ $product->supplier->name ?? 'Tidak ada supplier' }}
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap dark:text-gray-400">
+                            <div>Beli: Rp {{ number_format($product->purchase_price, 0, ',', '.') }}</div>
+                            <div>Jual: Rp {{ number_format($product->selling_price, 0, ',', '.') }}</div>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap dark:text-gray-400">
+                            <span class="@if($product->stock <= $product->min_stock) text-red-600 dark:text-red-400 font-semibold @endif">
+                                {{ $product->stock }}
+                            </span>
+                            <div class="text-xs text-gray-400">Min: {{ $product->min_stock }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            @if(!$product->is_active)
+                                <span class="inline-flex px-2 text-xs font-semibold leading-5 text-gray-800 bg-gray-100 rounded-full dark:bg-gray-800 dark:text-gray-100">
+                                    Tidak Aktif
+                                </span>
+                            @elseif($product->stock == 0)
+                                <span class="inline-flex px-2 text-xs font-semibold leading-5 text-red-800 bg-red-100 rounded-full dark:bg-red-800 dark:text-red-100">
+                                    Stok Habis
+                                </span>
+                            @elseif($product->stock <= $product->min_stock)
+                                <span class="inline-flex px-2 text-xs font-semibold leading-5 text-yellow-800 bg-yellow-100 rounded-full dark:bg-yellow-800 dark:text-yellow-100">
+                                    Stok Rendah
+                                </span>
+                            @else
+                                <span class="inline-flex px-2 text-xs font-semibold leading-5 text-green-800 bg-green-100 rounded-full dark:bg-green-800 dark:text-green-100">
+                                    Normal
+                                </span>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4 text-sm font-medium text-right whitespace-nowrap">
+                            <a href="{{ route('admin.products.show', $product->id) }}" class="mr-3 text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{{ route('admin.products.edit', $product->id) }}" class="mr-3 text-yellow-600 hover:text-yellow-900 dark:text-yellow-400 dark:hover:text-yellow-300">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <form action="{{ route('admin.products.destroy', $product->id) }}" method="POST" class="inline">
+                                @csrf
+                                @method('DELETE')
+                                <button type="button" onclick="confirmDelete(this)" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
                     @empty
-                        <tr>
-                            <td colspan="6" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
-                                Tidak ada data produk ditemukan
-                            </td>
-                        </tr>
+                    <tr>
+                        <td colspan="7" class="px-6 py-4 text-sm text-center text-gray-500 dark:text-gray-400">
+                            <div class="flex flex-col items-center py-8">
+                                <i class="fas fa-box-open text-gray-400 text-4xl mb-4"></i>
+                                <p>Tidak ada data produk ditemukan</p>
+                                @if(request('search') || request('category') || request('status'))
+                                    <a href="{{ route('admin.products.index') }}" class="mt-2 text-blue-600 hover:text-blue-800">Reset Filter</a>
+                                @endif
+                            </div>
+                        </td>
+                    </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
 
-        {{-- Pagination --}}
         @if($products->hasPages())
-            <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-                {{ $products->links() }}
-            </div>
+        <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+            {{ $products->appends(request()->query())->links() }}
+        </div>
         @endif
     </div>
 @endsection
+
+@push('scripts')
+<script>
+    function confirmDelete(form) {
+        Swal.fire({
+            title: 'Hapus Produk?',
+            text: "Data produk akan dihapus permanen!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Ya, Hapus!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                form.closest('form').submit();
+            }
+        });
+    }
+</script>
+@endpush
