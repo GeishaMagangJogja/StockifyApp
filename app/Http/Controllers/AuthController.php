@@ -84,33 +84,51 @@ class AuthController extends Controller
     /**
      * Handle user login
      */
-    public function login(Request $request)
+   public function login(Request $request)
 {
-    $credentials = $request->only('email', 'password');
+    $validated = $request->validate([
+        'email'    => 'required|email',
+        'password' => 'required|string',
+        'remember' => 'boolean',
+    ]);
 
-    if (Auth::attempt($credentials)) {
-        $request->session()->regenerate();
+    // Ambil user dari database
+    $user = User::where('email', $validated['email'])->first();
 
-        $user = Auth::user();
-
-        // Redirect berdasarkan role
-        switch ($user->role) {
-            case 'Admin':
-                return redirect()->route('admin.dashboard');
-            case 'Manajer Gudang':
-                return redirect()->route('manager.dashboard');
-            case 'Staff Gudang':
-                return redirect()->route('staff.dashboard');
-            default:
-                Auth::logout();
-                return redirect()->route('login')->withErrors(['role' => 'Akses tidak diizinkan']);
-        }
+    // Jika user tidak ditemukan atau password salah
+    if (!$user || !Hash::check($validated['password'], $user->password)) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Email atau password salah.',
+        ], 401);
     }
 
-    return back()->withErrors([
-        'email' => 'Email atau password salah.',
+    // Login user
+    Auth::login($user, $validated['remember'] ?? false);
+
+    // Regenerate session
+    $request->session()->regenerate();
+
+    // Update last login (opsional)
+    $user->update(['last_login_at' => now()]);
+
+    // Berhasil login
+    return response()->json([
+        'success' => true,
+        'message' => 'Login berhasil! Selamat datang, ' . $user->name,
+        'data' => [
+            'user' => [
+                'id'         => $user->id,
+                'name'       => $user->name,
+                'email'      => $user->email,
+                'role'       => $user->role,
+                'last_login' => now()->format('Y-m-d H:i:s'),
+            ],
+            'redirect_to' => $this->getRedirectUrlByRole($user->role),
+        ]
     ]);
 }
+
 
     /**
      * Alternative simple login method (fallback jika AuthService bermasalah)
@@ -199,6 +217,28 @@ class AuthController extends Controller
                 ]
             ]
         ]);
+    }
+
+    public function logout(Request $request)
+    {
+        // Untuk API (token-based, Sanctum/JWT)
+        if ($request->expectsJson() || $request->is('api/*')) {
+            // Sanctum: hapus token user
+            if ($request->user()) {
+                $request->user()->currentAccessToken()?->delete();
+            }
+            return response()->json([
+                'success' => true,
+                'message' => 'Logout berhasil.'
+            ]);
+        }
+
+        // Untuk web (session-based)
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect('/login')->with('status', 'Logout berhasil.');
     }
 
     /**
