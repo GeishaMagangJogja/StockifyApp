@@ -22,7 +22,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const password = document.getElementById("password").value;
 
         try {
-            const response = await axios.post("/auth/register", {
+            const response = await axios.post("api/auth/register", {
                 name,
                 email,
                 password,

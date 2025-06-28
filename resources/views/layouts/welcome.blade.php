@@ -1,4 +1,3 @@
-{{-- resources/views/layouts/welcome.blade.php --}}
 
 @extends('layouts.dashboard')
 

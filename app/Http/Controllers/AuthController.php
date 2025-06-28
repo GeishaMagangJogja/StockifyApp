@@ -4,7 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Services\AuthService;
 use Illuminate\Http\Request;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
@@ -15,6 +19,9 @@ class AuthController extends Controller
         $this->auth = $auth;
     }
 
+    /**
+     * Handle user registration
+     */
     public function register(Request $request)
     {
         $rules = [
@@ -23,62 +30,183 @@ class AuthController extends Controller
             'password' => 'required|string|min:6',
         ];
 
+        // Validasi role jika dikirim
         if ($request->has('role')) {
             $rules['role'] = 'required|in:Admin,Staff Gudang,Manajer Gudang';
         }
 
         $validated = $request->validate($rules);
 
+        // Default role: Staff Gudang
         if (!isset($validated['role'])) {
             $validated['role'] = 'Staff Gudang';
         }
 
-        // Buat user via service
-        $user = $this->auth->register($validated);
+        try {
+            // Buat user
+            $user = $this->auth->register($validated);
 
-        // Login langsung pakai session
-        Auth::login($user);
+            // Auto login setelah register
+            $loginData = [
+                'email'    => $validated['email'],
+                'password' => $validated['password'],
+            ];
+
+            $token = $this->auth->login($loginData);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Registrasi berhasil! Akun Anda telah dibuat.',
+                'data' => [
+                    'user' => [
+                        'id'         => $user->id,
+                        'name'       => $user->name,
+                        'email'      => $user->email,
+                        'role'       => $user->role,
+                        'created_at' => $user->created_at->format('Y-m-d H:i:s'),
+                    ],
+                    'access_token' => $token,
+                    'token_type'   => 'Bearer',
+                    'expires_in'   => config('jwt.ttl') * 60,
+                    'redirect_to'  => $this->getRedirectUrlByRole($user->role),
+                ]
+            ], 201);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Registrasi gagal. Silakan coba lagi.',
+                'error'   => 'REGISTRATION_FAILED',
+            ], 500);
+        }
+    }
+
+    /**
+     * Handle user login
+     */
+    public function login(Request $request)
+{
+    $credentials = $request->only('email', 'password');
+
+    if (Auth::attempt($credentials)) {
         $request->session()->regenerate();
 
-        // Redirect sesuai role
-        return $this->redirectByRole($user);
+        $user = Auth::user();
+
+        // Redirect berdasarkan role
+        switch ($user->role) {
+            case 'Admin':
+                return redirect()->route('admin.dashboard');
+            case 'Manajer Gudang':
+                return redirect()->route('manager.dashboard');
+            case 'Staff Gudang':
+                return redirect()->route('staff.dashboard');
+            default:
+                Auth::logout();
+                return redirect()->route('login')->withErrors(['role' => 'Akses tidak diizinkan']);
+        }
     }
 
-    public function login(Request $request)
+    return back()->withErrors([
+        'email' => 'Email atau password salah.',
+    ]);
+}
+
+    /**
+     * Alternative simple login method (fallback jika AuthService bermasalah)
+     */
+    public function simpleLogin(Request $request)
     {
-        $credentials = $request->validate([
+        $validated = $request->validate([
             'email'    => 'required|email',
             'password' => 'required|string',
+            'remember' => 'boolean'
         ]);
 
-        if (Auth::attempt($credentials)) {
-            $request->session()->regenerate();
-            $user = Auth::user();
+        // Manual authentication
+        $user = User::where('email', $validated['email'])->first();
 
-            return $this->redirectByRole($user);
+        if (!$user || !Hash::check($validated['password'], $user->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Login gagal! Email atau password salah.',
+                'error'   => 'INVALID_CREDENTIALS',
+            ], 401);
         }
 
-        return back()->withErrors([
-            'email' => 'Email atau password salah.',
-        ])->onlyInput('email');
+        // Login user
+        Auth::login($user, $validated['remember'] ?? false);
+
+        // Update last login
+        $user->update(['last_login_at' => now()]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Login berhasil! Selamat datang, ' . $user->name,
+            'data' => [
+                'user' => [
+                    'id'         => $user->id,
+                    'name'       => $user->name,
+                    'email'      => $user->email,
+                    'role'       => $user->role,
+                    'last_login' => now()->format('Y-m-d H:i:s'),
+                ],
+                'redirect_to'  => $this->getRedirectUrlByRole($user->role),
+            ]
+        ], 200);
     }
 
-    protected function redirectByRole($user)
+    /**
+     * Get redirect path based on user role
+     */
+    protected function getRedirectUrlByRole($role)
     {
-        return match ($user->role) {
-            'Admin'          => redirect()->intended('/admin/dashboard'),
-            'Manajer Gudang' => redirect()->intended('/manajergudang/dashboard'),
-            'Staff Gudang'   => redirect()->intended('/staff/dashboard'),
-            default          => redirect()->intended('/'),
+        return match ($role) {
+            'Admin'          => '/admin/dashboard',
+            'Manajer Gudang' => '/manajergudang/dashboard',
+            'Staff Gudang'   => '/staff/dashboard',
+            default          => '/',
         };
     }
 
-    public function logout(Request $request)
-    {
-        Auth::logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+    /**
+     * Logout user
+     */
 
-        return redirect()->route('login');
+    /**
+     * Get current authenticated user info
+     */
+    public function me(Request $request)
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User tidak terautentikasi',
+            ], 401);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'user' => [
+                    'id'         => $user->id,
+                    'name'       => $user->name,
+                    'email'      => $user->email,
+                    'role'       => $user->role,
+                    'created_at' => $user->created_at->format('Y-m-d H:i:s'),
+                ]
+            ]
+        ]);
+    }
+
+    /**
+     * Check if user has specific role
+     */
+    public function checkRole($role)
+    {
+        $user = Auth::user();
+        return $user && $user->role === $role;
     }
 }

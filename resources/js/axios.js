@@ -1,4 +1,3 @@
-i// resources/js/axios.js
 import axios from "axios";
 
 const web = axios.create({

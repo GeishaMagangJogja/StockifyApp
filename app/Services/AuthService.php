@@ -33,4 +33,5 @@ class AuthService
         return $user->createToken('auth_token')->plainTextToken;
 
     }
+
 }
