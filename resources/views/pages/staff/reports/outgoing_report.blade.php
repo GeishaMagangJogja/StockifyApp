@@ -1,16 +1,14 @@
 @extends('layouts.dashboardstaff')
 
-@section('title', 'Laporan Riwayat Barang Masuk')
+@section('title', 'Laporan Riwayat Barang Keluar')
 
 @section('content')
     <div class="flex justify-between items-center mb-6">
         <h2 class="text-2xl font-semibold text-gray-700 dark:text-gray-200">
-            Laporan Riwayat Barang Masuk
+            Laporan Riwayat Barang Keluar
         </h2>
-        {{-- Tombol untuk ekspor/cetak bisa ditambahkan di sini nanti --}}
     </div>
 
-    {{-- Container untuk Tabel Laporan --}}
     <div class="w-full overflow-hidden rounded-lg shadow-xs">
         <div class="w-full overflow-x-auto">
             <table class="w-full whitespace-no-wrap">
@@ -19,7 +17,7 @@
                         <th class="px-4 py-3">Tanggal Diproses</th>
                         <th class="px-4 py-3">Produk</th>
                         <th class="px-4 py-3">Jumlah</th>
-                        <th class="px-4 py-3">Supplier</th>
+                        <th class="px-4 py-3">Catatan/Tujuan</th>
                         <th class="px-4 py-3">Status</th>
                         <th class="px-4 py-3">Diproses Oleh</th>
                     </tr>
@@ -30,11 +28,11 @@
                             <td class="px-4 py-3 text-sm">{{ \Carbon\Carbon::parse($transaction->date)->format('d M Y') }}</td>
                             <td class="px-4 py-3 text-sm">{{ optional($transaction->product)->name ?? 'N/A' }}</td>
                             <td class="px-4 py-3 text-sm">{{ $transaction->quantity }}</td>
-                            <td class="px-4 py-3 text-sm">{{ optional($transaction->supplier)->name ?? 'N/A' }}</td>
+                            <td class="px-4 py-3 text-sm">{{ $transaction->notes ?? '-' }}</td>
                             <td class="px-4 py-3 text-xs">
-                                <span class="px-2 py-1 font-semibold leading-tight rounded-full 
+                               <span class="px-2 py-1 font-semibold leading-tight rounded-full 
                                     @if ($transaction->status == 'pending') text-orange-700 bg-orange-100 dark:text-white dark:bg-orange-600 @endif
-                                    @if (in_array($transaction->status, ['completed', 'diterima'])) text-green-700 bg-green-100 dark:text-green-100 dark:bg-green-700 @endif
+                                    @if (in_array($transaction->status, ['completed', 'dikeluarkan'])) text-green-700 bg-green-100 dark:text-green-100 dark:bg-green-700 @endif
                                     @if (in_array($transaction->status, ['rejected', 'ditolak'])) text-red-700 bg-red-100 dark:text-red-100 dark:bg-red-700 @endif">
                                     {{ ucfirst($transaction->status) }}
                                 </span>

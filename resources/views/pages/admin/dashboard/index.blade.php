@@ -99,77 +99,30 @@
         </div>
     </div>
 @endsection
-// Script yang diperbaiki untuk dashboard admin
+
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <script>
-        // Pastikan data dari backend tersedia
-        const data = @json($chartData ?? []);
+        const data = @json($chartData);
 
-        // Validasi data sebelum render chart
-        if (data && data.categories && data.incoming && data.outgoing) {
-            const options = {
-                series: [
-                    {
-                        name: 'Masuk',
-                        data: data.incoming,
-                        color: '#10B981' // green
-                    },
-                    {
-                        name: 'Keluar',
-                        data: data.outgoing,
-                        color: '#EF4444' // red
-                    },
-                ],
-                chart: {
-                    type: 'line',
-                    height: 300,
-                    toolbar: {
-                        show: false
-                    }
-                },
-                xaxis: {
-                    categories: data.categories,
-                    labels: {
-                        style: {
-                            fontSize: '12px'
-                        }
-                    }
-                },
-                yaxis: {
-                    title: {
-                        text: 'Jumlah Transaksi'
-                    }
-                },
-                stroke: {
-                    curve: 'smooth',
-                    width: 3
-                },
-                markers: {
-                    size: 4
-                },
-                grid: {
-                    borderColor: '#f1f5f9',
-                    strokeDashArray: 5
-                },
-                legend: {
-                    position: 'top',
-                    horizontalAlign: 'right'
-                },
-                tooltip: {
-                    shared: true,
-                    intersect: false
-                }
-            };
+    const options = {
+        series: [
+            { name: 'Masuk', data: data.incoming },
+            { name: 'Keluar', data: data.outgoing },
+        ],
+        chart: { type: 'line', height: 300 },
+        xaxis: { categories: data.categories }}:
+        
 
-            const chart = new ApexCharts(document.querySelector("#admin-stock-chart"), options);
-            chart.render();
-        } else {
-            // Jika data tidak tersedia, tampilkan pesan
-            document.querySelector("#admin-stock-chart").innerHTML =
-                '<div class="flex items-center justify-center h-64 text-gray-500">' +
-                '<p>Data grafik tidak tersedia</p>' +
-                '</div>';
-        }
+        const options = {
+            series: [
+                { name: 'Masuk', data: data.incoming },
+                { name: 'Keluar', data: data.outgoing },
+            ],
+            chart: { type: 'line', height: 300 },
+            xaxis: { categories: data.categories }
+        };
+
+        new ApexCharts(document.querySelector("#admin-stock-chart"), options).render();
     </script>
 @endpush

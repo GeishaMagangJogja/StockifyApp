@@ -1,77 +1,118 @@
-{{-- Card: Transaksi Masuk (30 hari) --}}
-    <div class="p-6 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
-        <div class="flex items-center">
-            <div class="p-3 mr-4 text-blue-500 bg-blue-100 rounded-full dark:text-blue-100 dark:bg-blue-500">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M12 8v4l3 3M9 17H5a2 2 0 01-2-2V7a2 2 0 012-2h8"/>
-                </svg>
-            </div>
-            <div>
-                <p class="mb-1 text-sm font-medium text-gray-600 dark:text-gray-400">Transaksi Masuk (30 hari)</p>
-                <p class="text-2xl font-bold text-gray-700 dark:text-gray-200">{{ $incomingCount }}</p>
+{{-- File: resources/views/pages/staff/dashboard/index.blade.php --}}
+
+@extends('layouts.dashboardstaff')
+
+@section('title', 'Dashboard Tugas Staff Gudang')
+
+@section('content')
+
+    {{-- Header Halaman --}}
+    <h2 class="mb-6 text-2xl font-semibold text-gray-700 dark:text-gray-200">
+        Daftar Tugas Anda
+    </h2>
+
+    {{-- Notifikasi jika tidak ada tugas sama sekali --}}
+    @if($incomingTasks->isEmpty() && $outgoingTasks->isEmpty())
+        <div class="px-6 py-4 mb-8 bg-white rounded-lg shadow-md dark:bg-gray-800">
+            <div class="flex items-center">
+                <div class="p-3 mr-4 text-green-500 bg-green-100 rounded-full dark:text-green-100 dark:bg-green-500">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                </div>
+                <div>
+                    <p class="text-lg font-semibold text-gray-700 dark:text-gray-200">
+                        Kerja bagus!
+                    </p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                        Tidak ada tugas yang perlu diselesaikan saat ini.
+                    </p>
+                </div>
             </div>
         </div>
-    </div>
+    @endif
 
-    {{-- Card: Transaksi Keluar (30 hari) --}}
-    <div class="p-6 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
-        <div class="flex items-center">
-            <div class="p-3 mr-4 text-red-500 bg-red-100 rounded-full dark:text-red-100 dark:bg-red-500">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M12 16V12l-3-3M9 7H5a2 2 0 00-2 2v6a2 2 0 002 2h8"/>
-                </svg>
-            </div>
-            <div>
-                <p class="mb-1 text-sm font-medium text-gray-600 dark:text-gray-400">Transaksi Keluar (30 hari)</p>
-                <p class="text-2xl font-bold text-gray-700 dark:text-gray-200">{{ $outgoingCount }}</p>
-            </div>
-        </div>
-    </div>
+    {{-- Kontainer untuk dua kolom tugas --}}
+    <div class="grid gap-8 md:grid-cols-2">
 
-    {{-- Card: Pengguna Terdaftar --}}
-    <div class="p-6 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
-        <div class="flex items-center">
-            <div class="p-3 mr-4 text-indigo-500 bg-indigo-100 rounded-full dark:text-indigo-100 dark:bg-indigo-500">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M17 20h5V8H2v12h5m5-16h4l3 4h-10l3-4z"/>
-                </svg>
-            </div>
-            <div>
-                <p class="mb-1 text-sm font-medium text-gray-600 dark:text-gray-400">Pengguna Terdaftar</p>
-                <p class="text-2xl font-bold text-gray-700 dark:text-gray-200">
-                    {{ \App\Models\User::count() }}
-                </p>
-            </div>
-        </div>
-    </div>
-</div>
-
-{{-- Baris 2: Grafik & Aktivitas Pengguna --}}
-<div class="grid grid-cols-1 gap-6 mb-6 lg:grid-cols-3">
-    {{-- Grafik Transaksi 7 Hari --}}
-    <div class="p-6 bg-white border border-gray-200 rounded-lg shadow lg:col-span-2 dark:bg-gray-800 dark:border-gray-700">
-        <h5 class="mb-4 text-xl font-bold text-gray-900 dark:text-white">Grafik Transaksi 7 Hari</h5>
-        <div id="admin-stock-chart"></div>
-    </div>
-
-    {{-- Aktivitas Pengguna Terbaru --}}
-    <div class="p-6 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
-        <h5 class="mb-4 text-xl font-bold text-gray-900 dark:text-white">Aktivitas Pengguna Terbaru</h5>
-        <ul class="space-y-4">
-            @forelse($recentUsers as $user)
-                <li class="flex justify-between items-center">
-                    <div>
-                        <p class="font-medium text-gray-900 dark:text-white">{{ $user->name }}</p>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">{{ $user->email }}</p>
+        {{-- Kolom 1: Tugas Barang Masuk --}}
+        <div class="flex flex-col">
+            <h3 class="mb-4 text-xl font-medium text-gray-800 dark:text-gray-100">
+                Barang Masuk Perlu Diperiksa ({{ $incomingTasks->count() }})
+            </h3>
+            <div class="space-y-4">
+                @forelse($incomingTasks as $task)
+                    <div class="p-4 bg-white rounded-lg shadow-sm dark:bg-gray-800 border-l-4 border-blue-500">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="font-bold text-gray-800 dark:text-gray-100">
+                                    {{ $task->product->name ?? 'Produk tidak ditemukan' }}
+                                </p>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">
+                                    Jumlah: <span class="font-semibold">{{ $task->quantity }}</span>
+                                </p>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">
+                                    Dari: {{ $task->supplier->name ?? 'Supplier tidak spesifik' }}
+                                </p>
+                                <p class="text-xs text-gray-500 dark:text-gray-500 mt-2">
+                                    Dibuat: {{ $task->created_at->diffForHumans() }}
+                                </p>
+                            </div>
+                            <div>
+                                {{-- Tombol ini akan mengarah ke halaman detail untuk konfirmasi --}}
+                                <a href="#" class="px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    Proses
+                                </a>
+                            </div>
+                        </div>
                     </div>
-                    <span class="text-sm text-gray-400 dark:text-gray-500">{{ $user->updated_at->diffForHumans() }}</span>
-                </li>
-            @empty
-                <li class="text-gray-500 dark:text-gray-400">Belum ada aktivitas terbaru.</li>
-            @endforelse
-        </ul>
+                @empty
+                    <div class="p-4 text-center bg-gray-50 rounded-lg dark:bg-gray-800">
+                        <p class="text-gray-500 dark:text-gray-400">Tidak ada barang masuk yang perlu diperiksa.</p>
+                    </div>
+                @endforelse
+            </div>
+        </div>
+
+        {{-- Kolom 2: Tugas Barang Keluar --}}
+        <div class="flex flex-col">
+            <h3 class="mb-4 text-xl font-medium text-gray-800 dark:text-gray-100">
+                Barang Keluar Perlu Disiapkan ({{ $outgoingTasks->count() }})
+            </h3>
+            <div class="space-y-4">
+                @forelse($outgoingTasks as $task)
+                    <div class="p-4 bg-white rounded-lg shadow-sm dark:bg-gray-800 border-l-4 border-red-500">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="font-bold text-gray-800 dark:text-gray-100">
+                                    {{ $task->product->name ?? 'Produk tidak ditemukan' }}
+                                </p>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">
+                                    Jumlah: <span class="font-semibold">{{ $task->quantity }}</span>
+                                </p>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">
+                                    Catatan: {{ $task->notes ?? '-' }}
+                                </p>
+                                <p class="text-xs text-gray-500 dark:text-gray-500 mt-2">
+                                    Dibuat: {{ $task->created_at->diffForHumans() }}
+                                </p>
+                            </div>
+                            <div>
+                                {{-- Tombol ini akan mengarah ke halaman detail untuk konfirmasi --}}
+                                <a href="#" class="px-3 py-1 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500">
+                                    Proses
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                @empty
+                    <div class="p-4 text-center bg-gray-50 rounded-lg dark:bg-gray-800">
+                        <p class="text-gray-500 dark:text-gray-400">Tidak ada barang keluar yang perlu disiapkan.</p>
+                    </div>
+                @endforelse
+            </div>
+        </div>
+
     </div>
-</div>
+
+@endsection
+
+{{-- Tidak ada kode atau spasi apapun di bawah baris ini --}}
