@@ -220,6 +220,9 @@ Route::middleware(['auth', 'role:Staff Gudang'])->prefix('staff')->name('staff.'
     Route::put('/profile', [StaffDashboardController::class, 'profileUpdate'])->name('profile.update');
 });
 
+// Tambahkan route ini di dalam group admin routes
+Route::post('/admin/products/generate-sku', [AdminDashboardController::class, 'generateSkuApi'])->name('admin.products.generate-sku');
+
 // ===================================
 // FALLBACK
 // ===================================

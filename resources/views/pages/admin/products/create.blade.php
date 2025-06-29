@@ -35,9 +35,17 @@
 
                 <!-- SKU -->
                 <div>
-                    <label for="sku" class="block text-sm font-medium text-gray-700 dark:text-gray-300">SKU <span class="text-red-500">*</span></label>
-                    <input type="text" id="sku" name="sku" value="{{ old('sku') }}" required
-                           class="block w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('sku') border-red-500 @enderror">
+                    <label for="sku" class="flex items-center justify-between text-sm font-medium text-gray-700 dark:text-gray-300">
+                        <span>SKU</span>
+                        <button type="button" id="generateSkuBtn"
+                                class="px-2 py-1 text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded">
+                            Generate Auto
+                        </button>
+                    </label>
+                    <input type="text" id="sku" name="sku" value="{{ old('sku') }}"
+                           class="block w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('sku') border-red-500 @enderror"
+                           placeholder="Akan di-generate otomatis dari nama produk">
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">SKU akan di-generate otomatis saat mengetik nama produk, atau klik "Generate Auto"</p>
                     @error('sku')
                         <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                     @enderror
@@ -80,7 +88,7 @@
                 <!-- Harga Beli -->
                 <div>
                     <label for="purchase_price" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Harga Beli</label>
-                    <input type="number" id="purchase_price" name="purchase_price" value="{{ old('purchase_price', 0) }}" min="0" step="0.01"
+                    <input type="text" id="purchase_price" name="purchase_price" value="{{ old('purchase_price', '0') }}"
                            class="block w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('purchase_price') border-red-500 @enderror">
                     @error('purchase_price')
                         <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -90,7 +98,7 @@
                 <!-- Harga Jual -->
                 <div>
                     <label for="selling_price" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Harga Jual</label>
-                    <input type="number" id="selling_price" name="selling_price" value="{{ old('selling_price', 0) }}" min="0" step="0.01"
+                    <input type="text" id="selling_price" name="selling_price" value="{{ old('selling_price', '0') }}"
                            class="block w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('selling_price') border-red-500 @enderror">
                     @error('selling_price')
                         <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -100,7 +108,7 @@
                 <!-- Stok Awal -->
                 <div>
                     <label for="initial_stock" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Stok Awal</label>
-                    <input type="number" id="initial_stock" name="initial_stock" value="{{ old('initial_stock', 0) }}" min="0"
+                    <input type="text" id="initial_stock" name="initial_stock" value="{{ old('initial_stock', '0') }}"
                            class="block w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('initial_stock') border-red-500 @enderror">
                     @error('initial_stock')
                         <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -110,7 +118,7 @@
                 <!-- Minimum Stok -->
                 <div>
                     <label for="min_stock" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Minimum Stok <span class="text-red-500">*</span></label>
-                    <input type="number" id="min_stock" name="min_stock" value="{{ old('min_stock', 0) }}" min="0" required
+                    <input type="text" id="min_stock" name="min_stock" value="{{ old('min_stock', '0') }}" required
                            class="block w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('min_stock') border-red-500 @enderror">
                     @error('min_stock')
                         <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -171,25 +179,141 @@
 
 @push('scripts')
     <script>
-        // Format harga saat input
-        document.getElementById('purchase_price').addEventListener('input', function(e) {
-            this.value = formatCurrency(this.value);
+        let skuGenerationTimeout;
+
+        // Auto-generate SKU when typing product name
+        document.getElementById('name').addEventListener('input', function() {
+            // Clear previous timeout
+            clearTimeout(skuGenerationTimeout);
+
+            // Set timeout to avoid too many requests while typing
+            skuGenerationTimeout = setTimeout(() => {
+                if (this.value.trim().length >= 3) {
+                    generateSkuFromName(this.value.trim());
+                } else {
+                    document.getElementById('sku').value = '';
+                }
+            }, 500); // Wait 500ms after user stops typing
         });
 
-        document.getElementById('selling_price').addEventListener('input', function(e) {
-            this.value = formatCurrency(this.value);
-        });
-
-        function formatCurrency(value) {
-            // Hapus semua karakter selain angka
-            let num = value.replace(/[^0-9]/g, '');
-
-            // Format dengan titik sebagai pemisah ribuan
-            if (num.length > 0) {
-                num = parseInt(num, 10).toLocaleString('id-ID');
+        // Manual generate SKU button
+        document.getElementById('generateSkuBtn').addEventListener('click', function() {
+            const nameInput = document.getElementById('name');
+            if (nameInput.value.trim()) {
+                generateSkuFromName(nameInput.value.trim());
+            } else {
+                alert('Silakan isi nama produk terlebih dahulu');
+                nameInput.focus();
             }
+        });
 
-            return num;
+        // Function to generate SKU from product name
+        function generateSkuFromName(productName) {
+            const skuInput = document.getElementById('sku');
+
+            // Show loading state
+            skuInput.value = 'Generating...';
+            skuInput.disabled = true;
+
+            // Get CSRF token
+            const token = document.querySelector('meta[name="csrf-token"]') ||
+                         document.querySelector('input[name="_token"]');
+
+            const csrfToken = token ? (token.getAttribute('content') || token.value) : '';
+
+            // Make request to generate SKU
+            fetch('{{ route("admin.products.generate-sku") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: productName
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.sku) {
+                    skuInput.value = data.sku;
+                } else {
+                    throw new Error('No SKU returned');
+                }
+            })
+            .catch(error => {
+                console.error('Error generating SKU:', error);
+
+                // Fallback: generate simple SKU locally
+                const fallbackSku = generateFallbackSku(productName);
+                skuInput.value = fallbackSku;
+
+                // Show warning
+                console.warn('Using fallback SKU generation');
+            })
+            .finally(() => {
+                skuInput.disabled = false;
+            });
         }
+
+        // Fallback SKU generation (client-side)
+        function generateFallbackSku(productName) {
+            // Take first 3 letters of the product name
+            const prefix = productName.replace(/[^A-Za-z]/g, '').substring(0, 3).toUpperCase();
+            const paddedPrefix = prefix.padEnd(3, 'X');
+
+            // Generate random 4-digit number
+            const randomNum = Math.floor(1000 + Math.random() * 9000);
+
+            return paddedPrefix + '-' + randomNum;
+        }
+
+        // Format currency input
+        function formatCurrency(input) {
+            let value = input.value.replace(/[^0-9]/g, '');
+            if (value === '') value = '0';
+
+            // Format with thousands separator
+            const formatted = parseInt(value, 10).toLocaleString('id-ID');
+            input.value = formatted;
+        }
+
+        // Format number input (for stock fields)
+        function formatNumber(input) {
+            input.value = input.value.replace(/[^0-9]/g, '');
+        }
+
+        // Initialize event listeners when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Format currency fields
+            const currencyFields = ['purchase_price', 'selling_price'];
+            currencyFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.addEventListener('input', () => formatCurrency(field));
+                    formatCurrency(field); // Format initial value
+                }
+            });
+
+            // Format number fields
+            const numberFields = ['initial_stock', 'min_stock'];
+            numberFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.addEventListener('input', () => formatNumber(field));
+                }
+            });
+
+            // Auto-generate SKU if name is already filled (for when there are validation errors)
+            const nameInput = document.getElementById('name');
+            if (nameInput.value.trim()) {
+                generateSkuFromName(nameInput.value.trim());
+            }
+        });
     </script>
 @endpush

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Welcome') - {{ config('app.name', 'Sistem Gudang') }}</title>
+    <title>@yield('title', 'Dashboard') - Manajer Gudang</title>
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -15,12 +15,14 @@
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
         [x-cloak] { display: none !important; }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 font-sans antialiased">
-    @auth
     <div class="flex h-screen">
         <!-- Sidebar -->
         <div x-show="sidebarOpen" x-cloak class="fixed inset-0 z-40 lg:hidden">
@@ -32,7 +34,7 @@
 
             <!-- Logo -->
             <div class="flex items-center justify-center h-16 px-4 bg-blue-600 dark:bg-blue-700">
-                <h1 class="text-xl font-bold text-white">Stockfy</h1>
+                <h1 class="text-xl font-bold text-white">Stockify</h1>
             </div>
 
             <!-- User Info -->
@@ -45,7 +47,7 @@
                     </div>
                     <div class="ml-3">
                         <p class="text-sm font-medium text-gray-900 dark:text-white">{{ auth()->user()->name }}</p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ auth()->user()->role }}</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Manajer Gudang</p>
                     </div>
                 </div>
             </div>
@@ -54,111 +56,62 @@
             <nav class="mt-4 px-4">
                 <div class="space-y-1">
                     <!-- Dashboard -->
-                    <a href="{{ route('admin.dashboard') }}"
+                    <a href="{{ route('manajergudang.dashboard') }}"
                        class="flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors
-                              {{ request()->routeIs('admin.dashboard') ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200' : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}">
+                              {{ request()->routeIs('manajergudang.dashboard') ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200' : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}">
                         <i class="fas fa-tachometer-alt mr-3"></i>
                         Dashboard
                     </a>
 
-                    <!-- Users -->
-                    <div x-data="{ open: {{ request()->routeIs('admin.users.*') ? 'true' : 'false' }} }">
+                    <!-- Stock Management -->
+                    <div x-data="{ open: {{ request()->routeIs('manajergudang.stock.*') ? 'true' : 'false' }} }">
                         <button @click="open = !open"
                                 class="flex items-center justify-between w-full px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors">
                             <div class="flex items-center">
-                                <i class="fas fa-users mr-3"></i>
-                                Kelola User
+                                <i class="fas fa-boxes mr-3"></i>
+                                Manajemen Stok
                             </div>
                             <i class="fas fa-chevron-down transform transition-transform" x-bind:class="{ 'rotate-180': open }"></i>
                         </button>
                         <div x-show="open" x-collapse class="ml-6 mt-1 space-y-1">
-                            <a href="{{ route('admin.users.index') }}"
+                            <a href="{{ route('manajergudang.stock.index') }}"
                                class="block px-3 py-2 text-sm rounded-lg transition-colors
-                                      {{ request()->routeIs('admin.users.index') ? 'bg-blue-50 text-blue-700 dark:bg-blue-900 dark:text-blue-200' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700' }}">
-                                Daftar User
+                                      {{ request()->routeIs('manajergudang.stock.index') ? 'bg-blue-50 text-blue-700 dark:bg-blue-900 dark:text-blue-200' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700' }}">
+                                Daftar Stok
                             </a>
-                            <a href="{{ route('admin.users.create') }}"
+                            <a href="{{ route('manajergudang.stock.in') }}"
                                class="block px-3 py-2 text-sm rounded-lg transition-colors
-                                      {{ request()->routeIs('admin.users.create') ? 'bg-blue-50 text-blue-700 dark:bg-blue-900 dark:text-blue-200' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700' }}">
-                                Tambah User
+                                      {{ request()->routeIs('manajergudang.stock.in') ? 'bg-blue-50 text-blue-700 dark:bg-blue-900 dark:text-blue-200' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700' }}">
+                                Barang Masuk
+                            </a>
+                            <a href="{{ route('manajergudang.stock.out') }}"
+                               class="block px-3 py-2 text-sm rounded-lg transition-colors
+                                      {{ request()->routeIs('manajergudang.stock.out') ? 'bg-blue-50 text-blue-700 dark:bg-blue-900 dark:text-blue-200' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700' }}">
+                                Barang Keluar
+                            </a>
+                            <a href="{{ route('manajergudang.stock.opname') }}"
+                               class="block px-3 py-2 text-sm rounded-lg transition-colors
+                                      {{ request()->routeIs('manajergudang.stock.opname') ? 'bg-blue-50 text-blue-700 dark:bg-blue-900 dark:text-blue-200' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700' }}">
+                                Stock Opname
+                            </a>
+                            <a href="{{ route('manajergudang.stock.history') }}"
+                               class="block px-3 py-2 text-sm rounded-lg transition-colors
+                                      {{ request()->routeIs('manajergudang.stock.history') ? 'bg-blue-50 text-blue-700 dark:bg-blue-900 dark:text-blue-200' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700' }}">
+                                Riwayat Stok
                             </a>
                         </div>
                     </div>
 
                     <!-- Products -->
-                    <div x-data="{ open: {{ request()->routeIs('admin.products.*') ? 'true' : 'false' }} }">
-                        <button @click="open = !open"
-                                class="flex items-center justify-between w-full px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors">
-                            <div class="flex items-center">
-                                <i class="fas fa-box mr-3"></i>
-                                Kelola Produk
-                            </div>
-                            <i class="fas fa-chevron-down transform transition-transform" x-bind:class="{ 'rotate-180': open }"></i>
-                        </button>
-                        <div x-show="open" x-collapse class="ml-6 mt-1 space-y-1">
-                            <a href="{{ route('admin.products.index') }}"
-                               class="block px-3 py-2 text-sm rounded-lg transition-colors
-                                      {{ request()->routeIs('admin.products.index') ? 'bg-blue-50 text-blue-700 dark:bg-blue-900 dark:text-blue-200' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700' }}">
-                                Daftar Produk
-                            </a>
-                            <a href="{{ route('admin.products.create') }}"
-                               class="block px-3 py-2 text-sm rounded-lg transition-colors
-                                      {{ request()->routeIs('admin.products.create') ? 'bg-blue-50 text-blue-700 dark:bg-blue-900 dark:text-blue-200' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700' }}">
-                                Tambah Produk
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- Categories -->
-                    <div x-data="{ open: {{ request()->routeIs('admin.categories.*') ? 'true' : 'false' }} }">
-                        <button @click="open = !open"
-                                class="flex items-center justify-between w-full px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors">
-                            <div class="flex items-center">
-                                <i class="fas fa-tags mr-3"></i>
-                                Kategori
-                            </div>
-                            <i class="fas fa-chevron-down transform transition-transform" x-bind:class="{ 'rotate-180': open }"></i>
-                        </button>
-                        <div x-show="open" x-collapse class="ml-6 mt-1 space-y-1">
-                            <a href="{{ route('admin.categories.index') }}"
-                               class="block px-3 py-2 text-sm rounded-lg transition-colors
-                                      {{ request()->routeIs('admin.categories.index') ? 'bg-blue-50 text-blue-700 dark:bg-blue-900 dark:text-blue-200' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700' }}">
-                                Daftar Kategori
-                            </a>
-                            <a href="{{ route('admin.categories.create') }}"
-                               class="block px-3 py-2 text-sm rounded-lg transition-colors
-                                      {{ request()->routeIs('admin.categories.create') ? 'bg-blue-50 text-blue-700 dark:bg-blue-900 dark:text-blue-200' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700' }}">
-                                Tambah Kategori
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- Suppliers -->
-                    <div x-data="{ open: {{ request()->routeIs('admin.suppliers.*') ? 'true' : 'false' }} }">
-                        <button @click="open = !open"
-                                class="flex items-center justify-between w-full px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors">
-                            <div class="flex items-center">
-                                <i class="fas fa-truck mr-3"></i>
-                                Supplier
-                            </div>
-                            <i class="fas fa-chevron-down transform transition-transform" x-bind:class="{ 'rotate-180': open }"></i>
-                        </button>
-                        <div x-show="open" x-collapse class="ml-6 mt-1 space-y-1">
-                            <a href="{{ route('admin.suppliers.index') }}"
-                               class="block px-3 py-2 text-sm rounded-lg transition-colors
-                                      {{ request()->routeIs('admin.suppliers.index') ? 'bg-blue-50 text-blue-700 dark:bg-blue-900 dark:text-blue-200' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700' }}">
-                                Daftar Supplier
-                            </a>
-                            <a href="{{ route('admin.suppliers.create') }}"
-                               class="block px-3 py-2 text-sm rounded-lg transition-colors
-                                      {{ request()->routeIs('admin.suppliers.create') ? 'bg-blue-50 text-blue-700 dark:bg-blue-900 dark:text-blue-200' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700' }}">
-                                Tambah Supplier
-                            </a>
-                        </div>
-                    </div>
+                    <a href="{{ route('manajergudang.products.index') }}"
+                       class="flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors
+                              {{ request()->routeIs('manajergudang.products.*') ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200' : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}">
+                        <i class="fas fa-box mr-3"></i>
+                        Daftar Produk
+                    </a>
 
                     <!-- Reports -->
-                    <div x-data="{ open: {{ request()->routeIs('admin.reports.*') ? 'true' : 'false' }} }">
+                    <div x-data="{ open: {{ request()->routeIs('manajergudang.reports.*') ? 'true' : 'false' }} }">
                         <button @click="open = !open"
                                 class="flex items-center justify-between w-full px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors">
                             <div class="flex items-center">
@@ -168,31 +121,23 @@
                             <i class="fas fa-chevron-down transform transition-transform" x-bind:class="{ 'rotate-180': open }"></i>
                         </button>
                         <div x-show="open" x-collapse class="ml-6 mt-1 space-y-1">
-                            <a href="{{ route('admin.reports.index') }}"
+                            <a href="{{ route('manajergudang.reports.stock') }}"
                                class="block px-3 py-2 text-sm rounded-lg transition-colors
-                                      {{ request()->routeIs('admin.reports.index') ? 'bg-blue-50 text-blue-700 dark:bg-blue-900 dark:text-blue-200' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700' }}">
-                                Dashboard Laporan
+                                      {{ request()->routeIs('manjergudang.reports.stock') ? 'bg-blue-50 text-blue-700 dark:bg-blue-900 dark:text-blue-200' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700' }}">
+                                Laporan Stok
                             </a>
-                            <a href="{{ route('admin.reports.users') }}"
+                            <a href="{{ route('manajergudang.reports.transactions') }}"
                                class="block px-3 py-2 text-sm rounded-lg transition-colors
-                                      {{ request()->routeIs('admin.reports.users') ? 'bg-blue-50 text-blue-700 dark:bg-blue-900 dark:text-blue-200' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700' }}">
-                                Laporan User
+                                      {{ request()->routeIs('manajergudang.reports.transactions') ? 'bg-blue-50 text-blue-700 dark:bg-blue-900 dark:text-blue-200' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700' }}">
+                                Laporan Transaksi
                             </a>
-                            <a href="{{ route('admin.reports.system') }}"
+                            <a href="{{ route('manajergudang.reports.inventory') }}"
                                class="block px-3 py-2 text-sm rounded-lg transition-colors
-                                      {{ request()->routeIs('admin.reports.system') ? 'bg-blue-50 text-blue-700 dark:bg-blue-900 dark:text-blue-200' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700' }}">
-                                Laporan Sistem
+                                      {{ request()->routeIs('manajergudang.reports.inventory') ? 'bg-blue-50 text-blue-700 dark:bg-blue-900 dark:text-blue-200' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700' }}">
+                                Laporan Inventaris
                             </a>
                         </div>
                     </div>
-
-                    <!-- Settings -->
-                    <a href="{{ route('admin.settings') }}"
-                       class="flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors
-                              {{ request()->routeIs('admin.settings') ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200' : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}">
-                        <i class="fas fa-cog mr-3"></i>
-                        Pengaturan
-                    </a>
                 </div>
             </nav>
         </aside>
@@ -206,6 +151,7 @@
                         <button @click="sidebarOpen = !sidebarOpen" class="lg:hidden text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
                             <i class="fas fa-bars text-xl"></i>
                         </button>
+                        <h2 class="ml-4 text-lg font-semibold text-gray-900 dark:text-white">@yield('header')</h2>
                     </div>
 
                     <div class="flex items-center space-x-4">
@@ -253,12 +199,6 @@
             </main>
         </div>
     </div>
-    @else
-    <!-- Welcome Content -->
-    <div class="min-h-screen flex flex-col">
-        @yield('content')
-    </div>
-    @endauth
 
     @stack('scripts')
 
@@ -309,6 +249,11 @@
                 }, 300);
             }, 5000);
         }
+
+        // Initialize any page-specific scripts
+        document.addEventListener('DOMContentLoaded', function() {
+            @stack('page-scripts')
+        });
     </script>
 </body>
 </html>

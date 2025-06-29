@@ -199,33 +199,94 @@ class AdminDashboardController extends Controller
         return view('pages.admin.products.create', compact('categories', 'suppliers'));
     }
 
+    /**
+     * Generate SKU based on product name
+     */
+    private function generateSKU($productName)
+    {
+        // Ambil 3 karakter pertama dari nama produk
+        $prefix = strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $productName), 0, 3));
+
+        // Jika prefix kurang dari 3 karakter, tambahkan 'X'
+        $prefix = str_pad($prefix, 3, 'X');
+
+        // Generate nomor random 4 digit
+        $number = str_pad(rand(1000, 9999), 4, '0', STR_PAD_LEFT);
+
+        $sku = $prefix . '-' . $number;
+
+        // Pastikan SKU unik
+        while (Product::where('sku', $sku)->exists()) {
+            $number = str_pad(rand(1000, 9999), 4, '0', STR_PAD_LEFT);
+            $sku = $prefix . '-' . $number;
+        }
+
+        return $sku;
+    }
+
+    /**
+     * API endpoint untuk generate SKU
+     */
+    public function generateSkuApi(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string'
+        ]);
+
+        $sku = $this->generateSKU($request->name);
+
+        return response()->json(['sku' => $sku]);
+    }
+
+    // Add this method to check SKU uniqueness
+    public function checkSku(Request $request)
+    {
+        $request->validate([
+            'sku' => 'required|string'
+        ]);
+
+        $exists = Product::where('sku', $request->sku)->exists();
+
+        return response()->json(['exists' => $exists]);
+    }
+
+    // Modify the productStore method to handle the numeric fields and auto-generate SKU
     public function productStore(Request $request)
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'sku' => 'required|string|max:100|unique:products',
+            'sku' => 'nullable|string|max:100|unique:products', // SKU sekarang optional
             'category_id' => 'nullable|exists:categories,id',
             'supplier_id' => 'nullable|exists:suppliers,id',
             'description' => 'nullable|string',
-            'purchase_price' => 'nullable|numeric|min:0',
-            'selling_price' => 'nullable|numeric|min:0',
-            'min_stock' => 'required|integer|min:0',
-            'initial_stock' => 'nullable|integer|min:0',
+            'purchase_price' => 'nullable|string',
+            'selling_price' => 'nullable|string',
+            'min_stock' => 'required|string',
+            'initial_stock' => 'nullable|string',
             'is_active' => 'boolean',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
+        // Clean numeric inputs
+        $purchase_price = (int) str_replace('.', '', $request->purchase_price);
+        $selling_price = (int) str_replace('.', '', $request->selling_price);
+        $min_stock = (int) $request->min_stock;
+        $initial_stock = (int) $request->initial_stock;
+
+        // Generate SKU if not provided
+        $sku = $request->sku ?: $this->generateSKU($request->name);
+
         $data = [
             'name' => $request->name,
-            'sku' => $request->sku,
+            'sku' => $sku,
             'category_id' => $request->category_id,
             'supplier_id' => $request->supplier_id,
             'description' => $request->description,
-            'purchase_price' => $request->purchase_price ?? 0,
-            'selling_price' => $request->selling_price ?? 0,
-            'min_stock' => $request->min_stock,
-            'stock' => $request->initial_stock ?? 0,
-            'is_active' => $request->boolean('is_active', true),
+            'purchase_price' => $purchase_price,
+            'selling_price' => $selling_price,
+            'min_stock' => $min_stock,
+            'stock' => $initial_stock,
+            'is_active' => $request->boolean('is_active'),
         ];
 
         // Handle image upload
@@ -259,13 +320,20 @@ class AdminDashboardController extends Controller
             'category_id' => 'nullable|exists:categories,id',
             'supplier_id' => 'nullable|exists:suppliers,id',
             'description' => 'nullable|string',
-            'purchase_price' => 'nullable|numeric|min:0',
-            'selling_price' => 'nullable|numeric|min:0',
-            'min_stock' => 'required|integer|min:0',
-            'stock' => 'nullable|integer|min:0',
+            'purchase_price' => 'nullable|string',
+            'selling_price' => 'nullable|string',
+            'min_stock' => 'required|string',
+            'stock' => 'nullable|string',
             'is_active' => 'boolean',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'remove_image' => 'nullable|boolean',
         ]);
+
+        // Clean numeric inputs
+        $purchase_price = (int) str_replace('.', '', $request->purchase_price ?? '0');
+        $selling_price = (int) str_replace('.', '', $request->selling_price ?? '0');
+        $min_stock = (int) str_replace('.', '', $request->min_stock ?? '0');
+        $stock = (int) str_replace('.', '', $request->stock ?? '0');
 
         $data = [
             'name' => $request->name,
@@ -273,14 +341,20 @@ class AdminDashboardController extends Controller
             'category_id' => $request->category_id,
             'supplier_id' => $request->supplier_id,
             'description' => $request->description,
-            'purchase_price' => $request->purchase_price ?? $product->purchase_price,
-            'selling_price' => $request->selling_price ?? $product->selling_price,
-            'min_stock' => $request->min_stock,
-            'stock' => $request->stock ?? $product->stock,
+            'purchase_price' => $purchase_price,
+            'selling_price' => $selling_price,
+            'min_stock' => $min_stock,
+            'stock' => $stock,
             'is_active' => $request->boolean('is_active'),
         ];
 
-        // Handle image upload
+        // Handle image removal
+        if ($request->remove_image && $product->image) {
+            Storage::disk('public')->delete($product->image);
+            $data['image'] = null;
+        }
+
+        // Handle new image upload
         if ($request->hasFile('image')) {
             // Delete old image if exists
             if ($product->image) {
@@ -291,7 +365,8 @@ class AdminDashboardController extends Controller
 
         $product->update($data);
 
-        return redirect()->route('admin.products.index')->with('success', 'Produk berhasil diupdate');
+        return redirect()->route('admin.products.index')
+            ->with('success', 'Produk berhasil diupdate');
     }
 
     public function productDestroy(Product $product)
@@ -374,7 +449,7 @@ class AdminDashboardController extends Controller
 
     public function supplierStore(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
             'contact_person' => 'required|string|max:255',
             'phone' => 'required|string|max:20',
@@ -382,9 +457,10 @@ class AdminDashboardController extends Controller
             'address' => 'required|string',
         ]);
 
-        Supplier::create($request->all());
+        Supplier::create($validated);
 
-        return redirect()->route('admin.suppliers.index')->with('success', 'Supplier berhasil ditambahkan');
+        return redirect()->route('admin.suppliers.index')
+               ->with('success', 'Supplier berhasil ditambahkan');
     }
 
     public function supplierEdit(Supplier $supplier)

@@ -20,6 +20,10 @@ class StockTransaction extends Model
         'status',
         'notes',
     ];
+    protected $casts = [
+    'date' => 'date',  // This will automatically cast the date field to a Carbon instance
+    // ... your other casts
+    ];
 
     public function product(): BelongsTo
     {

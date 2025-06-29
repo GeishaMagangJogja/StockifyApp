@@ -29,6 +29,12 @@ class Product extends Model
         'selling_price' => 'decimal:2',
     ];
 
+    // Add this scope
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
     public function category()
     {
         return $this->belongsTo(Category::class);
@@ -39,13 +45,11 @@ class Product extends Model
         return $this->belongsTo(Supplier::class);
     }
 
-    // Accessor for backward compatibility if you want to use 'code' in views
     public function getCodeAttribute()
     {
         return $this->sku;
     }
 
-    // Mutator for backward compatibility
     public function setCodeAttribute($value)
     {
         $this->attributes['sku'] = $value;
