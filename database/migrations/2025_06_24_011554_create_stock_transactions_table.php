@@ -16,6 +16,7 @@ return new class extends Migration
             $table->integer('quantity');
             $table->date('date');
             $table->enum('status', ['Pending', 'Diterima', 'Ditolak', 'Dikeluarkan']);
+              $table->foreignId('processed_by')->nullable()->constrained('users')->onDelete('set null');
             $table->text('notes')->nullable();
             $table->timestamps();
         });

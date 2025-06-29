@@ -1,119 +1,179 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Detail Produk: ' . $product->name)
+@section('title', 'Detail Produk')
 
 @section('content')
-<div class="container mx-auto px-4 sm:px-8">
-    <div class="py-8">
-        {{-- Header Halaman --}}
-        <div>
-            <div class="flex items-center space-x-3 mb-4">
-                <a href="{{ route('admin.products.index') }}" class="text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400" title="Kembali ke Daftar Produk">
-                    <i class="fas fa-arrow-left text-xl"></i>
-                </a>
-                <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Detail Produk</h1>
+    <div class="mb-6">
+        <div class="flex items-center mb-2 space-x-2 text-sm text-gray-600 dark:text-gray-400">
+            <a href="{{ route('admin.dashboard') }}" class="hover:text-blue-600">Dashboard</a>
+            <span>/</span>
+            <a href="{{ route('admin.products.index') }}" class="hover:text-blue-600">Produk</a>
+            <span>/</span>
+            <span>Detail Produk</span>
+        </div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Detail Produk: {{ $product->name }}</h1>
+    </div>
+
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <!-- Informasi Produk -->
+        <div class="col-span-2">
+            <div class="overflow-hidden bg-white rounded-lg shadow dark:bg-gray-800">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h2 class="text-lg font-medium text-gray-900 dark:text-white">Informasi Produk</h2>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+                        <!-- Nama Produk -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Nama Produk</label>
+                            <p class="mt-1 text-sm text-gray-900 dark:text-white">{{ $product->name }}</p>
+                        </div>
+
+                        <!-- SKU -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">SKU</label>
+                            <p class="mt-1 text-sm text-gray-900 dark:text-white">{{ $product->sku }}</p>
+                        </div>
+
+                        <!-- Kategori -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Kategori</label>
+                            <p class="mt-1 text-sm text-gray-900 dark:text-white">
+                                {{ $product->category ? $product->category->name : '-' }}
+                            </p>
+                        </div>
+
+                        <!-- Supplier -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Supplier</label>
+                            <p class="mt-1 text-sm text-gray-900 dark:text-white">
+                                {{ $product->supplier ? $product->supplier->name : '-' }}
+                            </p>
+                        </div>
+
+                        <!-- Harga Beli -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Harga Beli</label>
+                            <p class="mt-1 text-sm text-gray-900 dark:text-white">
+                                Rp {{ number_format($product->purchase_price, 0, ',', '.') }}
+                            </p>
+                        </div>
+
+                        <!-- Harga Jual -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Harga Jual</label>
+                            <p class="mt-1 text-sm text-gray-900 dark:text-white">
+                                Rp {{ number_format($product->selling_price, 0, ',', '.') }}
+                            </p>
+                        </div>
+
+                        <!-- Stok -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Stok</label>
+                            <p class="mt-1 text-sm text-gray-900 dark:text-white">
+                                {{ $product->stock }}
+                                @if($product->stock <= $product->min_stock)
+                                    <span class="ml-2 text-xs text-red-500">(Stok Rendah)</span>
+                                @endif
+                            </p>
+                        </div>
+
+                        <!-- Minimum Stok -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Minimum Stok</label>
+                            <p class="mt-1 text-sm text-gray-900 dark:text-white">{{ $product->min_stock }}</p>
+                        </div>
+
+                        <!-- Status -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Status</label>
+                            <p class="mt-1 text-sm text-gray-900 dark:text-white">
+                                @if($product->is_active)
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                        Aktif
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                                        Nonaktif
+                                    </span>
+                                @endif
+                            </p>
+                        </div>
+
+                        <!-- Dibuat Pada -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Dibuat Pada</label>
+                            <p class="mt-1 text-sm text-gray-900 dark:text-white">
+                                {{ $product->created_at->translatedFormat('d F Y H:i') }}
+                            </p>
+                        </div>
+
+                        <!-- Diupdate Pada -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Diupdate Pada</label>
+                            <p class="mt-1 text-sm text-gray-900 dark:text-white">
+                                {{ $product->updated_at->translatedFormat('d F Y H:i') }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Deskripsi -->
+                    <div class="mt-6">
+                        <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Deskripsi</label>
+                        <p class="mt-1 text-sm text-gray-900 dark:text-white">
+                            {{ $product->description ?: '-' }}
+                        </p>
+                    </div>
+                </div>
             </div>
-            <p class="text-gray-600 dark:text-gray-400">Informasi lengkap dan riwayat transaksi untuk produk <span class="font-semibold">{{ $product->name }}</span>.</p>
         </div>
 
-        {{-- Konten Detail --}}
-        <div class="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
-            {{-- Kolom Kiri: Info Produk --}}
-            <div class="lg:col-span-1">
-                <div class="bg-white dark:bg-slate-800 rounded-lg shadow p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">{{ $product->name }}</h3>
-                    <div class="space-y-4 text-sm">
-                        <div class="flex justify-between">
-                            <span class="text-gray-500 dark:text-gray-400">SKU:</span>
-                            <span class="font-semibold text-gray-800 dark:text-white">{{ $product->sku }}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-500 dark:text-gray-400">Kategori:</span>
-                            <span class="font-semibold text-gray-800 dark:text-white">{{ $product->category->name ?? 'N/A' }}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-500 dark:text-gray-400">Supplier:</span>
-                            <span class="font-semibold text-gray-800 dark:text-white">{{ $product->supplier->name ?? 'N/A' }}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-500 dark:text-gray-400">Unit:</span>
-                            <span class="font-semibold text-gray-800 dark:text-white">{{ $product->unit }}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-500 dark:text-gray-400">Stok Minimum:</span>
-                            <span class="font-semibold text-gray-800 dark:text-white">{{ $product->min_stock }}</span>
-                        </div>
-                        <div class="border-t dark:border-slate-700 my-4"></div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-gray-500 dark:text-gray-400 font-medium">Stok Saat Ini:</span>
-                            <span class="text-2xl font-bold {{ $product->current_stock <= $product->min_stock ? 'text-red-500' : 'text-green-500' }}">
-                                {{ $product->current_stock }}
-                            </span>
-                        </div>
-                    </div>
+        <!-- Gambar Produk dan Aksi -->
+        <div>
+            <!-- Gambar Produk -->
+            <div class="overflow-hidden bg-white rounded-lg shadow dark:bg-gray-800">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h2 class="text-lg font-medium text-gray-900 dark:text-white">Gambar Produk</h2>
                 </div>
-                <div class="mt-6 bg-white dark:bg-slate-800 rounded-lg shadow p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Deskripsi</h3>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">
-                        {{ $product->description ?? 'Tidak ada deskripsi.' }}
-                    </p>
+                <div class="p-6">
+                    @if($product->image)
+                        <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="object-cover w-full rounded">
+                    @else
+                        <div class="flex items-center justify-center p-6 bg-gray-100 rounded dark:bg-gray-700">
+                            <span class="text-sm text-gray-500 dark:text-gray-400">Tidak ada gambar</span>
+                        </div>
+                    @endif
                 </div>
             </div>
 
-            {{-- Kolom Kanan: Riwayat Transaksi --}}
-            <div class="lg:col-span-2">
-                <div class="bg-white dark:bg-slate-800 rounded-lg shadow">
-                    <div class="p-6">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Riwayat Transaksi</h3>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full table-auto">
-                            <thead class="bg-gray-50 dark:bg-slate-700">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Tanggal</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Tipe</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Jumlah</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Pengguna</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white dark:bg-slate-800 divide-y dark:divide-slate-700">
-                                @forelse($product->stockTransactions->sortByDesc('date') as $transaction)
-                                    <tr>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
-                                            {{ \Carbon\Carbon::parse($transaction->date)->format('d M Y') }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            @if($transaction->type == 'Masuk')
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300">
-                                                    <i class="fas fa-arrow-down mr-1.5"></i> Masuk
-                                                </span>
-                                            @else
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300">
-                                                    <i class="fas fa-arrow-up mr-1.5"></i> Keluar
-                                                </span>
-                                            @endif
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold {{ $transaction->type == 'Masuk' ? 'text-green-600' : 'text-red-600' }}">
-                                            {{ $transaction->type == 'Masuk' ? '+' : '-' }} {{ $transaction->quantity }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
-                                            {{ $transaction->user->name ?? 'N/A' }}
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="4" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
-                                            Belum ada riwayat transaksi untuk produk ini.
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
+            <!-- Tombol Aksi -->
+            <div class="mt-6 overflow-hidden bg-white rounded-lg shadow dark:bg-gray-800">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h2 class="text-lg font-medium text-gray-900 dark:text-white">Aksi</h2>
+                </div>
+                <div class="p-6">
+                    <div class="flex flex-col space-y-3">
+                        <a href="{{ route('admin.products.edit', $product->id) }}"
+                           class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <i class="mr-2 fas fa-edit"></i> Edit Produk
+                        </a>
+
+                        <form action="{{ route('admin.products.destroy', $product->id) }}" method="POST" class="w-full">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" onclick="return confirm('Apakah Anda yakin ingin menghapus produk ini?')"
+                                    class="inline-flex items-center justify-center w-full px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                <i class="mr-2 fas fa-trash"></i> Hapus Produk
+                            </button>
+                        </form>
+
+                        <a href="{{ route('admin.products.index') }}"
+                           class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600">
+                            <i class="mr-2 fas fa-arrow-left"></i> Kembali ke Daftar
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 @endsection
