@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class AdminDashboardController extends Controller
 {
@@ -166,7 +167,7 @@ class AdminDashboardController extends Controller
     // Products Management
     public function productList(Request $request)
     {
-        $query = Product::with('category');
+        $query = Product::with(['category', 'supplier']); // Eager load relasi
 
         // Kalkulasi Stok yang Efisien menggunakan subquery
         $query->addSelect(['*',
@@ -185,10 +186,21 @@ class AdminDashboardController extends Controller
                   ->orWhere('sku', 'like', "%{$search}%");
             });
         }
+        
+        // Tambahkan filter berdasarkan kategori jika ada
+        if ($request->has('category') && $request->filled('category')) {
+            $query->where('category_id', $request->category);
+        }
+
+        // TAMBAHKAN BARIS INI: Ambil semua kategori untuk filter
+        $categories = Category::orderBy('name')->get();
 
         $products = $query->latest()->paginate(10);
-        return view('pages.admin.products.index', compact('products'));
+
+        // TAMBAHKAN 'categories' KE COMPACT
+        return view('pages.admin.products.index', compact('products', 'categories'));
     }
+
 
     public function productCreate()
     {
@@ -324,7 +336,10 @@ class AdminDashboardController extends Controller
 
     public function supplierCreate()
     {
-        return view('pages.admin.suppliers.create');
+        $title = 'Tambah Supplier Baru';
+        $action = route('admin.suppliers.store');
+        
+        return view('pages.admin.suppliers.create', compact('title', 'action'));
     }
 
     public function supplierStore(Request $request)
@@ -348,7 +363,10 @@ class AdminDashboardController extends Controller
 
     public function supplierEdit(Supplier $supplier)
     {
-        return view('pages.admin.suppliers.edit', compact('supplier'));
+        $title = 'Edit Supplier';
+        $action = route('admin.suppliers.update', $supplier->id);
+        
+        return view('pages.admin.suppliers.edit', compact('supplier', 'title', 'action'));
     }
 
     public function supplierUpdate(Request $request, Supplier $supplier)

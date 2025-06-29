@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\Supplier;
 use App\Models\Category;
 use App\Models\StockTransaction;
+use App\Models\User;
 
 class ManagerDashboardController extends Controller
 {
