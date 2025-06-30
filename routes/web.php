@@ -7,7 +7,9 @@ use App\Http\Controllers\ManagerDashboardController;
 use App\Http\Controllers\StaffDashboardController;
 use App\Http\Controllers\StaffTaskController;
 use App\Http\Controllers\StaffReportController;
-use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\ReportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -60,7 +62,7 @@ Route::middleware(['auth', 'role:Admin'])->prefix('admin')->name('admin.')->grou
     Route::resource('products', ProductController::class);
     Route::resource('categories', CategoryController::class);
     Route::resource('suppliers', SupplierController::class);
-    Route::resource('reports', ReportController::class);
+    
     Route::resource('users', UserController::class);
 
     // Users Management (alternative routes)
@@ -100,22 +102,17 @@ Route::middleware(['auth', 'role:Admin'])->prefix('admin')->name('admin.')->grou
     Route::put('/suppliers/{supplier}', [AdminDashboardController::class, 'supplierUpdate'])->name('suppliers.update');
     Route::delete('/suppliers/{supplier}', [AdminDashboardController::class, 'supplierDestroy'])->name('suppliers.destroy');
 
-    // System Reports
-    Route::get('/reports', [AdminDashboardController::class, 'reportIndex'])->name('reports.index');
-    Route::get('/reports/stock', [AdminDashboardController::class, 'reportStock'])->name('reports.stock');
-    Route::get('/reports/transactions', [AdminDashboardController::class, 'reportTransactions'])->name('reports.transactions');
-    Route::get('/reports/users', [AdminDashboardController::class, 'reportUsers'])->name('reports.users');
-    Route::get('/reports/system', [AdminDashboardController::class, 'reportSystem'])->name('reports.system');
-    Route::get('/reports/system', [ReportController::class, 'system'])->name('reports.system');
-    Route::get('/reports/users', [ReportController::class, 'users'])->name('reports.users');
+    // System Reports (gunakan controller khusus untuk laporan)
+Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+Route::get('/reports/stock', [ReportController::class, 'stock'])->name('reports.stock');
+Route::get('/reports/transactions', [ReportController::class, 'transactions'])->name('reports.transactions');
+Route::get('/reports/users', [ReportController::class, 'users'])->name('reports.users');
+Route::get('/reports/system', [ReportController::class, 'system'])->name('reports.system');
+
 
     // Settings
-    Route::get('/settings', [SettingController::class, 'index'])->name('settings');
-    Route::get('/settings', [AdminDashboardController::class, 'settings'])->name('settings');
-    Route::put('/settings', [AdminDashboardController::class, 'settingsUpdate'])->name('settings.update');
-
-    Route::get('/profile', [AdminDashboardController::class, 'profile'])->name('profile');
-    Route::put('/profile', [ManagerDashboardController::class, 'updateProfile'])->name('profile.update');
+    Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
+    Route::post('/settings', [SettingsController::class, 'update'])->name('settings.update');
 });
 
 // ===================================
