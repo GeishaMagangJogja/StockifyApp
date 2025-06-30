@@ -2,18 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Product;
-use App\Models\ProductAttribute;
-use App\Models\StockTransaction;
+use Carbon\Carbon;
 use App\Models\User;
+use App\Models\Product;
 use App\Models\Category;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
-use Carbon\Carbon;
+use App\Exports\ProductsExport;
+use App\Models\ProductAttribute;
+use App\Models\StockTransaction;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class AdminDashboardController extends Controller
 {
@@ -172,33 +173,70 @@ class AdminDashboardController extends Controller
     }
 
     // Products Management
-    public function productList(Request $request)
-    {
-        $query = Product::with(['category', 'supplier'])
-            ->withCount('stockTransactions')
-            ->select('products.*');
+   public function productList(Request $request)
+{
+    $query = Product::query()
+        ->with(['category', 'supplier'])
+        ->withCount('stockTransactions')
+        ->select('products.*');
 
-        // Calculate current stock
-        $query->addSelect([
-            'current_stock' => StockTransaction::selectRaw('COALESCE(SUM(CASE WHEN type = "Masuk" THEN quantity ELSE -quantity END), 0)')
-                ->whereColumn('product_id', 'products.id')
-        ]);
+    // Hitung stok saat ini
+    $query->addSelect([
+        'current_stock' => StockTransaction::selectRaw('COALESCE(SUM(CASE WHEN type = "Masuk" THEN quantity ELSE -quantity END), 0)')
+            ->whereColumn('product_id', 'products.id')
+    ]);
 
-        if ($request->filled('search')) {
-            $search = $request->input('search');
-            $query->where(fn($q) => $q->where('name', 'like', "%{$search}%")
-                ->orWhere('sku', 'like', "%{$search}%"));
-        }
-
-        if ($request->filled('category')) {
-            $query->where('category_id', $request->input('category'));
-        }
-
-        $products = $query->orderBy('name')->paginate(10);
-        $categories = Category::orderBy('name')->get();
-
-        return view('pages.admin.products.index', compact('products', 'categories'));
+    // Filter pencarian
+    if ($request->filled('search')) {
+        $search = $request->input('search');
+        $query->where(function($q) use ($search) {
+            $q->where('name', 'like', "%{$search}%")
+              ->orWhere('sku', 'like', "%{$search}%")
+              ->orWhere('description', 'like', "%{$search}%");
+        });
     }
+
+    // Filter kategori
+    if ($request->filled('category')) {
+        $query->where('category_id', $request->input('category'));
+    }
+
+    // Filter status stok
+    if ($request->filled('stock_status')) {
+        switch ($request->input('stock_status')) {
+            case 'out_of_stock':
+                $query->having('current_stock', '<=', 0);
+                break;
+            case 'low_stock':
+                $query->having('current_stock', '>', 0)
+                      ->having('current_stock', '<=', DB::raw('minimum_stock'));
+                break;
+            case 'in_stock':
+                $query->having('current_stock', '>', DB::raw('minimum_stock'));
+                break;
+        }
+    }
+
+    // Sorting
+    $sortOptions = [
+        'name_asc' => ['name', 'asc'],
+        'name_desc' => ['name', 'desc'],
+        'stock_asc' => ['current_stock', 'asc'],
+        'stock_desc' => ['current_stock', 'desc'],
+        'price_asc' => ['selling_price', 'asc'],
+        'price_desc' => ['selling_price', 'desc'],
+    ];
+
+    $sort = $request->input('sort', 'name_asc');
+    [$sortColumn, $sortDirection] = $sortOptions[$sort] ?? ['name', 'asc'];
+
+    $query->orderBy($sortColumn, $sortDirection);
+
+    $products = $query->paginate(10);
+    $categories = Category::orderBy('name')->get();
+
+    return view('pages.admin.products.index', compact('products', 'categories'));
+}
 
     public function productCreate()
     {
@@ -312,7 +350,6 @@ class AdminDashboardController extends Controller
                 ->with('error', 'Gagal menghapus produk: '.$e->getMessage());
         }
     }
-
     // Categories Management
     public function categoryList()
     {
@@ -482,6 +519,12 @@ public function supplierDestroy(Supplier $supplier)
         return redirect()->route('admin.suppliers.index')
             ->with('error', 'Gagal menghapus supplier: '.$e->getMessage());
     }
+}
+
+public function confirmDelete(Supplier $supplier)
+{
+    $supplier->loadCount('products');
+    return view('pages.admin.suppliers.delete', compact('supplier'));
 }
     public function attributeList(Request $request)
     {

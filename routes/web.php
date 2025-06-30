@@ -2,14 +2,17 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\AdminDashboardController;
-use App\Http\Controllers\ManagerDashboardController;
-use App\Http\Controllers\StaffDashboardController;
-use App\Http\Controllers\StaffTaskController;
-use App\Http\Controllers\StaffReportController;
-use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\StaffTaskController;
+use App\Http\Controllers\StaffReportController;
+use App\Http\Controllers\AdminDashboardController;
+use App\Http\Controllers\StaffDashboardController;
+use App\Http\Controllers\ManagerDashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -61,8 +64,16 @@ Route::middleware(['auth', 'role:Admin'])->prefix('admin')->name('admin.')->grou
     // Resource Routes
     Route::resource('products', ProductController::class);
     Route::resource('categories', CategoryController::class);
-    Route::resource('suppliers', SupplierController::class);
-    
+    Route::resource('suppliers', SupplierController::class)->names([
+        'index'   => 'suppliers.index',
+        'create'  => 'suppliers.create',
+        'store'   => 'suppliers.store',
+        'show'    => 'suppliers.show',
+        'edit'    => 'suppliers.edit',
+        'update'  => 'suppliers.update',
+        'destroy' => 'suppliers.destroy',
+    ]);
+
     Route::resource('users', UserController::class);
 
     // Users Management (alternative routes)
@@ -82,6 +93,7 @@ Route::middleware(['auth', 'role:Admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/products/{product}/edit', [AdminDashboardController::class, 'productEdit'])->name('products.edit');
     Route::put('/products/{product}', [AdminDashboardController::class, 'productUpdate'])->name('products.update');
     Route::delete('/products/{product}', [AdminDashboardController::class, 'productDestroy'])->name('products.destroy');
+    Route::get('/products/export', [AdminDashboardController::class, 'exportProducts'])->name('products.export');
     Route::post('/products/generate-sku', [AdminDashboardController::class, 'generateSku'])->name('products.generate-sku');
 
     // Categories Management (alternative routes)
@@ -100,7 +112,7 @@ Route::middleware(['auth', 'role:Admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/suppliers/{supplier}', [AdminDashboardController::class, 'supplierShow'])->name('suppliers.show');
     Route::get('/suppliers/{supplier}/edit', [AdminDashboardController::class, 'supplierEdit'])->name('suppliers.edit');
     Route::put('/suppliers/{supplier}', [AdminDashboardController::class, 'supplierUpdate'])->name('suppliers.update');
-    Route::delete('/suppliers/{supplier}', [AdminDashboardController::class, 'supplierDestroy'])->name('suppliers.destroy');
+    Route::get('/suppliers/{supplier}/delete', [AdminDashboardController::class, 'confirmDelete'])->name('suppliers.confirm-delete');
 
     // System Reports (gunakan controller khusus untuk laporan)
     Route::prefix('reports')->name('reports.')->group(function () {

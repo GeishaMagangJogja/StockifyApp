@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Dotenv\Dotenv;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
 
@@ -34,33 +35,25 @@ private function handleLogoUpload($file)
     return $path;
 }
 
-   public function update(Request $request)
+public function update(Request $request)
 {
-    $request->validate([
-        'app_name' => 'required|string|max:255',
-        'app_logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-    ]);
+    Log::info('Mulai update settings', $request->all());
 
     try {
-        // Update APP_NAME
         $this->updateEnv('APP_NAME', $request->app_name);
+        Log::info('APP_NAME berhasil diupdate');
 
-        // Handle logo upload
         if ($request->hasFile('app_logo')) {
-            $this->handleLogoUpload($request->file('app_logo'));
+            $path = $this->handleLogoUpload($request->file('app_logo'));
+            Log::info('Logo berhasil diupload ke: '.$path);
         }
 
-        // Clear semua cache
         Artisan::call('config:clear');
-        Artisan::call('cache:clear');
-        Artisan::call('view:clear');
-
-        // Reload environment
-        $dotenv = Dotenv::createImmutable(base_path());
-        $dotenv->load();
+        Log::info('Config cleared');
 
         return back()->with('success', 'Pengaturan berhasil diperbarui!');
     } catch (\Exception $e) {
+        Log::error('Error update settings: '.$e->getMessage());
         return back()->with('error', 'Gagal memperbarui: '.$e->getMessage());
     }
 }
@@ -76,42 +69,44 @@ private function getLogoUrl()
 
 
 
-   private function updateEnv($key, $value)
+private function updateEnv($key, $value)
 {
     $envPath = app()->environmentFilePath();
 
+    // Pastikan file .env ada dan bisa diakses
+    if (!file_exists($envPath)) {
+        throw new \Exception("File .env tidak ditemukan");
+    }
+
     // Baca konten file
     $envContent = file_get_contents($envPath);
+    if ($envContent === false) {
+        throw new \Exception("Gagal membaca file .env");
+    }
 
     // Escape value jika mengandung spasi
     if (preg_match('/\s/', $value) && !preg_match('/^[\'"].*[\'"]$/', $value)) {
         $value = '"'.$value.'"';
     }
 
-    // Update atau tambahkan key
-    if (strpos($envContent, "$key=") !== false) {
-        $envContent = preg_replace(
-            "/^{$key}=.*/m",
-            "{$key}={$value}",
-            $envContent
-        );
+    // Update existing key atau tambahkan baru
+    $pattern = "/^{$key}=[^\r\n]*/m";
+    if (preg_match($pattern, $envContent)) {
+        $envContent = preg_replace($pattern, "{$key}={$value}", $envContent);
     } else {
         $envContent .= "\n{$key}={$value}\n";
     }
 
     // Tulis kembali ke file
-    file_put_contents($envPath, $envContent);
-
-    // Pastikan permission file benar
-    chmod($envPath, 0644);
-}
-
-    public function clearCache()
-    {
-        Artisan::call('cache:clear');
-        Artisan::call('config:clear');
-        Artisan::call('view:clear');
-
-        return back()->with('success', 'Cache berhasil dibersihkan!');
+    $written = file_put_contents($envPath, $envContent);
+    if ($written === false) {
+        throw new \Exception("Gagal menulis ke file .env");
     }
+
+    // Verifikasi perubahan
+    $newContent = file_get_contents($envPath);
+    if (!preg_match("/^{$key}={$value}/m", $newContent)) {
+        throw new \Exception("Gagal memverifikasi perubahan .env");
+    }
+}
 }
