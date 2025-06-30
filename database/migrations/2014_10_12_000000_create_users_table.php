@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->string('profile_photo_path', 2048)->nullable();
             $table->enum('role', ['Admin', 'Staff Gudang', 'Manajer Gudang'])->default('Staff Gudang');
             $table->rememberToken();
             $table->timestamps();

@@ -10,6 +10,7 @@ use App\Models\Category;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -43,14 +44,14 @@ class AdminDashboardController extends Controller
                     ->sum('quantity');
             }
 
-            // Data untuk tabel aktivitas terbaru
-            $recentTransactions = StockTransaction::with('product', 'user')
-                                  ->orderBy('date', 'desc')
-                                  ->latest()
-                                  ->limit(5)
-                                  ->get();
-            
-            $recentUsers = User::latest()->limit(5)->get(); // Pengguna terbaru khusus Admin
+            $lowStockProducts = Product::all()->filter(function ($product) {
+                // Pastikan min_stock ada nilainya sebelum membandingkan
+                return isset($product->min_stock) && $product->current_stock <= $product->min_stock;
+            })->take(5); // Ambil 5 produk teratas
+
+
+            $recentTransactions = StockTransaction::with('product', 'user')->orderBy('date', 'desc')->latest()->limit(5)->get();
+            $recentUsers = User::latest()->limit(5)->get();
 
             return view('pages.admin.dashboard.index', compact(
                 'totalProducts',
@@ -59,19 +60,16 @@ class AdminDashboardController extends Controller
                 'totalCategories',
                 'chartData',
                 'recentTransactions',
-                'recentUsers'
+                'recentUsers',
+                'lowStockProducts' // <-- Kirim data baru ke view
             ));
 
         } catch (\Exception $e) {
-            // Fallback jika terjadi error koneksi database, dll.
-            return view('pages.admin.dashboard.index', [
-                'totalProducts' => 0,
-                'totalSuppliers' => 0,
-                'totalUsers' => 0,
-                'totalCategories' => 0,
-                'chartData' => ['categories' => [], 'incoming' => [], 'outgoing' => []],
-                'recentTransactions' => collect([]),
-                'recentUsers' => collect([])
+            // ... (fallback tidak berubah, tapi tambahkan lowStockProducts) ...
+             return view('pages.admin.dashboard.index', [
+                // ...
+                'recentUsers' => collect([]),
+                'lowStockProducts' => collect([]) // <-- Tambahkan ini
             ])->with('error', 'Gagal memuat data dashboard: ' . $e->getMessage());
         }
     }
@@ -211,21 +209,73 @@ class AdminDashboardController extends Controller
 
     public function productStore(Request $request)
     {
-        $request->validate([
+        // 1. Define validation rules for ALL form fields
+        $validatedData = $request->validate([
             'name' => 'required|string|max:255',
-            'sku' => 'required|string|max:100|unique:products',
+            'sku' => 'required|string|max:100|unique:products,sku',
             'category_id' => 'required|exists:categories,id',
-            'supplier_id' => 'required|exists:suppliers,id',
+            'supplier_id' => 'nullable|exists:suppliers,id', // Use nullable if supplier is optional
             'description' => 'nullable|string',
             'purchase_price' => 'required|numeric|min:0',
             'selling_price' => 'required|numeric|min:0',
-            'unit' => 'required|string|max:50',
+            'initial_stock' => 'required|integer|min:0', // <-- Validate this
             'min_stock' => 'required|integer|min:0',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // <-- Validate this
+            'is_active' => 'nullable|boolean', // <-- Validate this
+            // We will add the 'unit' field to the form next
         ]);
 
-        Product::create($request->all());
+        DB::beginTransaction();
+        try {
+            // 2. Handle the 'is_active' checkbox
+            // If the checkbox is not ticked, it won't be in the request.
+            $validatedData['is_active'] = $request->has('is_active');
 
-        return redirect()->route('admin.products.index')->with('success', 'Produk berhasil ditambahkan');
+            // 3. Handle image upload
+            if ($request->hasFile('image')) {
+                $path = $request->file('image')->store('product_images', 'public');
+                $validatedData['image'] = $path;
+            }
+            
+            // 4. Create the product using ONLY the validated data
+            $product = Product::create([
+                'name' => $validatedData['name'],
+                'sku' => $validatedData['sku'],
+                'description' => $validatedData['description'],
+                'purchase_price' => $validatedData['purchase_price'],
+                'selling_price' => $validatedData['selling_price'],
+                'current_stock' => $validatedData['initial_stock'], // Set initial stock as current stock
+                'min_stock' => $validatedData['min_stock'],
+                'image' => $validatedData['image'] ?? null,
+                'is_active' => $validatedData['is_active'],
+                'category_id' => $validatedData['category_id'],
+                'supplier_id' => $validatedData['supplier_id'],
+                // Assuming your products table has a 'unit' column
+                // 'unit' => $validatedData['unit'],
+            ]);
+
+            // 5. Create an initial stock transaction if stock is added
+            if ($validatedData['initial_stock'] > 0) {
+                StockTransaction::create([
+                    'product_id' => $product->id,
+                    'user_id' => Auth::id(),
+                    'type' => 'Masuk', // 'Incoming'
+                    'quantity' => $validatedData['initial_stock'],
+                    'notes' => 'Stok awal produk baru.',
+                    'date' => now(),
+                ]);
+            }
+
+            DB::commit();
+
+            return redirect()->route('admin.products.index')->with('success', 'Produk berhasil ditambahkan.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            // Log the error for debugging
+            // Log::error('Failed to create product: ' . $e->getMessage()); 
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat menyimpan produk. Silakan coba lagi.')->withInput();
+        }
     }
 
     public function productShow(Product $product)
@@ -505,5 +555,35 @@ class AdminDashboardController extends Controller
         return redirect()->route('admin.settings')->with('success', 'Pengaturan berhasil diupdate');
     }
 
-    
+    // --- Profile Management ---
+    public function profile()
+    {
+        return view('pages.profile.edit', ['user' => Auth::user()]);
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $user = Auth::user();
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'current_password' => 'nullable|required_with:new_password',
+            'new_password' => 'nullable|min:8|confirmed',
+        ]);
+
+        $user->name = $request->name;
+        $user->email = $request->email;
+
+        if ($request->filled('new_password')) {
+            if (!Hash::check($request->current_password, $user->password)) {
+                return back()->withErrors(['current_password' => 'Password saat ini tidak cocok.']);
+            }
+            $user->password = Hash::make($request->new_password);
+        }
+
+        $user->save();
+
+        return back()->with('success', 'Profil berhasil diperbarui.');
+    }
 }

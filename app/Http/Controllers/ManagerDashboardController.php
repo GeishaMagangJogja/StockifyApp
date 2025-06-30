@@ -5,11 +5,13 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth; // <-- Tambahkan ini
+use Illuminate\Support\Facades\Hash;
 use App\Models\Product;
 use App\Models\Supplier;
 use App\Models\Category;
 use App\Models\StockTransaction;
 use App\Models\User;
+use Carbon\Carbon;
 
 class ManagerDashboardController extends Controller
 {
@@ -26,49 +28,35 @@ class ManagerDashboardController extends Controller
         $totalProducts = Product::count();
         $totalSuppliers = Supplier::count();
 
-        // Mengambil 5 produk dengan stok terendah
+        // ... (logika lowStockProducts tidak berubah)
         $lowStockProducts = Product::all()->filter(function ($product) {
-            return $product->current_stock <= $product->min_stock;
+            return isset($product->min_stock) && $product->current_stock <= $product->min_stock;
         })->sortBy('current_stock')->take(5);
 
-        // Menyiapkan data untuk grafik transaksi 7 hari terakhir
+        // ... (logika chartData tidak berubah)
         $chartData = ['categories' => [], 'incoming' => [], 'outgoing' => []];
         for ($i = 6; $i >= 0; $i--) {
             $day = now()->subDays($i);
             $chartData['categories'][] = $day->format('d M');
-            
-            // PERBAIKAN: Gunakan kolom 'date' bukan 'created_at'
-            $chartData['incoming'][] = StockTransaction::where('type', 'Masuk')
-                ->whereDate('date', $day->format('Y-m-d'))
-                ->sum('quantity');
-            
-            // PERBAIKAN: Gunakan kolom 'date' bukan 'created_at'
-            $chartData['outgoing'][] = StockTransaction::where('type', 'Keluar')
-                ->whereDate('date', $day->format('Y-m-d'))
-                ->sum('quantity');
+            $chartData['incoming'][] = StockTransaction::where('type', 'Masuk')->whereDate('date', $day->format('Y-m-d'))->sum('quantity');
+            $chartData['outgoing'][] = StockTransaction::where('type', 'Keluar')->whereDate('date', $day->format('Y-m-d'))->sum('quantity');
         }
 
-        // PERBAIKAN: Gunakan kolom 'date' bukan 'created_at'
-        $incomingTodayCount = StockTransaction::where('type', 'Masuk')
-            ->whereDate('date', today())
-            ->count();
-            
-        // PERBAIKAN: Gunakan kolom 'date' bukan 'created_at'
-        $outgoingTodayCount = StockTransaction::where('type', 'Keluar')
-            ->whereDate('date', today())
-            ->count();
+        $incomingTodayCount = StockTransaction::where('type', 'Masuk')->whereDate('date', today())->count();
+        $outgoingTodayCount = StockTransaction::where('type', 'Keluar')->whereDate('date', today())->count();
 
-        // Mengurutkan berdasarkan kolom 'date' agar lebih relevan
-        $recentTransactions = StockTransaction::with('product', 'user')
-            ->orderBy('date', 'desc')
-            ->latest() // latest() akan mengurutkan berdasarkan created_at, kita tambahkan urutan date
-            ->limit(5)
-            ->get();
+        $recentTransactions = StockTransaction::with('product', 'user')->orderBy('date', 'desc')->latest()->limit(5)->get();
             
+        // TAMBAHAN BARU: Ambil data supplier terbaru
+        $recentSuppliers = Supplier::latest()->limit(5)->get();
+
         return view('pages.manajergudang.dashboard.index', compact(
-            'totalProducts', 'totalSuppliers', 'lowStockProducts', 'incomingTodayCount', 'outgoingTodayCount', 'recentTransactions', 'chartData'
+            'totalProducts', 'totalSuppliers', 'lowStockProducts', 
+            'incomingTodayCount', 'outgoingTodayCount', 'recentTransactions', 
+            'chartData', 'recentSuppliers' // <-- Kirim data baru ke view
         ));
     }
+
     
     // ... (productList dan productShow tidak perlu diubah) ...
     public function productList(Request $request)
@@ -123,14 +111,16 @@ class ManagerDashboardController extends Controller
             'notes' => 'nullable|string|max:255',
         ]);
 
+        $transactionDateTime = Carbon::parse($request->transaction_date)->setTimeFrom(now());
+
         StockTransaction::create([
             'product_id' => $request->product_id,
-            'user_id' => Auth::id(), // Mengambil ID user yang sedang login
+            'user_id' => Auth::id(),
             'supplier_id' => $request->supplier_id,
             'type' => 'Masuk', 
             'quantity' => $request->quantity,
             'notes' => $request->notes,
-            'date' => $request->transaction_date, 
+            'date' => $transactionDateTime, // <-- Gunakan variabel baru
             'status' => 'Diterima',
         ]);
 
@@ -157,13 +147,15 @@ class ManagerDashboardController extends Controller
             return back()->withErrors(['quantity' => 'Jumlah barang keluar tidak boleh melebihi stok yang ada (Stok saat ini: ' . $product->current_stock . ').'])->withInput();
         }
 
+        $transactionDateTime = Carbon::parse($request->transaction_date)->setTimeFrom(now());
+
         StockTransaction::create([
             'product_id' => $request->product_id,
             'user_id' => Auth::id(),
             'type' => 'Keluar',
             'quantity' => $request->quantity,
             'notes' => $request->notes,
-            'date' => $request->transaction_date, 
+            'date' => $transactionDateTime, // <-- Gunakan variabel baru
             'status' => 'Dikeluarkan',
         ]);
 
@@ -187,25 +179,39 @@ class ManagerDashboardController extends Controller
 
         DB::transaction(function () use ($request) {
             foreach ($request->products as $item) {
-                // Konversi ke integer untuk memastikan perhitungan yang aman
                 $systemStock = (int)$item['system_stock'];
                 $physicalStock = (int)$item['physical_stock'];
-                $difference = $physicalStock - $systemStock;
+                
+                // Lanjutkan hanya jika stok fisik yang diinput berbeda dengan stok sistem
+                if ($physicalStock !== $systemStock) {
+                    
+                    // Langkah 1: Buat transaksi KELUAR untuk mengosongkan stok sistem
+                    // (Hanya jika stok sistem lebih dari 0)
+                    if ($systemStock > 0) {
+                        StockTransaction::create([
+                            'product_id' => $item['id'],
+                            'user_id' => Auth::id(),
+                            'type' => 'Keluar',
+                            'quantity' => $systemStock,
+                            'notes' => 'Opname out',
+                            'date' => now(),
+                            'status' => 'Dikeluarkan',
+                        ]);
+                    }
 
-                // Hanya buat transaksi jika ada selisih
-                if ($difference != 0) {
-                    StockTransaction::create([
-                        'product_id' => $item['id'],
-                        'user_id' => Auth::id(),
-                        // PERBAIKAN 1: Gunakan nilai ENUM yang benar
-                        'type' => $difference > 0 ? 'Masuk' : 'Keluar', 
-                        'quantity' => abs($difference),
-                        'notes' => 'Penyesuaian Stok Opname', // Catatan yang lebih deskriptif
-                        // PERBAIKAN 2: Tambahkan field 'date'
-                        'date' => now(), // Gunakan tanggal hari ini untuk stock opname
-                        // PERBAIKAN 3: Tambahkan field 'status'
-                        'status' => $difference > 0 ? 'Diterima' : 'Dikeluarkan', 
-                    ]);
+                    // Langkah 2: Buat transaksi MASUK sesuai dengan jumlah fisik
+                    // (Hanya jika stok fisik lebih dari 0)
+                    if ($physicalStock > 0) {
+                         StockTransaction::create([
+                            'product_id' => $item['id'],
+                            'user_id' => Auth::id(),
+                            'type' => 'Masuk',
+                            'quantity' => $physicalStock,
+                            'notes' => 'Opname physic stock',
+                            'date' => now(),
+                            'status' => 'Diterima',
+                        ]);
+                    }
                 }
             }
         });
@@ -214,23 +220,111 @@ class ManagerDashboardController extends Controller
     }
     
     // ... (supplier dan report methods) ...
-    public function supplierList()
+    public function supplierList(Request $request)
     {
-        $suppliers = Supplier::latest()->paginate(15);
+        $query = Supplier::withCount('products'); 
+
+        if ($request->has('search') && $request->filled('search')) {
+            $search = $request->get('search');
+            $query->where('name', 'like', "%{$search}%")->orWhere('email', 'like', "%{$search}%");
+        }
+
+        $suppliers = $query->latest()->paginate(15);
         return view('pages.manajergudang.suppliers.index', compact('suppliers'));
     }
-    
-    public function reportStock()
+
+    public function supplierShow(Supplier $supplier)
     {
+        // Load relasi produk untuk menampilkan statistik
+        $supplier->load('products');
+        return view('pages.manajergudang.suppliers.show', compact('supplier'));
+    }
+    
+    public function reportStock(Request $request)
+    {
+        // Query dasar untuk mengambil produk dengan kalkulasi stok
+        $query = Product::with('category');
+
+        $query->addSelect(['*',
+            'stock_in_sum' => StockTransaction::select(DB::raw('COALESCE(sum(quantity), 0)'))
+                ->whereColumn('product_id', 'products.id')
+                ->where('type', 'Masuk'),
+            'stock_out_sum' => StockTransaction::select(DB::raw('COALESCE(sum(quantity), 0)'))
+                ->whereColumn('product_id', 'products.id')
+                ->where('type', 'Keluar')
+        ]);
+        
+        // Filter berdasarkan kategori jika ada
+        if ($request->has('category_id') && $request->filled('category_id')) {
+            $query->where('category_id', $request->category_id);
+        }
+
+        $products = $query->paginate(20);
         $categories = Category::orderBy('name')->get();
-        return view('pages.manajergudang.reports.stock', compact('categories'));
+
+        return view('pages.manajergudang.reports.stock', compact('products', 'categories'));
     }
 
-    public function reportTransactions()
+    public function reportTransactions(Request $request)
     {
-        $categories = Category::orderBy('name')->get();
-        $suppliers = Supplier::orderBy('name')->get();
-        return view('pages.manajergudang.reports.transactions', compact('categories', 'suppliers'));
+        $query = StockTransaction::with(['product', 'user', 'supplier'])->latest('date');
+
+        // Filter berdasarkan tipe transaksi
+        if ($request->has('type') && $request->filled('type')) {
+            $query->where('type', $request->type);
+        }
+
+        // Filter berdasarkan rentang tanggal
+        if ($request->has('start_date') && $request->filled('start_date')) {
+            $query->whereDate('date', '>=', $request->start_date);
+        }
+        if ($request->has('end_date') && $request->filled('end_date')) {
+            $query->whereDate('date', '<=', $request->end_date);
+        }
+        
+        $transactions = $query->paginate(20);
+
+        return view('pages.manajergudang.reports.transactions', compact('transactions'));
+    }
+
+    public function profile()
+    {
+        return view('pages.profile.edit', ['user' => Auth::user()]);
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $user = Auth::user();
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'current_password' => 'nullable|required_with:new_password',
+            'new_password' => 'nullable|min:8|confirmed',
+        ]);
+
+        $user->name = $request->name;
+        $user->email = $request->email;
+
+        if ($request->hasFile('photo')) {
+            if ($user->profile_photo_path) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($user->profile_photo_path);
+            }
+            $path = $request->file('photo')->store('profile-photos', 'public');
+            $user->profile_photo_path = $path;
+        }
+
+        if ($request->filled('new_password')) {
+            if (!Hash::check($request->current_password, $user->password)) {
+                return back()->withErrors(['current_password' => 'Password saat ini tidak cocok.']);
+            }
+            $user->password = Hash::make($request->new_password);
+        }
+
+        $user->save();
+
+        return redirect()->route('manajergudang.profile')->with('success', 'Profil berhasil diperbarui.');
     }
 
 }

@@ -147,7 +147,7 @@ class ProductController extends Controller
                 'category_id' => 'sometimes|exists:categories,id',
                 'supplier_id' => 'sometimes|exists:suppliers,id',
                 'name' => 'sometimes|string',
-                'sku' => 'sometimes|string|unique:products,sku,' . $id,
+                'sku' => 'required|string|max:100|unique:products,sku,' . $product->id,
                 'description' => 'nullable|string',
                 'purchase_price' => 'sometimes|numeric',
                 'selling_price' => 'sometimes|numeric',

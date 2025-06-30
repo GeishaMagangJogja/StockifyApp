@@ -87,9 +87,10 @@
 
                 <!-- Harga Beli -->
                 <div>
-                    <label for="purchase_price" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Harga Beli</label>
-                    <input type="text" id="purchase_price" name="purchase_price" value="{{ old('purchase_price', '0') }}"
+                    <label for="purchase_price_display" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Harga Beli</label>
+                    <input type="text" id="purchase_price_display"
                            class="block w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('purchase_price') border-red-500 @enderror">
+                    <input type="hidden" id="purchase_price" name="purchase_price" value="{{ old('purchase_price', '0') }}">
                     @error('purchase_price')
                         <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                     @enderror
@@ -97,9 +98,10 @@
 
                 <!-- Harga Jual -->
                 <div>
-                    <label for="selling_price" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Harga Jual</label>
-                    <input type="text" id="selling_price" name="selling_price" value="{{ old('selling_price', '0') }}"
+                    <label for="selling_price_display" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Harga Jual</label>
+                    <input type="text" id="selling_price_display"
                            class="block w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('selling_price') border-red-500 @enderror">
+                    <input type="hidden" id="selling_price" name="selling_price" value="{{ old('selling_price', '0') }}">
                     @error('selling_price')
                         <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                     @enderror
@@ -183,17 +185,14 @@
 
         // Auto-generate SKU when typing product name
         document.getElementById('name').addEventListener('input', function() {
-            // Clear previous timeout
             clearTimeout(skuGenerationTimeout);
-
-            // Set timeout to avoid too many requests while typing
             skuGenerationTimeout = setTimeout(() => {
                 if (this.value.trim().length >= 3) {
                     generateSkuFromName(this.value.trim());
                 } else {
                     document.getElementById('sku').value = '';
                 }
-            }, 500); // Wait 500ms after user stops typing
+            }, 500);
         });
 
         // Manual generate SKU button
@@ -210,18 +209,12 @@
         // Function to generate SKU from product name
         function generateSkuFromName(productName) {
             const skuInput = document.getElementById('sku');
-
-            // Show loading state
             skuInput.value = 'Generating...';
             skuInput.disabled = true;
 
-            // Get CSRF token
-            const token = document.querySelector('meta[name="csrf-token"]') ||
-                         document.querySelector('input[name="_token"]');
-
+            const token = document.querySelector('meta[name="csrf-token"]') || document.querySelector('input[name="_token"]');
             const csrfToken = token ? (token.getAttribute('content') || token.value) : '';
 
-            // Make request to generate SKU
             fetch('{{ route("admin.products.generate-sku") }}', {
                 method: 'POST',
                 headers: {
@@ -229,14 +222,10 @@
                     'X-CSRF-TOKEN': csrfToken,
                     'Accept': 'application/json'
                 },
-                body: JSON.stringify({
-                    name: productName
-                })
+                body: JSON.stringify({ name: productName })
             })
             .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
+                if (!response.ok) throw new Error('Network response was not ok');
                 return response.json();
             })
             .then(data => {
@@ -248,12 +237,7 @@
             })
             .catch(error => {
                 console.error('Error generating SKU:', error);
-
-                // Fallback: generate simple SKU locally
-                const fallbackSku = generateFallbackSku(productName);
-                skuInput.value = fallbackSku;
-
-                // Show warning
+                skuInput.value = generateFallbackSku(productName);
                 console.warn('Using fallback SKU generation');
             })
             .finally(() => {
@@ -263,24 +247,19 @@
 
         // Fallback SKU generation (client-side)
         function generateFallbackSku(productName) {
-            // Take first 3 letters of the product name
             const prefix = productName.replace(/[^A-Za-z]/g, '').substring(0, 3).toUpperCase();
             const paddedPrefix = prefix.padEnd(3, 'X');
-
-            // Generate random 4-digit number
             const randomNum = Math.floor(1000 + Math.random() * 9000);
-
             return paddedPrefix + '-' + randomNum;
         }
 
-        // Format currency input
-        function formatCurrency(input) {
-            let value = input.value.replace(/[^0-9]/g, '');
-            if (value === '') value = '0';
-
-            // Format with thousands separator
-            const formatted = parseInt(value, 10).toLocaleString('id-ID');
-            input.value = formatted;
+        // Format currency input using a display and hidden field
+        function formatCurrency(displayInput, hiddenInput) {
+            let rawValue = displayInput.value.replace(/[^0-9]/g, '');
+            if (rawValue === '') rawValue = '0';
+            
+            hiddenInput.value = rawValue;
+            displayInput.value = parseInt(rawValue, 10).toLocaleString('id-ID');
         }
 
         // Format number input (for stock fields)
@@ -291,12 +270,22 @@
         // Initialize event listeners when DOM is loaded
         document.addEventListener('DOMContentLoaded', function() {
             // Format currency fields
-            const currencyFields = ['purchase_price', 'selling_price'];
-            currencyFields.forEach(fieldId => {
-                const field = document.getElementById(fieldId);
-                if (field) {
-                    field.addEventListener('input', () => formatCurrency(field));
-                    formatCurrency(field); // Format initial value
+            const currencyFieldPairs = [
+                { display: 'purchase_price_display', hidden: 'purchase_price' },
+                { display: 'selling_price_display', hidden: 'selling_price' }
+            ];
+            
+            currencyFieldPairs.forEach(pair => {
+                const displayInput = document.getElementById(pair.display);
+                const hiddenInput = document.getElementById(pair.hidden);
+
+                if (displayInput && hiddenInput) {
+                    // Initialize the display field with the value from the hidden field
+                    displayInput.value = hiddenInput.value;
+                    formatCurrency(displayInput, hiddenInput); // Format the initial value
+                    
+                    // Add event listener for when the user types in the display field
+                    displayInput.addEventListener('input', () => formatCurrency(displayInput, hiddenInput));
                 }
             });
 

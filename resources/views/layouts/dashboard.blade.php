@@ -73,10 +73,10 @@
                     <!-- User Info -->
                     <div class="px-3 py-4">
                         <div class="flex items-center">
-                            <div class="h-11 w-11 rounded-full bg-blue-500 flex items-center justify-center ring-2 ring-blue-400">
-                                <span class="text-lg font-medium text-white">
-                                    {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
-                                </span>
+                            <div class="flex-shrink-0">
+                                <img class="h-11 w-11 rounded-full object-cover ring-2 ring-blue-400" 
+                                     src="{{ Auth::user()->profile_photo_path ? asset('storage/' . Auth::user()->profile_photo_path) : 'https://ui-avatars.com/api/?name='.urlencode(Auth::user()->name).'&background=3b82f6&color=fff' }}" 
+                                     alt="{{ Auth::user()->name }}">
                             </div>
                             <div class="ml-4">
                                 <p class="text-base font-semibold text-gray-800 dark:text-white">{{ auth()->user()->name }}</p>
@@ -107,6 +107,8 @@
             <div class="p-6">
                 @yield('content')
             </div>
+
+            <x-footer-dashboard />
         </main>
     </div>
 
@@ -162,6 +164,33 @@
     </script>
 
     <script src="https://unpkg.com/flowbite@1.5.3/dist/flowbite.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+
+    <style>
+        [x-cloak] { display: none !important; }
+
+        .ts-control {
+            border-radius: 0.5rem !important;
+            border-color: #4b5563 !important; /* gray-600 */
+        }
+        .dark .ts-control {
+            background-color: #374151 !important; /* slate-700 */
+            border-color: #4b5563 !important; /* gray-600 */
+            color: white;
+        }
+        .dark .ts-dropdown {
+            background-color: #1e293b !important; /* slate-800 */
+            border-color: #4b5563 !important; /* gray-600 */
+        }
+        .dark .ts-dropdown .option {
+            color: #d1d5db; /* gray-300 */
+        }
+        .dark .ts-dropdown .active {
+            background-color: #3b82f6 !important; /* blue-500 */
+            color: white;
+        }
+    </style>
 </body>
 </html> 
 

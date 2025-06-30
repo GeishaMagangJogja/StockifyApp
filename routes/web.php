@@ -80,6 +80,7 @@ Route::middleware(['auth', 'role:Admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/products/{product}/edit', [AdminDashboardController::class, 'productEdit'])->name('products.edit');
     Route::put('/products/{product}', [AdminDashboardController::class, 'productUpdate'])->name('products.update');
     Route::delete('/products/{product}', [AdminDashboardController::class, 'productDestroy'])->name('products.destroy');
+    Route::post('/products/generate-sku', [AdminDashboardController::class, 'generateSku'])->name('products.generate-sku');
 
     // Categories Management (alternative routes)
     Route::get('/categories', [AdminDashboardController::class, 'categoryList'])->name('categories.index');
@@ -112,6 +113,9 @@ Route::middleware(['auth', 'role:Admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/settings', [SettingController::class, 'index'])->name('settings');
     Route::get('/settings', [AdminDashboardController::class, 'settings'])->name('settings');
     Route::put('/settings', [AdminDashboardController::class, 'settingsUpdate'])->name('settings.update');
+
+    Route::get('/profile', [AdminDashboardController::class, 'profile'])->name('profile');
+    Route::put('/profile', [ManagerDashboardController::class, 'updateProfile'])->name('profile.update');
 });
 
 // ===================================
@@ -165,7 +169,7 @@ Route::middleware(['auth', 'role:Manajer Gudang'])->prefix('manajergudang')->nam
 
     // Profile
     Route::get('/profile', [ManagerDashboardController::class, 'profile'])->name('profile');
-    Route::put('/profile', [ManagerDashboardController::class, 'profileUpdate'])->name('profile.update');
+    Route::put('/profile', [ManagerDashboardController::class, 'updateProfile'])->name('profile.update');
 });
 
 // ===================================
