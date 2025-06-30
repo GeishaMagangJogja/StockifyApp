@@ -12,9 +12,11 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->text('address')->nullable();
+            $table->text('contact_person')->nullable();
             $table->string('phone')->nullable();
             $table->string('email')->nullable();
-            $table->timestamps();
+            $table->softDeletes();  // Kolom untuk soft delete
+            $table->timestamps();   // Kolom created_at dan updated_at
         });
     }
 

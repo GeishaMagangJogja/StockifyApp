@@ -81,9 +81,15 @@
                 <!-- Harga Beli -->
                 <div>
                     <label for="purchase_price" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Harga Beli</label>
-                    <input type="text" id="purchase_price" name="purchase_price" value="{{ old('purchase_price', number_format($product->purchase_price, 0, ',', '.')) }}"
-                           class="block w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('purchase_price') border-red-500 @enderror"
-                           oninput="formatCurrency(this)">
+                    <div class="relative mt-1 rounded-md shadow-sm">
+                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                            <span class="text-gray-500 sm:text-sm">Rp</span>
+                        </div>
+                        <input type="text" id="purchase_price" name="purchase_price"
+                               value="{{ old('purchase_price', number_format($product->purchase_price, 0, ',', '.')) }}"
+                               class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('purchase_price') border-red-500 @enderror"
+                               oninput="formatCurrency(this)">
+                    </div>
                     @error('purchase_price')
                         <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                     @enderror
@@ -92,32 +98,48 @@
                 <!-- Harga Jual -->
                 <div>
                     <label for="selling_price" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Harga Jual</label>
-                    <input type="text" id="selling_price" name="selling_price" value="{{ old('selling_price', number_format($product->selling_price, 0, ',', '.')) }}"
-                           class="block w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('selling_price') border-red-500 @enderror"
-                           oninput="formatCurrency(this)">
+                    <div class="relative mt-1 rounded-md shadow-sm">
+                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                            <span class="text-gray-500 sm:text-sm">Rp</span>
+                        </div>
+                        <input type="text" id="selling_price" name="selling_price"
+                               value="{{ old('selling_price', number_format($product->selling_price, 0, ',', '.')) }}"
+                               class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('selling_price') border-red-500 @enderror"
+                               oninput="formatCurrency(this)">
+                    </div>
                     @error('selling_price')
                         <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                     @enderror
                 </div>
 
-                <!-- Stok -->
+                <!-- Current Stock -->
                 <div>
-                    <label for="stock" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Stok</label>
-                    <input type="text" id="stock" name="stock" value="{{ old('stock', $product->stock) }}"
-                           class="block w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('stock') border-red-500 @enderror"
+                    <label for="current_stock" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Stok Saat Ini</label>
+                    <input type="text" id="current_stock" name="current_stock" value="{{ old('current_stock', $product->current_stock) }}"
+                           class="block w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('current_stock') border-red-500 @enderror"
                            oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-                    @error('stock')
+                    @error('current_stock')
                         <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                     @enderror
                 </div>
 
                 <!-- Minimum Stok -->
                 <div>
-                    <label for="min_stock" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Minimum Stok <span class="text-red-500">*</span></label>
-                    <input type="text" id="min_stock" name="min_stock" value="{{ old('min_stock', $product->min_stock) }}" required
-                           class="block w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('min_stock') border-red-500 @enderror"
+                    <label for="minimum_stock" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Minimum Stok <span class="text-red-500">*</span></label>
+                    <input type="text" id="minimum_stock" name="minimum_stock" value="{{ old('minimum_stock', $product->minimum_stock) }}" required
+                           class="block w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('minimum_stock') border-red-500 @enderror"
                            oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-                    @error('min_stock')
+                    @error('minimum_stock')
+                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <!-- Unit -->
+                <div>
+                    <label for="unit" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Satuan <span class="text-red-500">*</span></label>
+                    <input type="text" id="unit" name="unit" value="{{ old('unit', $product->unit) }}" required
+                           class="block w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('unit') border-red-500 @enderror">
+                    @error('unit')
                         <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                     @enderror
                 </div>
@@ -191,25 +213,31 @@
     <script>
         // Format currency input
         function formatCurrency(input) {
-            // If input is an element, get its value
-            const value = typeof input === 'object' ? input.value : input;
-
             // Remove all non-digit characters
-            let num = value.replace(/[^0-9]/g, '');
+            let value = input.value.replace(/[^0-9]/g, '');
 
             // If empty, set to 0
-            if (num === '') num = '0';
+            if (value === '') value = '0';
 
-            // Format with thousands separators
-            const formatted = parseInt(num, 10).toLocaleString('id-ID');
+            // Convert to number and format with thousands separators
+            const number = parseInt(value, 10);
+            const formatted = new Intl.NumberFormat('id-ID').format(number);
 
             // Update the input value
-            if (typeof input === 'object') {
-                input.value = formatted;
-            }
+            input.value = formatted;
 
-            return formatted;
+            // Return the raw number for form submission
+            return number;
         }
+
+        // Convert formatted values back to numbers before form submission
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const purchasePrice = document.getElementById('purchase_price');
+            const sellingPrice = document.getElementById('selling_price');
+
+            purchasePrice.value = purchasePrice.value.replace(/[^0-9]/g, '');
+            sellingPrice.value = sellingPrice.value.replace(/[^0-9]/g, '');
+        });
 
         // Initialize formatting on page load
         document.addEventListener('DOMContentLoaded', function() {

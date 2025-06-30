@@ -2,133 +2,205 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\StockTransaction;
+use App\Models\Product;
+use App\Models\Supplier;
 use Illuminate\Http\Request;
-use App\Services\StockTransactionService;
+use App\Models\StockTransaction;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class StockTransactionController extends Controller
 {
-    protected $service;
-
-    public function __construct(StockTransactionService $service)
+    /**
+     * Menampilkan form untuk transaksi masuk
+     */
+    public function createIncoming()
     {
-        $this->service = $service;
+        $products = Product::orderBy('name')->get();
+        $suppliers = Supplier::orderBy('name')->get();
+
+        return view('transactions.incoming.create', compact('products', 'suppliers'));
     }
 
     /**
-     * Menampilkan semua transaksi (biasanya untuk API admin).
+     * Menampilkan form untuk transaksi keluar
+     */
+    public function createOutgoing()
+    {
+        $products = Product::where('current_stock', '>', 0)
+                         ->orderBy('name')
+                         ->get();
+
+        return view('transactions.outgoing.create', compact('products'));
+    }
+
+    /**
+     * Menyimpan transaksi masuk
+     */
+    public function storeIncoming(Request $request)
+    {
+        $validated = $this->validateIncomingRequest($request);
+
+        DB::transaction(function () use ($validated) {
+            $product = Product::findOrFail($validated['product_id']);
+            $previousStock = $product->current_stock;
+
+            StockTransaction::create([
+                'product_id' => $product->id,
+                'supplier_id' => $validated['supplier_id'],
+                'user_id' => Auth::id(),
+                'type' => 'Masuk',
+                'quantity' => $validated['quantity'],
+                'date' => $validated['transaction_date'],
+                'status' => 'Diterima',
+                'notes' => $validated['notes'] ?? null,
+                'previous_stock' => $previousStock,
+                'current_stock' => $previousStock + $validated['quantity']
+            ]);
+
+            $product->increment('current_stock', $validated['quantity']);
+        });
+
+        return redirect()->route('transactions.index')
+            ->with('success', 'Transaksi masuk berhasil dicatat');
+    }
+
+    /**
+     * Menyimpan transaksi keluar
+     */
+    public function storeOutgoing(Request $request)
+    {
+        $validated = $this->validateOutgoingRequest($request);
+        $product = Product::findOrFail($validated['product_id']);
+
+        if ($product->current_stock < $validated['quantity']) {
+            return back()->withErrors(['quantity' => 'Stok tidak mencukupi! Stok tersedia: '.$product->current_stock]);
+        }
+
+        DB::transaction(function () use ($validated, $product) {
+            $previousStock = $product->current_stock;
+
+            StockTransaction::create([
+                'product_id' => $product->id,
+                'user_id' => Auth::id(),
+                'type' => 'Keluar',
+                'quantity' => $validated['quantity'],
+                'date' => $validated['transaction_date'],
+                'status' => 'Dikeluarkan',
+                'notes' => $validated['notes'] ?? null,
+                'previous_stock' => $previousStock,
+                'current_stock' => $previousStock - $validated['quantity']
+            ]);
+
+            $product->decrement('current_stock', $validated['quantity']);
+        });
+
+        return redirect()->route('transactions.index')
+            ->with('success', 'Transaksi keluar berhasil dicatat');
+    }
+
+    /**
+     * Menampilkan riwayat transaksi
      */
     public function index()
     {
-        return response()->json($this->service->getAll());
+        $transactions = StockTransaction::with(['product', 'supplier', 'user'])
+            ->orderBy('date', 'desc')
+            ->paginate(20);
+
+        return view('transactions.index', compact('transactions'));
     }
 
     /**
-     * Menyimpan transaksi baru (biasanya dari API).
-     * Ini berbeda dari form di web.
+     * Validasi request untuk transaksi masuk
      */
-    public function store(Request $request)
+    protected function validateIncomingRequest(Request $request)
+    {
+        return $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'supplier_id' => 'required|exists:suppliers,id',
+            'quantity' => 'required|integer|min:1',
+            'transaction_date' => 'required|date|before_or_equal:today',
+            'notes' => 'nullable|string|max:255'
+        ]);
+    }
+
+    /**
+     * Validasi request untuk transaksi keluar
+     */
+    protected function validateOutgoingRequest(Request $request)
+    {
+        return $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'quantity' => 'required|integer|min:1',
+            'transaction_date' => 'required|date|before_or_equal:today',
+            'notes' => 'nullable|string|max:255'
+        ]);
+    }
+
+    /**
+     * API Endpoint untuk mendapatkan semua transaksi
+     */
+    public function apiIndex()
+    {
+        $transactions = StockTransaction::with(['product', 'supplier', 'user'])
+            ->orderBy('date', 'desc')
+            ->get();
+
+        return response()->json($transactions);
+    }
+
+    /**
+     * API Endpoint untuk menyimpan transaksi
+     */
+    public function apiStore(Request $request)
     {
         $validated = $request->validate([
             'product_id' => 'required|exists:products,id',
-            'user_id' => 'required|exists:users,id',
-            'supplier_id' => 'nullable|exists:suppliers,id',
+            'supplier_id' => 'nullable|required_if:type,Masuk|exists:suppliers,id',
             'type' => 'required|in:Masuk,Keluar',
             'quantity' => 'required|integer|min:1',
             'date' => 'required|date',
-            'status' => 'required|in:Pending,Diterima,Ditolak,Dikeluarkan',
             'notes' => 'nullable|string'
         ]);
 
-        return response()->json($this->service->create($validated), 201);
-    }
+        $product = Product::findOrFail($validated['product_id']);
 
-    /**
-     * Menampilkan detail satu transaksi.
-     */
-    public function show($id)
-    {
-        return response()->json($this->service->findById($id));
-    }
-
-    /**
-     * Memperbarui transaksi yang ada.
-     */
-    public function update(Request $request, $id)
-    {
-        $validated = $request->validate([
-            'product_id' => 'sometimes|exists:products,id',
-            'user_id' => 'sometimes|exists:users,id',
-            'type' => 'sometimes|in:Masuk,Keluar',
-            'quantity' => 'sometimes|integer|min:1',
-            'date' => 'sometimes|date',
-            'status' => 'sometimes|in:Pending,Diterima,Ditolak,Dikeluarkan',
-            'notes' => 'nullable|string'
-        ]);
-
-        return response()->json($this->service->update($id, $validated));
-    }
-
-    /**
-     * Menghapus transaksi.
-     */
-    public function destroy($id)
-    {
-        $this->service->delete($id);
-        return response()->json(['message' => 'Transaksi berhasil dihapus.']);
-    }
-
-    /**
-     * Memfilter transaksi berdasarkan tipe (Masuk/Keluar).
-     */
-    public function filterByType($type)
-    {
-        // Validasi tipe untuk keamanan
-        $validTypes = ['Masuk', 'Keluar'];
-        if (!in_array($type, $validTypes)) {
-            return response()->json(['message' => 'Tipe tidak valid.'], 400);
-        }
-        return response()->json($this->service->getByType($type));
-    }
-
-    /**
-     * Menyetujui atau menolak transaksi (biasanya oleh Manajer).
-     */
-    public function approve(Request $request, $id)
-    {
-        $validated = $request->validate([
-            'status' => 'required|in:Diterima,Ditolak,Dikeluarkan',
-            'notes' => 'nullable|string'
-        ]);
-
-        return response()->json(
-            $this->service->approve($id, $validated['status'], $validated['notes'] ?? null)
-        );
-    }
-    
-    /**
-     * Mengkonfirmasi penerimaan barang (biasanya oleh Staff).
-     */
-    public function confirm($id)
-    {
-        $transaction = StockTransaction::findOrFail($id);
-
-        // Contoh otorisasi sederhana, bisa disempurnakan
-        if ($transaction->status !== 'Pending' || $transaction->type !== 'Masuk') {
-             return response()->json(['message' => 'Transaksi ini tidak dapat dikonfirmasi.'], 400);
+        if ($validated['type'] === 'Keluar' && $product->current_stock < $validated['quantity']) {
+            return response()->json([
+                'message' => 'Stok tidak mencukupi',
+                'available_stock' => $product->current_stock
+            ], 400);
         }
 
-        $transaction->status = 'Diterima';
-        $transaction->user_id = auth()->id(); // Tetapkan staff yang mengkonfirmasi
-        $transaction->save();
+        $transaction = DB::transaction(function () use ($validated, $product) {
+            $previousStock = $product->current_stock;
+            $newStock = $validated['type'] === 'Masuk'
+                ? $previousStock + $validated['quantity']
+                : $previousStock - $validated['quantity'];
 
-        return response()->json([
-            'message' => 'Transaksi berhasil dikonfirmasi.',
-            'data' => $transaction
-        ]);
+            $transaction = StockTransaction::create([
+                'product_id' => $product->id,
+                'supplier_id' => $validated['supplier_id'] ?? null,
+                'user_id' => Auth::id(),
+                'type' => $validated['type'],
+                'quantity' => $validated['quantity'],
+                'date' => $validated['date'],
+                'status' => $validated['type'] === 'Masuk' ? 'Diterima' : 'Dikeluarkan',
+                'notes' => $validated['notes'] ?? null,
+                'previous_stock' => $previousStock,
+                'current_stock' => $newStock
+            ]);
+
+            if ($validated['type'] === 'Masuk') {
+                $product->increment('current_stock', $validated['quantity']);
+            } else {
+                $product->decrement('current_stock', $validated['quantity']);
+            }
+
+            return $transaction;
+        });
+
+        return response()->json($transaction, 201);
     }
-    
-    // Anda mungkin tidak memerlukan method storeIncomingFromApi dan storeOutgoingFromApi
-    // jika Anda tidak berencana membuat tugas dari API eksternal.
-    // Jika ya, mereka bisa ditambahkan kembali di sini.
 }

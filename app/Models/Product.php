@@ -29,7 +29,6 @@ class Product extends Model
         'current_stock' => 0,
         'minimum_stock' => 0,
         'unit' => 'pcs',
-        'is_active' => true
     ];
 
     protected $appends = ['stock_status'];

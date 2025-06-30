@@ -21,7 +21,7 @@
         {{-- Kartu Ringkasan Stok --}}
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
             <div class="p-6 bg-white dark:bg-slate-800 rounded-lg shadow"><h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Varian Produk</h4><p class="text-3xl font-bold text-gray-800 dark:text-white mt-1">{{ number_format($products->total()) }}</p></div>
-            <div class="p-6 bg-white dark:bg-slate-800 rounded-lg shadow"><h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Produk Stok Rendah</h4><p class="text-3xl font-bold text-yellow-500 mt-1">{{ $products->filter(fn($p) => $p->current_stock <= $p->min_stock && $p->current_stock > 0)->count() }}</p></div>
+            <div class="p-6 bg-white dark:bg-slate-800 rounded-lg shadow"><h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Produk Stok Rendah</h4><p class="text-3xl font-bold text-yellow-500 mt-1">{{ $products->filter(fn($p) => $p->current_stock <= $p->minimum_stock && $p->current_stock > 0)->count() }}</p></div>
             <div class="p-6 bg-white dark:bg-slate-800 rounded-lg shadow"><h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Produk Stok Habis</h4><p class="text-3xl font-bold text-red-500 mt-1">{{ $products->filter(fn($p) => $p->current_stock <= 0)->count() }}</p></div>
         </div>
 
@@ -45,7 +45,7 @@
                     </div>
                 </form>
             </div>
-            
+
             <div class="overflow-x-auto">
                 <table class="w-full table-auto">
                     <thead class="bg-gray-50 dark:bg-slate-700">
@@ -77,7 +77,7 @@
                             {{-- Kolom Stok (rata tengah) --}}
                             <td class="px-6 py-4 text-center">
                                 <p class="text-lg font-bold text-gray-900 dark:text-white">{{ number_format($product->current_stock) }}</p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">Min: {{ number_format($product->min_stock) }} {{ $product->unit }}</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Min: {{ number_format($product->minimum_stock) }} {{ $product->unit }}</p>
                             </td>
                             {{-- Kolom Status (rata tengah) --}}
                             <td class="px-6 py-4 text-center">

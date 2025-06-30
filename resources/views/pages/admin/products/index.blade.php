@@ -102,9 +102,7 @@
                             @else
                                 <span class="inline-flex px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full dark:bg-green-900/50 dark:text-green-300">Normal</span>
                             @endif
-                            @if(!$product->is_active)
-                                <span class="inline-flex px-2 py-1 mt-1 text-xs font-semibold text-gray-800 bg-gray-100 rounded-full dark:bg-gray-900/50 dark:text-gray-300">Nonaktif</span>
-                            @endif
+
                         </td>
                         <td class="px-6 py-4 text-sm font-medium text-center whitespace-nowrap">
                             <div class="flex items-center justify-center space-x-2">

@@ -42,11 +42,11 @@
             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Isi semua informasi yang diperlukan untuk menambahkan produk baru</p>
         </div>
 
-        <form action="{{ route('admin.products.store') }}" method="POST" enctype="multipart/form-data" class="p-6">
+        <form action="{{ route('admin.products.store') }}" method="POST" enctype="multipart/form-data" class="p-6" id="productForm">
             @csrf
 
             <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <!-- Informasi Dasar -->
+                <!-- Basic Information -->
                 <div class="space-y-6">
                     <div>
                         <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
@@ -54,7 +54,7 @@
                         </label>
                         <input type="text" id="name" name="name" value="{{ old('name') }}" required
                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 @error('name') border-red-500 dark:border-red-500 @enderror"
-                               placeholder="Contoh: Laptop ASUS ROG">
+                               placeholder="Contoh: Laptop ASUS ROG" autofocus>
                         @error('name')
                             <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                         @enderror
@@ -114,7 +114,7 @@
                     </div>
                 </div>
 
-                <!-- Informasi Harga & Stok -->
+                <!-- Price & Stock Information -->
                 <div class="space-y-6">
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div>
@@ -196,10 +196,12 @@
                         @enderror
                     </div>
 
+
+
                 </div>
             </div>
 
-            <!-- Gambar Produk -->
+            <!-- Product Image -->
             <div class="mt-6">
                 <label for="image" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                     Gambar Produk
@@ -228,7 +230,7 @@
                 </div>
             </div>
 
-            <!-- Deskripsi -->
+            <!-- Description -->
             <div class="mt-6">
                 <label for="description" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                     Deskripsi Produk
@@ -241,13 +243,13 @@
                 @enderror
             </div>
 
-            <!-- Tombol Aksi -->
+            <!-- Action Buttons -->
             <div class="flex items-center justify-end mt-8 space-x-3">
                 <a href="{{ route('admin.products.index') }}"
                    class="px-5 py-2.5 text-sm font-medium text-gray-900 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700">
                     Batal
                 </a>
-                <button type="submit"
+                <button type="submit" id="submitButton"
                         class="px-5 py-2.5 text-sm font-medium text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
                     <i class="mr-1 fas fa-save"></i> Simpan Produk
                 </button>
@@ -259,6 +261,12 @@
 @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Auto focus on name field
+            const nameInput = document.getElementById('name');
+            if (nameInput) {
+                nameInput.focus();
+            }
+
             // Currency formatting functions
             function formatCurrencyDisplay(value) {
                 return parseInt(value || 0).toLocaleString('id-ID');
@@ -320,7 +328,7 @@
                     if (file) {
                         // Validate file size (2MB)
                         if (file.size > 2 * 1024 * 1024) {
-                            alert('Ukuran file terlalu besar. Maksimal 2MB.');
+                            showAlert('error', 'Ukuran file terlalu besar. Maksimal 2MB.');
                             this.value = '';
                             return;
                         }
@@ -328,7 +336,7 @@
                         // Validate file type
                         const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
                         if (!allowedTypes.includes(file.type)) {
-                            alert('Format file tidak didukung. Gunakan JPG, PNG, atau GIF.');
+                            showAlert('error', 'Format file tidak didukung. Gunakan JPG, PNG, atau GIF.');
                             this.value = '';
                             return;
                         }
@@ -350,7 +358,6 @@
             }
 
             // Auto-generate SKU from product name
-            const nameInput = document.getElementById('name');
             const skuInput = document.getElementById('sku');
             const generateSkuBtn = document.getElementById('generateSkuBtn');
 
@@ -372,7 +379,7 @@
                     if (nameInput.value.length >= 3) {
                         generateSKU(nameInput.value);
                     } else {
-                        alert('Nama produk minimal 3 karakter');
+                        showAlert('warning', 'Nama produk minimal 3 karakter');
                         nameInput.focus();
                     }
                 });
@@ -400,11 +407,39 @@
                 }
             }
 
-                    // Form validation
-            const form = document.querySelector('form');
+            // Form validation
+            const form = document.getElementById('productForm');
             if (form) {
                 form.addEventListener('submit', function(e) {
-                    // [Kode validasi yang sudah ada...]
+                    // Validate required fields
+                    const requiredFields = ['name', 'sku', 'category_id', 'purchase_price_raw', 'selling_price_raw', 'current_stock', 'minimum_stock', 'unit'];
+                    let hasError = false;
+
+                    requiredFields.forEach(fieldName => {
+                        const field = document.querySelector(`[name="${fieldName}"]`);
+                        if (field && !field.value.trim()) {
+                            hasError = true;
+                            field.focus();
+                            showAlert('error', `Field ${fieldName.replace('_', ' ')} harus diisi`);
+                            return false;
+                        }
+                    });
+
+                    if (hasError) {
+                        e.preventDefault();
+                        return false;
+                    }
+
+                    // Validate prices
+                    const purchasePrice = parseInt(document.getElementById('purchase_price_raw').value);
+                    const sellingPrice = parseInt(document.getElementById('selling_price_raw').value);
+
+                    if (sellingPrice <= purchasePrice) {
+                        e.preventDefault();
+                        showAlert('error', 'Harga jual harus lebih besar dari harga beli');
+                        document.getElementById('selling_price_display').focus();
+                        return false;
+                    }
 
                     // Validate stock
                     const currentStock = parseInt(document.getElementById('current_stock').value);
@@ -412,42 +447,34 @@
 
                     if (currentStock < 0 || minimumStock < 0) {
                         e.preventDefault();
-                        alert('Stok tidak boleh bernilai negatif.');
+                        showAlert('error', 'Stok tidak boleh bernilai negatif');
                         return false;
                     }
 
-                    // Validasi tambahan: stok minimum tidak boleh lebih besar dari stok awal
+                    // Validate minimum stock not greater than current stock
                     if (minimumStock > currentStock) {
                         e.preventDefault();
-                        alert('Stok minimum tidak boleh lebih besar dari stok awal.');
+                        showAlert('error', 'Stok minimum tidak boleh lebih besar dari stok awal');
                         document.getElementById('minimum_stock').focus();
                         return false;
                     }
-                });
-            }
 
-            // Tambahkan event listener untuk memastikan harga jual > harga beli
-            const sellingPriceDisplay = document.getElementById('selling_price_display');
-            if (sellingPriceDisplay) {
-                sellingPriceDisplay.addEventListener('blur', function() {
-                    const purchasePrice = parseInt(document.getElementById('purchase_price_raw').value);
-                    const sellingPrice = parseInt(document.getElementById('selling_price_raw').value);
-
-                    if (sellingPrice <= purchasePrice) {
-                        alert('Harga jual harus lebih besar dari harga beli.');
-                        this.focus();
+                    // Show loading state
+                    const submitButton = document.getElementById('submitButton');
+                    if (submitButton) {
+                        submitButton.disabled = true;
+                        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Menyimpan...';
                     }
                 });
             }
 
-            // Tambahkan loading state saat form submit
-            form.addEventListener('submit', function() {
-                const submitButton = form.querySelector('button[type="submit"]');
-                if (submitButton) {
-                    submitButton.disabled = true;
-                    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Menyimpan...';
-                }
-            });
+
+
+            // Alert helper function
+            function showAlert(type, message) {
+                // You can replace this with a more sophisticated alert system like SweetAlert
+                alert(`${type.toUpperCase()}: ${message}`);
+            }
         });
     </script>
 @endpush

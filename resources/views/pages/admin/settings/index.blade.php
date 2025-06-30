@@ -16,18 +16,18 @@
 
     <!-- Alert Messages -->
     @if(session('success'))
-        <div class="mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg dark:bg-green-800 dark:border-green-600 dark:text-green-200">
+        <div class="p-4 mb-6 text-green-700 bg-green-100 border border-green-400 rounded-lg dark:bg-green-800 dark:border-green-600 dark:text-green-200">
             <div class="flex items-center">
-                <i class="fas fa-check-circle mr-2"></i>
+                <i class="mr-2 fas fa-check-circle"></i>
                 {{ session('success') }}
             </div>
         </div>
     @endif
 
     @if(session('error'))
-        <div class="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg dark:bg-red-800 dark:border-red-600 dark:text-red-200">
+        <div class="p-4 mb-6 text-red-700 bg-red-100 border border-red-400 rounded-lg dark:bg-red-800 dark:border-red-600 dark:text-red-200">
             <div class="flex items-center">
-                <i class="fas fa-exclamation-circle mr-2"></i>
+                <i class="mr-2 fas fa-exclamation-circle"></i>
                 {{ session('error') }}
             </div>
         </div>
@@ -41,7 +41,7 @@
                 </div>
                 <div>
                     <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Konfigurasi Aplikasi</h2>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Kelola pengaturan umum aplikasi Anda</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Kelola pengaturan dasar aplikasi</p>
                 </div>
             </div>
         </div>
@@ -49,23 +49,23 @@
         <div class="p-6">
             <form method="POST" action="{{ route('admin.settings.update') }}" enctype="multipart/form-data">
                 @csrf
-                @method('POST') {{-- Atau PUT jika Anda mendefinisikan route sebagai PUT/PATCH --}}
+                @method('PUT')
 
                 <div class="space-y-6">
                     <!-- App Name Section -->
-                    <div class="border-b border-gray-200 dark:border-gray-700 pb-6">
-                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Informasi Aplikasi</h3>
-                        
+                    <div class="pb-6 border-b border-gray-200 dark:border-gray-700">
+                        <h3 class="mb-4 text-lg font-medium text-gray-900 dark:text-white">Informasi Aplikasi</h3>
+
                         <div class="space-y-4">
                             <div>
-                                <label for="app_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                <label for="app_name" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                                     Nama Aplikasi
                                 </label>
-                                <input type="text" 
-                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('app_name') border-red-500 @enderror" 
-                                       id="app_name" 
-                                       name="app_name" 
-                                       value="{{ old('app_name', $app_name ?? '') }}" 
+                                <input type="text"
+                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('app_name') border-red-500 @enderror"
+                                       id="app_name"
+                                       name="app_name"
+                                       value="{{ old('app_name', $app_name ?? '') }}"
                                        placeholder="Masukkan nama aplikasi"
                                        required>
                                 @error('app_name')
@@ -76,17 +76,16 @@
                     </div>
 
                     <!-- Logo Section -->
-                    <div class="border-b border-gray-200 dark:border-gray-700 pb-6">
-                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Logo Aplikasi</h3>
-                        
+                    <div class="pb-6 border-b border-gray-200 dark:border-gray-700">
+                        <h3 class="mb-4 text-lg font-medium text-gray-900 dark:text-white">Logo Aplikasi</h3>
+
                         <div class="space-y-4">
                             <!-- Current Logo Display -->
                             <div class="flex items-center space-x-4">
                                 <div class="flex-shrink-0">
-                                    {{-- Container untuk preview logo --}}
-                                    <img src="{{ $app_logo ?? 'https://via.placeholder.com/80x80.png?text=No+Logo' }}" 
-                                         alt="Logo Aplikasi" 
-                                         id="logo-preview" {{-- ID untuk Javascript --}}
+                                    <img src="{{ $app_logo ?? 'https://via.placeholder.com/80x80.png?text=No+Logo' }}"
+                                         alt="Logo Aplikasi"
+                                         id="logo-preview"
                                          class="object-contain w-20 h-20 bg-gray-100 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600">
                                 </div>
                                 <div>
@@ -96,10 +95,10 @@
                                     <p class="text-xs text-gray-500 dark:text-gray-400">Unggah file baru untuk mengganti logo</p>
                                 </div>
                             </div>
-                           
+
                             <!-- File Upload -->
                             <div>
-                                <label for="app_logo" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                <label for="app_logo" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                                     Upload Logo Baru
                                 </label>
                                 <div class="flex items-center justify-center w-full">
@@ -111,12 +110,11 @@
                                             </p>
                                             <p class="text-xs text-gray-500 dark:text-gray-400">PNG, JPG, GIF, SVG (MAX. 2MB)</p>
                                         </div>
-                                        {{-- Tampilkan nama file yang dipilih --}}
                                         <div id="file-name-display" class="hidden text-sm text-gray-700 dark:text-gray-300"></div>
-                                        <input id="app_logo" 
-                                               name="app_logo" 
-                                               type="file" 
-                                               class="hidden @error('app_logo') border-red-500 @enderror" 
+                                        <input id="app_logo"
+                                               name="app_logo"
+                                               type="file"
+                                               class="hidden @error('app_logo') border-red-500 @enderror"
                                                accept="image/png, image/jpeg, image/jpg, image/gif, image/svg+xml">
                                     </label>
                                 </div>
@@ -128,90 +126,18 @@
                     </div>
 
                     <!-- Action Buttons -->
-                    <div class="flex items-center justify-end space-x-4 pt-4">
-                        <a href="{{ route('admin.dashboard') }}" 
-                           class="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-300 dark:hover:bg-gray-500 transition-colors duration-150">
-                            <i class="fas fa-times mr-2"></i>Batal
+                    <div class="flex items-center justify-end pt-4 space-x-4">
+                        <a href="{{ route('admin.dashboard') }}"
+                           class="px-4 py-2 text-gray-700 transition-colors duration-150 bg-gray-200 rounded-lg hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-300 dark:hover:bg-gray-500">
+                            <i class="mr-2 fas fa-times"></i>Batal
                         </a>
-                        <button type="submit" 
-                                class="px-6 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors duration-150">
-                            <i class="fas fa-save mr-2"></i>Simpan Perubahan
+                        <button type="submit"
+                                class="px-6 py-2 text-white transition-colors duration-150 bg-blue-600 rounded-lg hover:bg-blue-700">
+                            <i class="mr-2 fas fa-save"></i>Simpan Perubahan
                         </button>
                     </div>
                 </div>
             </form>
-        </div>
-    </div>
-
-    <!-- ... Sisa kode (cards) bisa tetap sama ... -->
-    <div class="grid grid-cols-1 gap-6 mt-6 md:grid-cols-2 lg:grid-cols-3">
-        <!-- System Info Card -->
-        <div class="overflow-hidden bg-white rounded-lg shadow dark:bg-gray-800">
-            <div class="p-6">
-                <div class="flex items-center">
-                    <div class="flex items-center justify-center w-10 h-10 mr-3 bg-green-100 rounded-lg dark:bg-green-800">
-                        <i class="text-green-600 fas fa-server dark:text-green-300"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Sistem</h3>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Informasi sistem</p>
-                    </div>
-                </div>
-                <div class="mt-4 space-y-2">
-                    <div class="flex justify-between text-sm">
-                        <span class="text-gray-500 dark:text-gray-400">Laravel:</span>
-                        <span class="font-medium text-gray-900 dark:text-white">{{ app()->version() }}</span>
-                    </div>
-                    <div class="flex justify-between text-sm">
-                        <span class="text-gray-500 dark:text-gray-400">PHP:</span>
-                        <span class="font-medium text-gray-900 dark:text-white">{{ PHP_VERSION }}</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Cache Management Card -->
-        <div class="overflow-hidden bg-white rounded-lg shadow dark:bg-gray-800">
-            <div class="p-6">
-                <div class="flex items-center">
-                    <div class="flex items-center justify-center w-10 h-10 mr-3 bg-orange-100 rounded-lg dark:bg-orange-800">
-                        <i class="text-orange-600 fas fa-bolt dark:text-orange-300"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Cache</h3>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Kelola cache aplikasi</p>
-                    </div>
-                </div>
-                <div class="mt-4">
-                    <button type="button" 
-                            onclick="clearCache()"
-                            class="w-full px-4 py-2 text-sm font-medium text-orange-600 bg-orange-100 rounded-lg hover:bg-orange-200 dark:bg-orange-800 dark:text-orange-200 dark:hover:bg-orange-700 transition-colors duration-150">
-                        <i class="fas fa-trash mr-2"></i>Clear Cache
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Backup Card -->
-        <div class="overflow-hidden bg-white rounded-lg shadow dark:bg-gray-800">
-            <div class="p-6">
-                <div class="flex items-center">
-                    <div class="flex items-center justify-center w-10 h-10 mr-3 bg-purple-100 rounded-lg dark:bg-purple-800">
-                        <i class="text-purple-600 fas fa-database dark:text-purple-300"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Backup</h3>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Backup database</p>
-                    </div>
-                </div>
-                <div class="mt-4">
-                    <button type="button" 
-                            onclick="createBackup()"
-                            class="w-full px-4 py-2 text-sm font-medium text-purple-600 bg-purple-100 rounded-lg hover:bg-purple-200 dark:bg-purple-800 dark:text-purple-200 dark:hover:bg-purple-700 transition-colors duration-150">
-                        <i class="fas fa-download mr-2"></i>Create Backup
-                    </button>
-                </div>
-            </div>
         </div>
     </div>
 @endsection
@@ -248,13 +174,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     logoPreview.src = event.target.result;
                 }
                 reader.readAsDataURL(file);
-                
+
                 logoStatus.textContent = 'Logo Pratinjau';
-                uploadBoxText.classList.add('hidden'); // Sembunyikan teks "Klik untuk upload"
-                fileNameDisplay.textContent = file.name; // Tampilkan nama file
+                uploadBoxText.classList.add('hidden');
+                fileNameDisplay.textContent = file.name;
                 fileNameDisplay.classList.remove('hidden');
             } else {
-                // Jika user membatalkan pilihan file
                 logoPreview.src = "{{ $app_logo ?? 'https://via.placeholder.com/80x80.png?text=No+Logo' }}";
                 logoStatus.textContent = "@if(isset($app_logo) && $app_logo) Logo Saat Ini @else Belum Ada Logo @endif";
                 uploadBoxText.classList.remove('hidden');
@@ -263,15 +188,5 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
-
-// Clear Cache Function (tetap sama)
-function clearCache() {
-    // ... kode clearCache Anda sudah benar
-}
-
-// Create Backup Function (tetap sama)
-function createBackup() {
-    // ... kode createBackup Anda sudah benar
-}
 </script>
 @endpush

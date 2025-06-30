@@ -3,113 +3,246 @@
 @section('title', 'Manajemen Supplier')
 
 @section('content')
-    <div class="mb-6">
-        <div class="flex items-center mb-2 space-x-2 text-sm text-gray-600 dark:text-gray-400">
-            <a href="{{ route('admin.dashboard') }}" class="hover:text-blue-600">Dashboard</a>
-            <span>/</span>
-            <span>Supplier</span>
-        </div>
-        <div class="flex items-center justify-between">
-            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Daftar Supplier</h1>
-            <a href="{{ route('admin.suppliers.create') }}" class="px-4 py-2 text-white transition duration-150 bg-blue-600 rounded-lg hover:bg-blue-700">
-                <i class="mr-2 fas fa-plus"></i>Tambah Supplier
-            </a>
-        </div>
+<div class="mb-6">
+    <div class="flex items-center mb-2 space-x-2 text-sm text-gray-600 dark:text-gray-400">
+        <a href="{{ route('admin.dashboard') }}" class="hover:text-blue-600">Dashboard</a>
+        <span>/</span>
+        <span>Supplier</span>
     </div>
+    <div class="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Daftar Supplier</h1>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                Kelola data supplier dan produk yang mereka sediakan
+            </p>
+        </div>
+        <a href="{{ route('admin.suppliers.create') }}" class="flex items-center px-4 py-2 text-sm font-medium text-white transition duration-150 bg-blue-600 rounded-lg hover:bg-blue-700">
+            <svg class="w-5 h-5 mr-2 -ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+            Tambah Supplier
+        </a>
+    </div>
+</div>
 
-    <div class="overflow-hidden bg-white rounded-lg shadow dark:bg-gray-800">
-        <div class="p-4 border-b border-gray-200 dark:border-gray-700">
-            <form action="{{ route('admin.suppliers.index') }}" method="GET">
+<div class="overflow-hidden bg-white rounded-lg shadow dark:bg-gray-800">
+    <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+        <div class="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
+            <form action="{{ route('admin.suppliers.index') }}" method="GET" class="w-full md:w-auto">
                 <div class="flex items-center">
                     <input type="text" name="search" value="{{ request('search') }}"
                            placeholder="Cari supplier..."
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg md:w-64 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                    <button type="submit" class="px-4 py-2 ml-2 text-white transition duration-150 bg-blue-600 rounded-lg hover:bg-blue-700">
-                        <i class="fas fa-search"></i>
+                           class="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg md:w-64 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400">
+                    <button type="submit" class="px-4 py-2 ml-2 text-sm font-medium text-white transition duration-150 bg-blue-600 rounded-lg hover:bg-blue-700">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
                     </button>
                 </div>
             </form>
+            <div class="text-sm text-gray-500 dark:text-gray-400">
+                Total: {{ $suppliers->total() }} supplier
+            </div>
         </div>
-
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead class="bg-gray-50 dark:bg-gray-700">
-                    <tr>
-                        <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-300">Nama</th>
-                        <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-300">Contact Person</th>
-                        <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-300">Telepon</th>
-                        <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-300">Email</th>
-                        <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-right text-gray-500 uppercase dark:text-gray-300">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
-                    @forelse($suppliers as $supplier)
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="font-medium text-gray-900 dark:text-white">{{ $supplier->name }}</div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400">{{ Str::limit($supplier->address, 30) }}</div>
-                        </td>
-                        <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap dark:text-gray-400">
-                            {{ $supplier->contact_person }}
-                        </td>
-                        <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap dark:text-gray-400">
-                            {{ $supplier->phone }}
-                        </td>
-                        <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap dark:text-gray-400">
-                            {{ $supplier->email ?? '-' }}
-                        </td>
-                        <td class="px-6 py-4 text-sm font-medium text-right whitespace-nowrap">
-                            <a href="{{ route('admin.suppliers.show', $supplier->id) }}" class="mr-3 text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                            <a href="{{ route('admin.suppliers.edit', $supplier->id) }}" class="mr-3 text-yellow-600 hover:text-yellow-900 dark:text-yellow-400 dark:hover:text-yellow-300">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <form action="{{ route('admin.suppliers.destroy', $supplier->id) }}" method="POST" class="inline">
-                                @csrf
-                                @method('DELETE')
-                                <button type="button" onclick="confirmDelete(this)" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
-                                    <i class="fas fa-trash-alt"></i>
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="5" class="px-6 py-4 text-sm text-center text-gray-500 dark:text-gray-400">
-                            Tidak ada data supplier ditemukan
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-
-        @if($suppliers->hasPages())
-        <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-            {{ $suppliers->appends(request()->query())->links() }}
-        </div>
-        @endif
     </div>
+
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead class="bg-gray-50 dark:bg-gray-700">
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-300">
+                        <div class="flex items-center">
+                            Nama Supplier
+                            <a href="{{ request()->fullUrlWithQuery(['sort' => 'name', 'direction' => request('direction') == 'asc' ? 'desc' : 'asc']) }}">
+                                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                                </svg>
+                            </a>
+                        </div>
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-300">Kontak</th>
+                    <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-300">Produk</th>
+                    <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-right text-gray-500 uppercase dark:text-gray-300">Aksi</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
+                @forelse($suppliers as $supplier)
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 w-10 h-10">
+                                <div class="flex items-center justify-center w-full h-full text-blue-600 bg-blue-100 rounded-full dark:text-blue-300 dark:bg-blue-900">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="ml-4">
+                                <div class="font-medium text-gray-900 dark:text-white">{{ $supplier->name }}</div>
+                                <div class="text-sm text-gray-500 dark:text-gray-400">{{ $supplier->email }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900 dark:text-white">{{ $supplier->contact_person }}</div>
+                        <div class="text-sm text-gray-500 dark:text-gray-400">{{ $supplier->phone }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="inline-flex px-2 text-xs font-semibold leading-5 text-green-800 bg-green-100 rounded-full dark:bg-green-900 dark:text-green-200">
+                            {{ $supplier->products_count }} Produk
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-sm font-medium text-right whitespace-nowrap">
+                        <div class="flex items-center justify-end space-x-2">
+                            <a href="{{ route('admin.suppliers.show', $supplier->id) }}"
+                               class="p-2 text-blue-600 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-700 dark:text-blue-400"
+                               title="Detail">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                </svg>
+                            </a>
+                            <a href="{{ route('admin.suppliers.edit', $supplier->id) }}"
+                               class="p-2 text-yellow-600 rounded-lg hover:bg-yellow-50 dark:hover:bg-gray-700 dark:text-yellow-400"
+                               title="Edit">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                </svg>
+                            </a>
+                            @if($supplier->products_count == 0)
+                                <button onclick="openDeleteModal('{{ $supplier->id }}', '{{ $supplier->name }}')"
+                                        class="p-2 text-red-600 rounded-lg hover:bg-red-50 dark:hover:bg-gray-700 dark:text-red-400"
+                                        title="Hapus">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                </button>
+                            @else
+                                <button disabled
+                                        class="p-2 text-gray-400 cursor-not-allowed dark:text-gray-500"
+                                        title="Tidak dapat dihapus karena memiliki produk">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                </button>
+                            @endif
+                        </div>
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="4" class="px-6 py-4 text-sm text-center text-gray-500 dark:text-gray-400">
+                        <div class="flex flex-col items-center justify-center py-8">
+                            <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <p class="mt-4 font-medium text-gray-500">Tidak ada data supplier</p>
+                            <p class="text-sm text-gray-400">Tambahkan supplier baru dengan menekan tombol di atas</p>
+                        </div>
+                    </td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+
+    @if($suppliers->hasPages())
+    <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+        {{ $suppliers->appends(request()->query())->links() }}
+    </div>
+    @endif
+</div>
+
+<!-- Modal Konfirmasi Hapus -->
+<div id="deleteModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+            <div class="absolute inset-0 bg-gray-500 opacity-75 dark:bg-gray-900 dark:opacity-80"></div>
+        </div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block overflow-hidden text-left align-bottom transition-all transform bg-white rounded-lg shadow-xl sm:my-8 sm:align-middle sm:max-w-lg sm:w-full dark:bg-gray-800">
+            <div class="px-4 pt-5 pb-4 bg-white sm:p-6 sm:pb-4 dark:bg-gray-800">
+                <div class="sm:flex sm:items-start">
+                    <div class="flex items-center justify-center flex-shrink-0 w-12 h-12 mx-auto bg-red-100 rounded-full sm:mx-0 sm:h-10 sm:w-10 dark:bg-red-900">
+                        <svg class="w-6 h-6 text-red-600 dark:text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                    </div>
+                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                        <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-white" id="modal-title">
+                            Hapus Supplier
+                        </h3>
+                        <div class="mt-2">
+                            <p class="text-sm text-gray-500 dark:text-gray-300">
+                                Anda akan menghapus supplier: <span id="supplierName" class="font-semibold"></span>.<br>
+                                Data yang dihapus dapat dipulihkan melalui menu trash.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="px-4 py-3 bg-gray-50 sm:px-6 sm:flex sm:flex-row-reverse dark:bg-gray-700">
+                <form id="deleteForm" method="POST">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="inline-flex justify-center w-full px-4 py-2 text-base font-medium text-white bg-red-600 border border-transparent rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">
+                        Hapus
+                    </button>
+                </form>
+                <button type="button" onclick="closeDeleteModal()" class="inline-flex justify-center w-full px-4 py-2 mt-3 text-base font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm dark:bg-gray-600 dark:text-white dark:border-gray-600 dark:hover:bg-gray-500">
+                    Batal
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
 <script>
-    function confirmDelete(form) {
-        Swal.fire({
-            title: 'Hapus Supplier?',
-            text: "Data supplier akan dihapus permanen!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Ya, Hapus!',
-            cancelButtonText: 'Batal'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                form.closest('form').submit();
-            }
-        });
+    function openDeleteModal(id, name) {
+        const modal = document.getElementById('deleteModal');
+        const form = document.getElementById('deleteForm');
+        const nameSpan = document.getElementById('supplierName');
+        form.action = `/admin/suppliers/${id}`;
+        nameSpan.textContent = name;
+        modal.classList.remove('hidden');
     }
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').classList.add('hidden');
+    }
+    document.getElementById('deleteForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const form = this;
+        const url = form.action;
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': form.querySelector('input[name="_token"]').value,
+                'X-HTTP-Method-Override': 'DELETE',
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({})
+        })
+        .then(response => {
+            if (response.redirected) {
+                window.location.href = response.url;
+            } else {
+                return response.json();
+            }
+        })
+        .then(data => {
+            closeDeleteModal();
+            if (data && data.success) {
+                alert('Supplier telah dihapus.');
+                window.location.reload();
+            }
+        })
+        .catch(error => {
+            closeDeleteModal();
+            alert('Terjadi kesalahan saat menghapus supplier.');
+        });
+    });
 </script>
 @endpush

@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use Dotenv\Dotenv;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class SettingsController extends Controller
 {
@@ -17,77 +17,101 @@ class SettingsController extends Controller
         ]);
     }
 
-    public function update(Request $request)
-    {
-        $request->validate([
-            'app_name' => 'required|string|max:255',
-            'app_logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-        ]);
-
-        try {
-            // Update app name dalam tanda kutip untuk handle spasi
-            $this->updateEnv('APP_NAME', '"' . $request->app_name . '"');
-
-            // Handle logo upload
-            if ($request->hasFile('app_logo')) {
-                $this->handleLogoUpload($request->file('app_logo'));
-            }
-
-            // Hapus cache agar perubahan .env terbaca
-            Artisan::call('config:clear');
-            Artisan::call('cache:clear');
-
-            return back()->with('success', 'Pengaturan berhasil diperbarui!');
-            
-        } catch (\Exception $e) {
-            return back()->with('error', 'Gagal memperbarui pengaturan: '.$e->getMessage());
-        }
+private function handleLogoUpload($file)
+{
+    // Hapus logo lama jika ada
+    $oldLogo = config('app.logo');
+    if ($oldLogo && Storage::disk('public')->exists($oldLogo)) {
+        Storage::disk('public')->delete($oldLogo);
     }
 
-    private function getLogoUrl()
-    {
-        $logoPath = config('app.logo');
-        // Pastikan path ada dan file-nya benar-benar ada di storage
-        if ($logoPath && Storage::disk('public')->exists($logoPath)) {
-            // Gunakan Storage::url untuk mendapatkan URL yang benar (/storage/logos/...)
-            return Storage::disk('public')->url($logoPath);
+    // Simpan logo baru
+    $path = $file->store('logos', 'public');
+
+    // Update .env
+    $this->updateEnv('APP_LOGO', $path);
+
+    return $path;
+}
+
+   public function update(Request $request)
+{
+    $request->validate([
+        'app_name' => 'required|string|max:255',
+        'app_logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+    ]);
+
+    try {
+        // Update APP_NAME
+        $this->updateEnv('APP_NAME', $request->app_name);
+
+        // Handle logo upload
+        if ($request->hasFile('app_logo')) {
+            $this->handleLogoUpload($request->file('app_logo'));
         }
-        return null; // Kembalikan null jika tidak ada logo
+
+        // Clear semua cache
+        Artisan::call('config:clear');
+        Artisan::call('cache:clear');
+        Artisan::call('view:clear');
+
+        // Reload environment
+        $dotenv = Dotenv::createImmutable(base_path());
+        $dotenv->load();
+
+        return back()->with('success', 'Pengaturan berhasil diperbarui!');
+    } catch (\Exception $e) {
+        return back()->with('error', 'Gagal memperbarui: '.$e->getMessage());
+    }
+}
+
+private function getLogoUrl()
+{
+    $logoPath = config('app.logo');
+    if ($logoPath && Storage::disk('public')->exists($logoPath)) {
+        return asset('storage/' . $logoPath);
+    }
+    return null;
+}
+
+
+
+   private function updateEnv($key, $value)
+{
+    $envPath = app()->environmentFilePath();
+
+    // Baca konten file
+    $envContent = file_get_contents($envPath);
+
+    // Escape value jika mengandung spasi
+    if (preg_match('/\s/', $value) && !preg_match('/^[\'"].*[\'"]$/', $value)) {
+        $value = '"'.$value.'"';
     }
 
-    private function handleLogoUpload($file)
-    {
-        // Hapus logo lama jika ada
-        $oldLogoPath = config('app.logo');
-        if ($oldLogoPath && Storage::disk('public')->exists($oldLogoPath)) {
-            Storage::disk('public')->delete($oldLogoPath);
-        }
-
-        // Simpan logo baru di `storage/app/public/logos`
-        // `store` akan mengembalikan path relatif seperti `logos/namafile.ext`
-        $path = $file->store('logos', 'public');
-        
-        // Simpan path relatif ini ke .env
-        $this->updateEnv('APP_LOGO', $path);
+    // Update atau tambahkan key
+    if (strpos($envContent, "$key=") !== false) {
+        $envContent = preg_replace(
+            "/^{$key}=.*/m",
+            "{$key}={$value}",
+            $envContent
+        );
+    } else {
+        $envContent .= "\n{$key}={$value}\n";
     }
 
-    private function updateEnv($key, $value)
+    // Tulis kembali ke file
+    file_put_contents($envPath, $envContent);
+
+    // Pastikan permission file benar
+    chmod($envPath, 0644);
+}
+
+    public function clearCache()
     {
-        $envPath = app()->environmentFilePath();
-        $envContent = file_get_contents($envPath);
-        
-        $oldValue = env($key);
-        $oldLine = "{$key}={$oldValue}";
-        $newLine = "{$key}={$value}";
+        Artisan::call('cache:clear');
+        Artisan::call('config:clear');
+        Artisan::call('view:clear');
 
-        if (preg_match("/^{$key}=/m", $envContent)) {
-            // Jika key sudah ada, ganti barisnya
-            $envContent = preg_replace("/^{$key}=.*/m", $newLine, $envContent);
-        } else {
-            // Jika key belum ada, tambahkan di akhir
-            $envContent .= "\n" . $newLine . "\n";
-        }
-
-        file_put_contents($envPath, $envContent);
+        return back()->with('success', 'Cache berhasil dibersihkan!');
     }
 }
