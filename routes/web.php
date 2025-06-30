@@ -7,7 +7,8 @@ use App\Http\Controllers\ManagerDashboardController;
 use App\Http\Controllers\StaffDashboardController;
 use App\Http\Controllers\StaffTaskController;
 use App\Http\Controllers\StaffReportController;
-use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\UserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -101,17 +102,14 @@ Route::middleware(['auth', 'role:Admin'])->prefix('admin')->name('admin.')->grou
 
     // System Reports
     Route::get('/reports', [AdminDashboardController::class, 'reportIndex'])->name('reports.index');
-    Route::get('/reports/stock', [AdminDashboardController::class, 'reportStock'])->name('reports.stock');
-    Route::get('/reports/transactions', [AdminDashboardController::class, 'reportTransactions'])->name('reports.transactions');
     Route::get('/reports/users', [AdminDashboardController::class, 'reportUsers'])->name('reports.users');
     Route::get('/reports/system', [AdminDashboardController::class, 'reportSystem'])->name('reports.system');
     Route::get('/reports/system', [ReportController::class, 'system'])->name('reports.system');
     Route::get('/reports/users', [ReportController::class, 'users'])->name('reports.users');
 
     // Settings
-    Route::get('/settings', [SettingController::class, 'index'])->name('settings');
-    Route::get('/settings', [AdminDashboardController::class, 'settings'])->name('settings');
-    Route::put('/settings', [AdminDashboardController::class, 'settingsUpdate'])->name('settings.update');
+    Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
+    Route::post('/settings', [SettingsController::class, 'update'])->name('settings.update');
 });
 
 // ===================================

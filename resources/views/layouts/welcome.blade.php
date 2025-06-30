@@ -89,10 +89,10 @@
                 <div class="absolute top-0 left-0 w-full h-64 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl opacity-10 dark:opacity-20"></div>
                 <div class="relative p-8 bg-white rounded-xl shadow-lg dark:bg-gray-800">
                     <div class="flex items-center">
-                        <img class="w-12 h-12 rounded-full" src="https://randomuser.me/api/portraits/women/42.jpg" alt="Testimonial">
+                        <img class="w-12 h-12 rounded-full" src="https://i.pinimg.com/736x/3b/44/10/3b4410e67b15f8272026cbd411b6e57d.jpg" alt="Testimonial">
                         <div class="ml-4">
-                            <h4 class="text-lg font-semibold text-gray-900 dark:text-white">Sarah Wijaya</h4>
-                            <p class="text-gray-600 dark:text-gray-400">Manajer Gudang, PT Sejahtera</p>
+                            <h4 class="text-lg font-semibold text-gray-900 dark:text-white">Ronaldo Pattripan</h4>
+                            <p class="text-gray-600 dark:text-gray-400">Manajer Gudang, Seven Inc</p>
                         </div>
                     </div>
                     <blockquote class="mt-4 text-gray-700 dark:text-gray-300">
