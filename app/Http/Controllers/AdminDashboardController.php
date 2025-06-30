@@ -486,9 +486,42 @@ class AdminDashboardController extends Controller
     }
 
     // Reports
-    public function reportIndex()
+    public function reportIndex(Request $request)
     {
-        return view('pages.admin.reports.index');
+        // --- Data for Stock Report ---
+        $stockQuery = Product::with('category')->withCount('stockTransactions');
+
+        if ($request->has('category_id') && $request->filled('category_id')) {
+            $stockQuery->where('category_id', $request->category_id);
+        }
+
+        $products = $stockQuery->paginate(10, ['*'], 'productsPage'); // Use a custom page name
+        $categories = Category::orderBy('name')->get();
+
+
+        // --- Data for Transaction Report ---
+        $transactionQuery = StockTransaction::with(['product', 'user'])->latest('created_at');
+
+        if ($request->has('type') && $request->filled('type')) {
+            $transactionQuery->where('type', $request->type);
+        }
+
+        if ($request->has('from') && $request->filled('from')) {
+            $transactionQuery->whereDate('created_at', '>=', $request->from);
+        }
+
+        if ($request->has('to') && $request->filled('to')) {
+            $transactionQuery->whereDate('created_at', '<=', $request->to);
+        }
+        
+        $transactions = $transactionQuery->paginate(10, ['*'], 'transactionsPage'); // Use a custom page name
+
+        // Return the correct view with ALL the necessary data
+        return view('pages.admin.reports.index', compact(
+            'products', 
+            'categories', 
+            'transactions'
+        ));
     }
 
     public function reportStock(Request $request)

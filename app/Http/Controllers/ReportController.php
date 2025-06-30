@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Product;
@@ -10,41 +11,34 @@ use Illuminate\Http\Request;
 
 class ReportController extends Controller
 {
-    public function index(Request $request)
-{
-    // untuk stok
-    $queryProducts = Product::with('category')->withCount('stockTransactions');
-    if ($request->has('category_id') && $request->category_id != '') {
-        $queryProducts->where('category_id', $request->category_id);
-    }
-    $products = $queryProducts->paginate(10);
-    $categories = Category::all();
-
-    // untuk transaksi
-    $queryTransactions = StockTransaction::with(['product', 'user'])->orderBy('created_at', 'desc');
-    if ($request->filled('type')) {
-        $queryTransactions->where('type', $request->type);
-    }
-    if ($request->filled('from') && $request->filled('to')) {
-        $queryTransactions->whereBetween('created_at', [$request->from, $request->to]);
-    }
-    $transactions = $queryTransactions->paginate(10);
-
-    return view('pages.admin.reports.index', compact('products', 'categories', 'transactions'));
-}
-  public function stock(Request $request)
-{
-    $query = Product::with('category')->withCount('stockTransactions');
-
-    if ($request->has('category_id') && $request->category_id != '') {
-        $query->where('category_id', $request->category_id);
+    /**
+     * Display the main report navigation hub.
+     */
+    public function index()
+    {
+        return view('pages.admin.reports.index');
     }
 
-    $products = $query->paginate(20);
-    $categories = Category::all();
+    /**
+     * Display the stock report.
+     */
+    public function stock(Request $request)
+    {
+        $query = Product::with('category')->withCount('stockTransactions');
 
-    return view('pages.admin.reports.stock', compact('products', 'categories'));
-}
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->category_id);
+        }
+
+        $products = $query->latest()->paginate(20);
+        $categories = Category::orderBy('name')->get();
+
+        return view('pages.admin.reports.stock', compact('products', 'categories'));
+    }
+
+    /**
+     * Display the transactions report.
+     */
     public function transactions(Request $request)
     {
         $query = StockTransaction::with(['product', 'user'])->orderBy('created_at', 'desc');
@@ -52,8 +46,7 @@ class ReportController extends Controller
         if ($request->filled('type')) {
             $query->where('type', $request->type);
         }
-
-        // Optional: filter tanggal
+        
         if ($request->filled('from') && $request->filled('to')) {
             $query->whereBetween('created_at', [$request->from, $request->to]);
         }
@@ -63,12 +56,18 @@ class ReportController extends Controller
         return view('pages.admin.reports.transactions', compact('transactions'));
     }
 
+    /**
+     * Display the users report.
+     */
     public function users()
     {
-         $users = User::paginate(15);
+        $users = User::latest()->paginate(15);
         return view('pages.admin.reports.users', compact('users'));
     }
 
+    /**
+     * Display the system statistics report.
+     */
     public function system()
     {
         $systemData = [

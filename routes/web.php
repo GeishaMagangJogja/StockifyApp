@@ -103,16 +103,22 @@ Route::middleware(['auth', 'role:Admin'])->prefix('admin')->name('admin.')->grou
     Route::delete('/suppliers/{supplier}', [AdminDashboardController::class, 'supplierDestroy'])->name('suppliers.destroy');
 
     // System Reports (gunakan controller khusus untuk laporan)
-Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
-Route::get('/reports/stock', [ReportController::class, 'stock'])->name('reports.stock');
-Route::get('/reports/transactions', [ReportController::class, 'transactions'])->name('reports.transactions');
-Route::get('/reports/users', [ReportController::class, 'users'])->name('reports.users');
-Route::get('/reports/system', [ReportController::class, 'system'])->name('reports.system');
+    Route::prefix('reports')->name('reports.')->group(function () {
+        Route::get('/', [ReportController::class, 'index'])->name('index');
+        Route::get('/stock', [ReportController::class, 'stock'])->name('stock');
+        Route::get('/transactions', [ReportController::class, 'transactions'])->name('transactions');
+        Route::get('/users', [ReportController::class, 'users'])->name('users');
+        Route::get('/system', [ReportController::class, 'system'])->name('system');
+    });
 
 
     // Settings
-    Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
-    Route::post('/settings', [SettingsController::class, 'update'])->name('settings.update');
+
+    Route::get('/settings', [AdminDashboardController::class, 'settings'])->name('settings');
+    Route::put('/settings', [AdminDashboardController::class, 'settingsUpdate'])->name('settings.update');
+
+    Route::get('/profile', [AdminDashboardController::class, 'profile'])->name('profile');
+    Route::put('/profile', [AdminDashboardController::class, 'updateProfile'])->name('profile.update');
 });
 
 // ===================================

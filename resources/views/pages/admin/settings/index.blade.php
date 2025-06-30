@@ -65,7 +65,7 @@
                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('app_name') border-red-500 @enderror" 
                                        id="app_name" 
                                        name="app_name" 
-                                       value="{{ old('app_name', $app_name) }}" 
+                                       value="{{ old('app_name', $app_name ?? '') }}" 
                                        placeholder="Masukkan nama aplikasi"
                                        required>
                                 @error('app_name')
@@ -91,7 +91,7 @@
                                 </div>
                                 <div>
                                     <p class="text-sm font-medium text-gray-900 dark:text-white" id="logo-status">
-                                        @if($app_logo) Logo Saat Ini @else Belum Ada Logo @endif
+                                        @if(isset($app_logo) && $app_logo) Logo Saat Ini @else Belum Ada Logo @endif
                                     </p>
                                     <p class="text-xs text-gray-500 dark:text-gray-400">Unggah file baru untuk mengganti logo</p>
                                 </div>
@@ -256,7 +256,7 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 // Jika user membatalkan pilihan file
                 logoPreview.src = "{{ $app_logo ?? 'https://via.placeholder.com/80x80.png?text=No+Logo' }}";
-                logoStatus.textContent = "@if($app_logo) Logo Saat Ini @else Belum Ada Logo @endif";
+                logoStatus.textContent = "@if(isset($app_logo) && $app_logo) Logo Saat Ini @else Belum Ada Logo @endif";
                 uploadBoxText.classList.remove('hidden');
                 fileNameDisplay.classList.add('hidden');
             }
