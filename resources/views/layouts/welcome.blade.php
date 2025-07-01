@@ -6,16 +6,16 @@
 <div class="min-h-screen bg-gradient-to-br from-blue-50 to-gray-50 dark:from-gray-900 dark:to-gray-800">
     <!-- Animated Background Elements -->
     <div class="fixed inset-0 overflow-hidden opacity-10 dark:opacity-20">
-        <div class="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob dark:bg-blue-800"></div>
-        <div class="absolute top-1/3 right-1/4 w-64 h-64 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000 dark:bg-purple-800"></div>
-        <div class="absolute bottom-1/4 left-1/2 w-64 h-64 bg-pink-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000 dark:bg-pink-800"></div>
+        <div class="absolute w-64 h-64 bg-blue-200 rounded-full top-1/4 left-1/4 mix-blend-multiply filter blur-3xl opacity-70 animate-blob dark:bg-blue-800"></div>
+        <div class="absolute w-64 h-64 bg-purple-200 rounded-full top-1/3 right-1/4 mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000 dark:bg-purple-800"></div>
+        <div class="absolute w-64 h-64 bg-pink-200 rounded-full bottom-1/4 left-1/2 mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000 dark:bg-pink-800"></div>
     </div>
 
     <!-- Main Content -->
     <div class="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 py-12 sm:px-6 lg:px-8">
         <!-- Logo/Icon -->
         <div class="mb-8 transition-transform duration-500 transform hover:scale-110">
-            <div class="p-5 bg-blue-600 rounded-2xl shadow-xl dark:bg-blue-700">
+            <div class="p-5 bg-blue-600 shadow-xl rounded-2xl dark:bg-blue-700">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                 </svg>
@@ -87,7 +87,7 @@
         <div class="max-w-3xl mx-auto mt-16">
             <div class="relative">
                 <div class="absolute top-0 left-0 w-full h-64 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl opacity-10 dark:opacity-20"></div>
-                <div class="relative p-8 bg-white rounded-xl shadow-lg dark:bg-gray-800">
+                <div class="relative p-8 bg-white shadow-lg rounded-xl dark:bg-gray-800">
                     <div class="flex items-center">
                         <img class="w-12 h-12 rounded-full" src="https://i.pinimg.com/736x/3b/44/10/3b4410e67b15f8272026cbd411b6e57d.jpg" alt="Testimonial">
                         <div class="ml-4">

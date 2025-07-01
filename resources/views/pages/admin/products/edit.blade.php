@@ -267,24 +267,7 @@
                                 <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Sistem akan memberikan peringatan jika stok mencapai batas ini</p>
                             </div>
 
-                            <!-- Status Aktif -->
-                            <div>
-                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                                    Status Produk
-                                </label>
-                                <div class="flex items-center">
-                                    <input type="checkbox" id="is_active" name="is_active" value="1"
-                                           {{ old('is_active', $product->is_active) ? 'checked' : '' }}
-                                           class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
-                                    <label for="is_active" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">
-                                        Produk Aktif
-                                    </label>
-                                </div>
-                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Nonaktifkan untuk menyembunyikan produk</p>
-                                @error('is_active')
-                                    <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                                @enderror
-                            </div>
+
                         </div>
                     </div>
 
@@ -324,7 +307,7 @@
                                     <img id="imagePreview" class="object-cover w-full h-48 transition-all border-2 border-gray-300 border-dashed rounded-lg dark:border-gray-600 group-hover:border-blue-400"
                                     src="{{ $product->image ? asset('storage/' . $product->image) : 'https://via.placeholder.com/300x200?text=No+Image' }}"
                                     alt="Preview gambar">
-                                    <button type="button" id="removeImageBtn" 
+                                    <button type="button" id="removeImageBtn"
                                             class="absolute flex items-center justify-center p-2 text-white transition-colors bg-red-500 rounded-full shadow-lg -top-2 -right-2 hover:bg-red-600"
                                             style="{{ !$product->image || str_contains($product->image, 'placeholder') ? 'display: none;' : '' }}">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -456,7 +439,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let originalImageSrc = imagePreview.src;
     // Pastikan semua elemen ada sebelum memasang listener
     if (imageInput && imagePreview && removeImageBtn && removeImageInput) {
-    
+
         imageInput.addEventListener('change', function() {
             const file = this.files[0];
             if (file) {
@@ -496,14 +479,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function calculateProfitMargin() {
         if (!profitMarginEl) return;
-        
+
         const purchase = parseInt(purchasePriceRaw.value) || 0;
         const selling = parseInt(sellingPriceRaw.value) || 0;
 
         if (purchase > 0 && selling >= purchase) {
             const margin = selling - purchase;
             const percent = ((margin / purchase) * 100).toFixed(2);
-            
+
             profitMarginEl.querySelector('#marginAmount').textContent = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(margin);
             profitMarginEl.querySelector('#marginPercent').textContent = percent;
             profitMarginEl.style.display = 'block';
@@ -511,7 +494,7 @@ document.addEventListener('DOMContentLoaded', function () {
             profitMarginEl.style.display = 'none';
         }
     }
-    
+
     if (purchasePriceInput && sellingPriceInput) {
         purchasePriceInput.addEventListener('input', () => {
             formatCurrency(purchasePriceInput, purchasePriceRaw);
@@ -522,7 +505,7 @@ document.addEventListener('DOMContentLoaded', function () {
             formatCurrency(sellingPriceInput, sellingPriceRaw);
             calculateProfitMargin();
         });
-        
+
         // Inisialisasi saat halaman dimuat
         calculateProfitMargin();
     }
