@@ -18,9 +18,46 @@
         </div>
     </div>
     {{-- Notifikasi --}}
-    @if(session('success'))
-        <div class="mb-6 p-4 bg-green-100 text-green-700 rounded-lg">{{ session('success') }}</div>
-    @endif
+@if (session('success'))
+    <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)"
+         x-transition:leave="transition ease-in duration-300"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="flex items-center justify-between p-4 mb-6 text-green-800 bg-green-100 border-l-4 border-green-500 rounded-r-lg dark:bg-green-900/30 dark:text-green-300 dark:border-green-600"
+         role="alert">
+        
+        <div class="flex items-center">
+            <i class="mr-2 fas fa-check-circle"></i>
+            <span class="font-medium">{{ session('success') }}</span>
+        </div>
+        
+        <button @click="show = false" class="text-green-700 hover:text-green-900 dark:text-green-300 dark:hover:text-green-100">
+            <span class="sr-only">Tutup</span>
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+@endif
+
+@if (session('error'))
+    {{-- Anda juga bisa menerapkan gaya yang sama untuk notifikasi error --}}
+    <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 8000)"
+         x-transition:leave="transition ease-in duration-300"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="flex items-center justify-between p-4 mb-6 text-red-800 bg-red-100 border-l-4 border-red-500 rounded-r-lg dark:bg-red-900/30 dark:text-red-300 dark:border-red-600"
+         role="alert">
+        
+        <div class="flex items-center">
+            <i class="mr-2 fas fa-exclamation-triangle"></i>
+            <span class="font-medium">{{ session('error') }}</span>
+        </div>
+        
+        <button @click="show = false" class="text-red-700 hover:text-red-900 dark:text-red-300 dark:hover:text-red-100">
+            <span class="sr-only">Tutup</span>
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+@endif
 
     {{-- Baris Pertama: Kartu Statistik --}}
     <div class="grid grid-cols-1 gap-6 mb-6 sm:grid-cols-2 lg:grid-cols-4">

@@ -1,123 +1,86 @@
-<nav class="fixed top-0 z-30 w-full bg-white border-b border-gray-200 dark:bg-dark-primary dark:border-slate-700">
-    <div class="px-3 py-3 lg:px-5 lg:pl-3">
+<nav class="fixed top-0 z-30 w-full bg-white border-b border-slate-200 dark:bg-dark-primary dark:border-slate-700">
+    <div class="px-4 py-2.5">
         <div class="flex items-center justify-between">
             <div class="flex items-center justify-start">
                 @auth
-                <button @click="sidebarOpen = !sidebarOpen" class="p-2 text-gray-600 rounded cursor-pointer lg:hidden dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700">
-                    <i class="fas fa-bars text-xl"></i>
+                {{-- Tombol Hamburger --}}
+                <button @click="sidebarOpen = !sidebarOpen" class="p-2 text-gray-500 rounded-lg cursor-pointer lg:hidden dark:text-gray-400 hover:bg-slate-100 dark:hover:bg-slate-700 focus:outline-none focus:bg-slate-100 dark:focus:bg-slate-700">
+                    <i class="text-xl fas fa-bars"></i>
                 </button>
                 @endauth
-                <a href="{{ url('/') }}" class="flex ml-2 md:mr-24">
-                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Stockify</h1>
+                {{-- Logo --}}
+                <a href="{{ url('/') }}" class="flex items-center ml-2 md:mr-24">
+                    <span class="text-xl font-bold text-gray-900 sm:text-2xl dark:text-white">Stockify</span>
                 </a>
             </div>
         
-            <div class="flex items-center space-x-4">
+            <div class="flex items-center space-x-2 sm:space-x-3">
                 @auth
-                <!-- Dark Mode Toggle -->
-                <button @click="toggleDarkMode" type="button" class="p-2 text-gray-500 rounded-lg hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-slate-700">
+                @php $userRole = auth()->user()->role; @endphp
+
+                {{-- Dark Mode Toggle --}}
+                <button @click="toggleDarkMode" type="button" class="p-2 text-gray-500 rounded-lg hover:bg-slate-100 dark:text-gray-400 dark:hover:bg-slate-700 focus:outline-none focus:bg-slate-100 dark:focus:bg-slate-700">
+                    <span class="sr-only">Toggle dark mode</span>
                     <i class="fas fa-sun" x-show="!darkMode" x-cloak></i>
                     <i class="fas fa-moon" x-show="darkMode" x-cloak></i>
                 </button>
 
-                <!-- Apps Dropdown (Dinamis Berdasarkan Peran) -->
+                {{-- Apps Dropdown (Pintasan Cepat) --}}
                 <div x-data="{ open: false }" class="relative hidden sm:block">
-                    <button @click="open = !open" class="p-2 text-gray-500 rounded-lg hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-slate-700">
-                        <i class="fas fa-th-large fa-fw text-lg"></i>
+                    <button @click="open = !open" class="p-2 text-gray-500 rounded-lg hover:bg-slate-100 dark:text-gray-400 dark:hover:bg-slate-700 focus:outline-none focus:bg-slate-100 dark:focus:bg-slate-700">
                         <span class="sr-only">View apps</span>
+                        <i class="text-lg fas fa-th-large fa-fw"></i>
                     </button>
-                    <div x-show="open" @click.away="open = false" x-cloak class="absolute right-0 mt-2 w-72 bg-white dark:bg-dark-primary rounded-md shadow-lg border border-gray-200 dark:border-slate-700 z-50">
-                        <div class="block px-4 py-2 text-base font-medium text-center text-gray-700 bg-gray-50 dark:bg-slate-700 dark:text-gray-400">
+                    <div x-show="open" @click.away="open = false" x-cloak
+                         x-transition:enter="transition duration-150 ease-out" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                         x-transition:leave="transition duration-100 ease-in" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
+                         class="absolute right-0 z-50 w-64 mt-2 origin-top-right bg-white border rounded-xl shadow-xl dark:bg-dark-primary dark:border-slate-700 ring-1 ring-black ring-opacity-5">
+                        <div class="px-4 py-3 text-sm font-medium text-gray-800 bg-slate-50 dark:bg-slate-800 dark:text-gray-200 rounded-t-xl">
                             Pintasan Cepat
                         </div>
-                        <div class="grid grid-cols-3 gap-4 p-4">
-                            @php
-                                $userRole = auth()->user()->role;
-                            @endphp
-
-                            {{-- PINTASAN UNTUK ADMIN --}}
+                        <div class="grid grid-cols-3 gap-2 p-3">
                             @if($userRole === 'Admin')
-                                <a href="{{ route('admin.users.create') }}" class="flex flex-col items-center p-2 text-center rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700">
-                                    <div class="flex items-center justify-center w-12 h-12 mb-2 bg-purple-100 rounded-full dark:bg-purple-500/30"><i class="fas fa-user-plus text-xl text-purple-600 dark:text-purple-300"></i></div>
-                                    <p class="text-xs font-medium text-gray-700 dark:text-gray-300">User Baru</p>
-                                </a>
-                                <a href="{{ route('admin.products.create') }}" class="flex flex-col items-center p-2 text-center rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700">
-                                    <div class="flex items-center justify-center w-12 h-12 mb-2 bg-green-100 rounded-full dark:bg-green-500/30"><i class="fas fa-box text-xl text-green-600 dark:text-green-300"></i></div>
-                                    <p class="text-xs font-medium text-gray-700 dark:text-gray-300">Produk Baru</p>
-                                </a>
-                                <a href="{{ route('admin.suppliers.create') }}" class="flex flex-col items-center p-2 text-center rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700">
-                                    <div class="flex items-center justify-center w-12 h-12 mb-2 bg-blue-100 rounded-full dark:bg-blue-500/30"><i class="fas fa-truck text-xl text-blue-600 dark:text-blue-300"></i></div>
-                                    <p class="text-xs font-medium text-gray-700 dark:text-gray-300">Supplier Baru</p>
-                                </a>
-                            {{-- PINTASAN UNTUK MANAJER GUDANG --}}
+                                <x-navbar.shortcut-link :href="route('admin.users.create')" icon="fas fa-user-plus" color="purple">User Baru</x-navbar.shortcut-link>
+                                <x-navbar.shortcut-link :href="route('admin.products.create')" icon="fas fa-box" color="green">Produk Baru</x-navbar.shortcut-link>
+                                <x-navbar.shortcut-link :href="route('admin.suppliers.create')" icon="fas fa-truck" color="blue">Supplier</x-navbar.shortcut-link>
                             @elseif($userRole === 'Manajer Gudang')
-                                <a href="{{ route('manajergudang.stock.in') }}" class="flex flex-col items-center p-2 text-center rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700">
-                                    <div class="flex items-center justify-center w-12 h-12 mb-2 bg-green-100 rounded-full dark:bg-green-500/30"><i class="fas fa-arrow-down text-xl text-green-600 dark:text-green-300"></i></div>
-                                    <p class="text-xs font-medium text-gray-700 dark:text-gray-300">Barang Masuk</p>
-                                </a>
-                                <a href="{{ route('manajergudang.stock.out') }}" class="flex flex-col items-center p-2 text-center rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700">
-                                    <div class="flex items-center justify-center w-12 h-12 mb-2 bg-red-100 rounded-full dark:bg-red-500/30"><i class="fas fa-arrow-up text-xl text-red-600 dark:text-red-300"></i></div>
-                                    <p class="text-xs font-medium text-gray-700 dark:text-gray-300">Barang Keluar</p>
-                                </a>
-                                <a href="{{ route('manajergudang.stock.opname') }}" class="flex flex-col items-center p-2 text-center rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700">
-                                    <div class="flex items-center justify-center w-12 h-12 mb-2 bg-yellow-100 rounded-full dark:bg-yellow-500/30"><i class="fas fa-tasks text-xl text-yellow-600 dark:text-yellow-300"></i></div>
-                                    <p class="text-xs font-medium text-gray-700 dark:text-gray-300">Stock Opname</p>
-                                </a>
-                            {{-- [BARU] PINTASAN UNTUK STAFF GUDANG --}}
+                                <x-navbar.shortcut-link :href="route('manajergudang.stock.in')" icon="fas fa-arrow-down" color="green">Barang Masuk</x-navbar.shortcut-link>
+                                <x-navbar.shortcut-link :href="route('manajergudang.stock.out')" icon="fas fa-arrow-up" color="red">Barang Keluar</x-navbar.shortcut-link>
+                                <x-navbar.shortcut-link :href="route('manajergudang.stock.opname')" icon="fas fa-tasks" color="yellow">Stock Opname</x-navbar.shortcut-link>
                             @elseif($userRole === 'Staff Gudang')
-                                <a href="{{ route('staff.stock.incoming.list') }}" class="flex flex-col items-center p-2 text-center rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700">
-                                    <div class="flex items-center justify-center w-12 h-12 mb-2 bg-sky-100 rounded-full dark:bg-sky-500/30"><i class="fas fa-dolly text-xl text-sky-600 dark:text-sky-300"></i></div>
-                                    <p class="text-xs font-medium text-gray-700 dark:text-gray-300">Tugas Masuk</p>
-                                </a>
-                                <a href="{{ route('staff.stock.outgoing.list') }}" class="flex flex-col items-center p-2 text-center rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700">
-                                    <div class="flex items-center justify-center w-12 h-12 mb-2 bg-orange-100 rounded-full dark:bg-orange-500/30"><i class="fas fa-truck-loading text-xl text-orange-600 dark:text-orange-300"></i></div>
-                                    <p class="text-xs font-medium text-gray-700 dark:text-gray-300">Tugas Keluar</p>
-                                </a>
+                                <x-navbar.shortcut-link :href="route('staff.stock.incoming.list')" icon="fas fa-dolly" color="sky">Tugas Masuk</x-navbar.shortcut-link>
+                                <x-navbar.shortcut-link :href="route('staff.stock.outgoing.list')" icon="fas fa-truck-loading" color="orange">Tugas Keluar</x-navbar.shortcut-link>
                             @endif
                         </div>
                     </div>
                 </div>
 
-                {{-- Notifikasi (Placeholder) --}}
-                <div x-data="{ open: false }" class="relative hidden sm:block">
-                    <button @click="open = !open" class="p-2 text-gray-500 rounded-lg hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-slate-700">
-                        <span class="sr-only">View notifications</span>
-                        <i class="fas fa-bell fa-fw"></i>
-                    </button>
-                    <div x-show="open" @click.away="open = false" x-cloak class="absolute right-0 mt-2 w-80 bg-white dark:bg-dark-primary rounded-md shadow-lg border dark:border-slate-700 z-50">
-                        <div class="block px-4 py-2 font-medium text-center text-gray-700 bg-gray-50 dark:bg-slate-700 dark:text-gray-400">Notifikasi</div>
-                        <div class="p-4 text-center text-sm text-gray-500 dark:text-gray-400">Tidak ada notifikasi baru.</div>
-                    </div>
-                </div>
-
-                <!-- Profile Dropdown -->
+                {{-- Profile Dropdown --}}
                 <div x-data="{ open: false }" class="relative">
-                    <button @click="open = !open" class="flex items-center space-x-2 text-gray-700 dark:text-gray-300">
-                        <img class="w-9 h-9 rounded-full object-cover" 
-                        src="{{ Auth::user()->profile_photo_path ? asset('storage/' . Auth::user()->profile_photo_path) : 'https://ui-avatars.com/api/?name='.urlencode(Auth::user()->name).'&background=3b82f6&color=fff' }}" 
-                        alt="{{ Auth::user()->name }}">
-                        <i class="fas fa-chevron-down text-xs transform" :class="{'rotate-180': open}"></i>
+                    <button @click="open = !open" class="flex items-center space-x-2 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-dark-primary focus:ring-white/50">
+                        <img class="object-cover w-9 h-9 rounded-full" 
+                             src="{{ Auth::user()->profile_photo_path ? asset('storage/' . Auth::user()->profile_photo_path) : 'https://ui-avatars.com/api/?name='.urlencode(Auth::user()->name).'&background=3b82f6&color=fff' }}" 
+                             alt="{{ Auth::user()->name }}">
                     </button>
-                    <div x-show="open" @click.away="open = false" x-cloak class="absolute right-0 mt-2 w-48 bg-white dark:bg-dark-primary rounded-md shadow-lg border dark:border-slate-700 z-50">
-                        <div class="px-4 py-3 border-b dark:border-slate-700">
-                            <p class="text-sm font-semibold text-gray-800 dark:text-white">{{ auth()->user()->name }}</p>
-                            <p class="text-xs text-gray-500 dark:text-gray-400">{{ auth()->user()->email }}</p>
+                    <div x-show="open" @click.away="open = false" x-cloak
+                         x-transition:enter="transition duration-150 ease-out" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                         x-transition:leave="transition duration-100 ease-in" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
+                         class="absolute right-0 z-50 w-56 mt-2 origin-top-right bg-white border divide-y rounded-lg shadow-xl dark:bg-dark-primary dark:border-slate-700 divide-slate-100 dark:divide-slate-700 ring-1 ring-black ring-opacity-5">
+                        <div class="px-4 py-3">
+                            <p class="text-sm font-semibold text-gray-800 truncate dark:text-white">{{ auth()->user()->name }}</p>
+                            <p class="text-sm text-gray-500 truncate dark:text-gray-400">{{ auth()->user()->email }}</p>
                         </div>
                         <div class="py-1">
-                            <a href="{{
-                                match(Auth::user()->role) {
-                                    'Admin' => route('admin.profile'),
-                                    'Manajer Gudang' => route('manajergudang.profile'),
-                                    'Staff Gudang' => route('staff.profile'),
-                                    default => '#'
-                                }
-                            }}" class="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700">
-                                Profil
-                            </a>
-                                <form action="{{ route('logout') }}" method="POST">
-                                    @csrf
-                                    <button type="submit" class="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700">Logout</button>
-                                </form>
+                            <a href="{{ match(Auth::user()->role) { 'Admin' => route('admin.profile'), 'Manajer Gudang' => route('manajergudang.profile'), 'Staff Gudang' => route('staff.profile'), default => '#' } }}" class="block w-full px-4 py-2 text-sm text-left text-gray-700 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-slate-700/50">Profil Saya</a>
+                        </div>
+                        <div class="py-1">
+                            <form action="{{ route('logout') }}" method="POST">
+                                @csrf
+                                <button type="submit" class="flex items-center justify-between w-full px-4 py-2 text-sm text-left text-red-600 dark:text-red-400 hover:bg-slate-100 dark:hover:bg-slate-700/50">
+                                    <span>Logout</span>
+                                    <i class="fas fa-sign-out-alt"></i>
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </div>

@@ -276,27 +276,53 @@ class ManagerDashboardController extends Controller
 
     public function reportStock(Request $request)
     {
-        // Query dasar untuk mengambil produk dengan kalkulasi stok
-        $query = Product::with('category');
+        // --- 1. EFFICIENT QUERY FOR SUMMARY AND FILTERING ---
+        // Start with a base query to get status counts
+        $summaryQuery = Product::query()
+            ->selectRaw("
+                SUM(CASE WHEN current_stock > min_stock THEN 1 ELSE 0 END) as safe_count,
+                SUM(CASE WHEN current_stock <= min_stock AND current_stock > 0 THEN 1 ELSE 0 END) as low_count,
+                SUM(CASE WHEN current_stock <= 0 THEN 1 ELSE 0 END) as out_count
+            ");
 
-        $query->addSelect(['*',
-            'stock_in_sum' => StockTransaction::select(DB::raw('COALESCE(sum(quantity), 0)'))
-                ->whereColumn('product_id', 'products.id')
-                ->where('type', 'Masuk'),
-            'stock_out_sum' => StockTransaction::select(DB::raw('COALESCE(sum(quantity), 0)'))
-                ->whereColumn('product_id', 'products.id')
-                ->where('type', 'Keluar')
-        ]);
+        // --- 2. QUERY FOR THE PAGINATED PRODUCT LIST ---
+        // Start a separate query for the table data
+        $productsQuery = Product::with('category');
 
-        // Filter berdasarkan kategori jika ada
-        if ($request->has('category_id') && $request->filled('category_id')) {
-            $query->where('category_id', $request->category_id);
+        // --- 3. APPLY FILTERS TO BOTH QUERIES ---
+        // Apply search filter (only for the product list)
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $productsQuery->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                ->orWhere('sku', 'like', "%{$search}%");
+            });
         }
 
-        $products = $query->paginate(20);
+        // Apply category filter (to both the summary and the list)
+        if ($request->filled('category_id')) {
+            $categoryId = $request->category_id;
+            $summaryQuery->where('category_id', $categoryId);
+            $productsQuery->where('category_id', $categoryId);
+        }
+
+        // --- 4. EXECUTE QUERIES AND GET DATA ---
+        // Execute the summary query to get the counts
+        $summaryResult = $summaryQuery->first();
+        $stockSummary = [
+            'safe' => $summaryResult->safe_count ?? 0,
+            'low' => $summaryResult->low_count ?? 0,
+            'out' => $summaryResult->out_count ?? 0,
+        ];
+
+        // Execute the paginated query for the table
+        $products = $productsQuery->paginate(20);
+
+        // Get all categories for the filter dropdown
         $categories = Category::orderBy('name')->get();
 
-        return view('pages.manajergudang.reports.stock', compact('products', 'categories'));
+        // --- 5. RETURN VIEW WITH ALL DATA ---
+        return view('pages.manajergudang.reports.stock', compact('products', 'categories', 'stockSummary'));
     }
 
     public function reportTransactions(Request $request)

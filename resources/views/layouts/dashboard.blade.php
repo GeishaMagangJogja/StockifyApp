@@ -46,16 +46,87 @@
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="https://unpkg.com/@ryangjchandler/alpine-tooltip@1.x.x/dist/cdn.min.js"></script>
 
+    @stack('styles')
     <style>
-        /* Mencegah FOUC pada elemen-elemen Alpine.js */
         [x-cloak] { display: none !important; }
+
+        :root {
+            /* Warna untuk Light Mode */
+            --scrollbar-track: #f1f5f9; /* slate-100 */
+            --scrollbar-thumb: #cbd5e1; /* slate-300 */
+            --scrollbar-thumb-hover: #94a3b8; /* slate-400 */
+
+            /* Warna khusus untuk sidebar di light mode */
+            --sidebar-scrollbar-thumb: #e2e8f0; /* slate-200 */
+            --sidebar-scrollbar-thumb-hover: #cbd5e1; /* slate-300 */
+        }
+
+        .dark {
+            /* Timpa variabel saat Dark Mode aktif */
+            --scrollbar-track: #0f172a; /* dark-secondary */
+            --scrollbar-thumb: #475569; /* slate-600 */
+            --scrollbar-thumb-hover: #64748b; /* slate-500 */
+            
+            /* Warna khusus untuk sidebar di dark mode */
+            --sidebar-scrollbar-thumb: #334155; /* slate-700 */
+            --sidebar-scrollbar-thumb-hover: #475569; /* slate-600 */
+        }
+
+        /* --- Styling Scrollbar Utama (hanya ditulis sekali) --- */
+        /* Untuk Firefox */
+        html {
+            scrollbar-width: thin;
+            scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+        }
+        /* Untuk WebKit (Chrome, Safari, Edge) */
+        html::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        html::-webkit-scrollbar-track {
+            background-color: var(--scrollbar-track);
+        }
+        html::-webkit-scrollbar-thumb {
+            background-color: var(--scrollbar-thumb);
+            border-radius: 10px;
+            border: 2px solid var(--scrollbar-track);
+        }
+        html::-webkit-scrollbar-thumb:hover {
+            background-color: var(--scrollbar-thumb-hover);
+        }
+
+        /* --- Styling Scrollbar Khusus (Sidebar) --- */
+        /* Untuk Firefox */
+        .custom-scrollbar {
+            scrollbar-color: var(--sidebar-scrollbar-thumb) transparent;
+        }
+        /* Untuk WebKit */
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: var(--sidebar-scrollbar-thumb);
+            border: 2px solid transparent; /* Reset border */
+        }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+            border-color: #1e293b; /* Beri border hanya di dark mode */
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background-color: var(--sidebar-scrollbar-thumb-hover);
+        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-dark-secondary">
     
     <div x-data="{ 
             sidebarOpen: false, 
+            sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true',
+            toggleSidebarCollapse() {
+                this.sidebarCollapsed = !this.sidebarCollapsed;
+                localStorage.setItem('sidebarCollapsed', this.sidebarCollapsed);
+            },
             darkMode: localStorage.getItem('darkMode') === 'true',
             toggleDarkMode() {
                 this.darkMode = !this.darkMode;
@@ -63,7 +134,9 @@
                 document.documentElement.classList.toggle('dark', this.darkMode);
             }
          }" 
-         class="flex h-screen">
+         x-init="$watch('sidebarCollapsed', value => document.body.classList.toggle('sidebar-collapsed', value))"
+         :class="{ 'sidebar-collapsed': sidebarCollapsed }"
+         class="flex h-screen overflow-x-hidden">
 
         {{-- Komponen Navbar dipanggil di sini --}}
         <x-navbar-dashboard />
@@ -73,20 +146,27 @@
             <!-- Sidebar Backdrop untuk mobile -->
             <div x-show="sidebarOpen" x-cloak class="fixed inset-0 z-10 bg-black opacity-50 lg:hidden" @click="sidebarOpen = false"></div>
 
-            <!-- Sidebar -->
-            <aside class="fixed inset-y-0 left-0 z-20 w-64 bg-white dark:bg-dark-primary shadow-lg transform transition-transform duration-300 ease-in-out -translate-x-full lg:translate-x-0 pt-16"
-                   :class="{ 'translate-x-0': sidebarOpen, '-translate-x-full': !sidebarOpen }">
+            <!-- [MODIFIKASI] Class dinamis untuk mengubah lebar sidebar -->
+            <aside 
+                class="fixed inset-y-0 left-0 z-20 flex flex-col pt-16 transition-[width] ease-in-out transform bg-white shadow-lg dark:bg-dark-primary lg:translate-x-0"
+                :class="{
+                    'translate-x-0 w-64': sidebarOpen, 
+                    '-translate-x-full': !sidebarOpen,
+                    'lg:w-64': !sidebarCollapsed,
+                    'lg:w-20': sidebarCollapsed
+                }">
                 
-                <div class="h-full px-3 pb-4 overflow-y-auto">
+                <div class="flex flex-col flex-1 h-full px-3 pb-4 overflow-y-auto custom-scrollbar">
                     <!-- User Info -->
-                    <div class="px-3 py-4">
+                    <div class="px-3 py-4" :class="{ 'lg:px-1': sidebarCollapsed }">
                         <div class="flex items-center">
                             <div class="flex-shrink-0">
-                                <img class="h-11 w-11 rounded-full object-cover ring-2 ring-blue-400" 
+                                <img class="object-cover w-11 h-11 rounded-full ring-2 ring-blue-400" 
                                      src="{{ Auth::user()->profile_photo_path ? asset('storage/' . Auth::user()->profile_photo_path) : 'https://ui-avatars.com/api/?name='.urlencode(Auth::user()->name).'&background=3b82f6&color=fff' }}" 
                                      alt="{{ Auth::user()->name }}">
                             </div>
-                            <div class="ml-4">
+                            {{-- [MODIFIKASI] Sembunyikan teks saat sidebar di-collapse --}}
+                            <div class="ml-4 transition-opacity" :class="{ 'lg:opacity-0 lg:invisible': sidebarCollapsed }">
                                 <p class="text-base font-semibold text-gray-800 dark:text-white">{{ auth()->user()->name }}</p>
                                 <p class="text-sm text-gray-500 dark:text-gray-400">{{ auth()->user()->role }}</p>
                             </div>
@@ -94,8 +174,8 @@
                     </div>
     
                     <!-- Navigation -->
-                    <nav class="flex-1 mt-2 px-1">
-                        {{-- DISINILAH PERUBAHAN UTAMANYA --}}
+                    {{-- [MODIFIKASI] Padding disesuaikan saat collapse --}}
+                    <nav class="flex-1 px-1 mt-2" :class="{ 'lg:px-0': sidebarCollapsed }">
                         @if (auth()->user()->role === 'Admin')
                             <x-sidebar.admin-sidebar />
                         @elseif (auth()->user()->role === 'Manajer Gudang')
@@ -106,24 +186,27 @@
                     </nav>
                 </div>
                 
-                <!-- Laravel Logo -->
-                <div class="absolute bottom-4 left-4">
-                    <svg class="h-8 w-auto text-red-500" viewBox="0 0 119 125" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M118.5 60.55V125H59.25V60.55H0V0H59.25V60.55H118.5Z" fill="currentColor"/></svg>
+                {{-- [MODIFIKASI BARU] Tombol untuk Collapse/Expand Sidebar --}}
+                <div class="flex-shrink-0 p-4 border-t border-slate-200 dark:border-slate-700">
+                    <button @click="toggleSidebarCollapse" class="flex items-center justify-center w-full p-2 text-gray-500 rounded-lg dark:text-gray-400 hover:bg-slate-100 dark:hover:bg-slate-700">
+                        <i class="transition-transform fas" :class="{ 'fa-chevron-left': !sidebarCollapsed, 'fa-chevron-right': sidebarCollapsed }"></i>
+                        <span class="ml-3 font-medium transition-opacity " :class="{ 'lg:opacity-0 lg:hidden': sidebarCollapsed }">Sembunyikan</span>
+                    </button>
                 </div>
             </aside>
         @endauth
 
-        <!-- Main Content -->
-        <main class="flex-1 overflow-y-auto pt-16 @auth lg:pl-64 @endauth">
+        {{-- [MODIFIKASI] Margin kiri dinamis untuk konten utama --}}
+        <main class="flex-1 pt-16 overflow-y-auto transition-[margin-left]  ease-in-out"
+              :class="{ 'lg:ml-64': !sidebarCollapsed, 'lg:ml-20': sidebarCollapsed }">
             <div class="p-6">
                 @yield('content')
             </div>
-
             <x-footer-dashboard />
         </main>
     </div>
 
-@stack('scripts')
+    @stack('scripts')
 
     <!-- Toast Notifications -->
     <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>

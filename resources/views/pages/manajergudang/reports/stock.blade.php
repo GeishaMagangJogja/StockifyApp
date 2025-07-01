@@ -77,7 +77,7 @@
                             {{-- Kolom Stok (rata tengah) --}}
                             <td class="px-6 py-4 text-center">
                                 <p class="text-lg font-bold text-gray-900 dark:text-white">{{ number_format($product->current_stock) }}</p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">Min: {{ number_format($product->minimum_stock) }} {{ $product->unit }}</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Min: {{ number_format($product->min_stock) }} {{ $product->unit }}</p>
                             </td>
                             {{-- Kolom Status (rata tengah) --}}
                             <td class="px-6 py-4 text-center">
