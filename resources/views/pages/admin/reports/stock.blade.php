@@ -4,11 +4,11 @@
 
 @section('content')
 {{-- Unified Card Layout --}}
-<div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden border border-gray-200 dark:border-gray-700">
+<div class="overflow-hidden bg-white border border-gray-200 rounded-lg shadow-md dark:bg-gray-800 dark:border-gray-700">
 
     {{-- Card Header: Title & Filters --}}
     <div class="p-6 border-b border-gray-200 dark:border-gray-700">
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+        <div class="flex flex-col items-start justify-between sm:flex-row sm:items-center">
             <div>
                 <h2 class="text-xl font-bold text-gray-900 dark:text-white">Laporan Stok Barang</h2>
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
@@ -20,9 +20,9 @@
             </div>
 
             {{-- Filter Form --}}
-            <form method="GET" class="mt-4 sm:mt-0 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <form method="GET" class="flex flex-col items-start gap-4 mt-4 sm:mt-0 sm:flex-row sm:items-center">
                 <div class="flex items-center gap-4">
-                    <select name="category_id" class="w-52 px-3 py-2 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                    <select name="category_id" class="px-3 py-2 text-sm text-gray-800 bg-white border border-gray-300 rounded-md shadow-sm w-52 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-blue-500 focus:border-blue-500">
                         <option value="">-- Semua Kategori --</option>
                         @foreach ($categories as $cat)
                             <option value="{{ $cat->id }}" {{ request('category_id') == $cat->id ? 'selected' : '' }}>
@@ -30,17 +30,25 @@
                             </option>
                         @endforeach
                     </select>
-
-                    <select name="stock_status" class="w-40 px-3 py-2 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                    <select name="stock_status" class="w-40 px-3 py-2 text-sm text-gray-800 bg-white border border-gray-300 rounded-md shadow-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-blue-500 focus:border-blue-500">
                         <option value="">-- Semua Status --</option>
-                        <option value="low" {{ request('stock_status') == 'low' ? 'selected' : '' }}>Stok Menipis</option>
-                        <option value="out" {{ request('stock_status') == 'out' ? 'selected' : '' }}>Stok Habis</option>
-                        <option value="safe" {{ request('stock_status') == 'safe' ? 'selected' : '' }}>Stok Aman</option>
+                        @php
+                            $statusOptions = [
+                                'low' => 'Stok Menipis',
+                                'out' => 'Stok Habis',
+                                'safe' => 'Stok Aman',
+                            ];
+                        @endphp
+                        @foreach($statusOptions as $value => $label)
+                            <option value="{{ $value }}" {{ request('stock_status') === $value ? 'selected' : '' }}>
+                                {{ $label }}
+                            </option>
+                        @endforeach
                     </select>
                 </div>
 
                 <div class="flex items-center gap-2">
-                    <button type="submit" class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 text-sm rounded-md font-medium shadow-sm transition">
+                    <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition bg-blue-600 rounded-md shadow-sm hover:bg-blue-700">
                         <i class="fas fa-filter"></i>
                         <span>Filter</span>
                     </button>
@@ -51,20 +59,20 @@
     </div>
 
     {{-- Summary Cards --}}
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 p-6 border-b border-gray-200 dark:border-gray-700">
-        <div class="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg">
+    <div class="grid grid-cols-1 gap-4 p-6 border-b border-gray-200 md:grid-cols-4 dark:border-gray-700">
+        <div class="p-4 rounded-lg bg-blue-50 dark:bg-blue-900/30">
             <h3 class="text-sm font-medium text-blue-800 dark:text-blue-200">Total Produk</h3>
             <p class="mt-1 text-2xl font-semibold text-blue-600 dark:text-blue-100">{{ $products->total() }}</p>
         </div>
-        <div class="bg-green-50 dark:bg-green-900/30 p-4 rounded-lg">
+        <div class="p-4 rounded-lg bg-green-50 dark:bg-green-900/30">
             <h3 class="text-sm font-medium text-green-800 dark:text-green-200">Stok Aman</h3>
             <p class="mt-1 text-2xl font-semibold text-green-600 dark:text-green-100">{{ $stockSummary['safe'] }}</p>
         </div>
-        <div class="bg-yellow-50 dark:bg-yellow-900/30 p-4 rounded-lg">
+        <div class="p-4 rounded-lg bg-yellow-50 dark:bg-yellow-900/30">
             <h3 class="text-sm font-medium text-yellow-800 dark:text-yellow-200">Stok Menipis</h3>
             <p class="mt-1 text-2xl font-semibold text-yellow-600 dark:text-yellow-100">{{ $stockSummary['low'] }}</p>
         </div>
-        <div class="bg-red-50 dark:bg-red-900/30 p-4 rounded-lg">
+        <div class="p-4 rounded-lg bg-red-50 dark:bg-red-900/30">
             <h3 class="text-sm font-medium text-red-800 dark:text-red-200">Stok Habis</h3>
             <p class="mt-1 text-2xl font-semibold text-red-600 dark:text-red-100">{{ $stockSummary['out'] }}</p>
         </div>
@@ -76,12 +84,12 @@
             {{-- Enhanced Table Header --}}
             <thead class="bg-gray-50 dark:bg-gray-700/50">
                 <tr>
-                    <th scope="col" class="px-6 py-3 text-left font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">Produk</th>
-                    <th scope="col" class="px-6 py-3 text-left font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">Kategori</th>
-                    <th scope="col" class="px-6 py-3 text-center font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">Stok Saat Ini</th>
-                    <th scope="col" class="px-6 py-3 text-center font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">Stok Minimum</th>
-                    <th scope="col" class="px-6 py-3 text-center font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">Selisih</th>
-                    <th scope="col" class="px-6 py-3 text-left font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">Status</th>
+                    <th scope="col" class="px-6 py-3 font-medium tracking-wider text-left text-gray-600 uppercase dark:text-gray-300">Produk</th>
+                    <th scope="col" class="px-6 py-3 font-medium tracking-wider text-left text-gray-600 uppercase dark:text-gray-300">Kategori</th>
+                    <th scope="col" class="px-6 py-3 font-medium tracking-wider text-center text-gray-600 uppercase dark:text-gray-300">Stok Saat Ini</th>
+                    <th scope="col" class="px-6 py-3 font-medium tracking-wider text-center text-gray-600 uppercase dark:text-gray-300">Stok Minimum</th>
+                    <th scope="col" class="px-6 py-3 font-medium tracking-wider text-center text-gray-600 uppercase dark:text-gray-300">Selisih</th>
+                    <th scope="col" class="px-6 py-3 font-medium tracking-wider text-left text-gray-600 uppercase dark:text-gray-300">Status</th>
                 </tr>
             </thead>
             {{-- Zebra-striping and hover effect --}}
@@ -90,11 +98,11 @@
                     @php
                         $difference = $product->current_stock - $product->min_stock;
                     @endphp
-                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                        <td class="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-white">
+                    <tr class="transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                        <td class="px-6 py-4 text-gray-900 whitespace-nowrap dark:text-white">
                             <div class="flex items-center">
                                 @if($product->image)
-                                    <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="w-8 h-8 rounded-md object-cover mr-3">
+                                    <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="object-cover w-8 h-8 mr-3 rounded-md">
                                 @endif
                                 <div>
                                     <div class="font-medium">{{ $product->name }}</div>
@@ -102,9 +110,9 @@
                                 </div>
                             </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-gray-500 dark:text-gray-300">{{ $product->category->name ?? '-' }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center text-gray-900 dark:text-white font-semibold">{{ $product->current_stock }} {{ $product->unit }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center text-gray-500 dark:text-gray-300">{{ $product->min_stock }} {{ $product->unit }}</td>
+                        <td class="px-6 py-4 text-gray-500 whitespace-nowrap dark:text-gray-300">{{ $product->category->name ?? '-' }}</td>
+                        <td class="px-6 py-4 font-semibold text-center text-gray-900 whitespace-nowrap dark:text-white">{{ $product->current_stock }} {{ $product->unit }}</td>
+                        <td class="px-6 py-4 text-center text-gray-500 whitespace-nowrap dark:text-gray-300">{{ $product->min_stock }} {{ $product->unit }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-center font-medium {{ $difference < 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400' }}">
                             {{ $difference > 0 ? '+' : '' }}{{ $difference }} {{ $product->unit }}
                         </td>
@@ -129,8 +137,8 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="text-center py-10 text-gray-500 dark:text-gray-400">
-                            <i class="fas fa-box-open fa-2x mb-2"></i>
+                        <td colspan="6" class="py-10 text-center text-gray-500 dark:text-gray-400">
+                            <i class="mb-2 fas fa-box-open fa-2x"></i>
                             <p>Tidak ada data stok ditemukan.</p>
                             @if(request()->anyFilled(['category_id', 'stock_status']))
                                 <a href="{{ route('admin.reports.stock') }}" class="text-blue-600 dark:text-blue-400 hover:underline">Reset filter</a>
