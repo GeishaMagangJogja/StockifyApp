@@ -17,8 +17,9 @@
             <form method="GET" class="mt-4 sm:mt-0 flex flex-wrap items-center gap-4">
                 <select name="type" class="w-48 px-3 py-2 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white shadow-sm focus:ring-blue-500 focus:border-blue-500">
                     <option value="">-- Semua Jenis --</option>
-                    <option value="masuk" {{ request('type') == 'masuk' ? 'selected' : '' }}>Barang Masuk</option>
-                    <option value="keluar" {{ request('type') == 'keluar' ? 'selected' : '' }}>Barang Keluar</option>
+                    {{-- [FIXED] Menggunakan nilai dengan huruf kapital --}}
+                    <option value="Masuk" {{ request('type') == 'Masuk' ? 'selected' : '' }}>Barang Masuk</option>
+                    <option value="Keluar" {{ request('type') == 'Keluar' ? 'selected' : '' }}>Barang Keluar</option>
                 </select>
                 <input type="date" name="from" value="{{ request('from') }}" class="px-3 py-2 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white shadow-sm focus:ring-blue-500 focus:border-blue-500">
                 <input type="date" name="to" value="{{ request('to') }}" class="px-3 py-2 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white shadow-sm focus:ring-blue-500 focus:border-blue-500">
@@ -49,7 +50,8 @@
                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                         <td class="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-white">{{ $trx->product->name ?? '-' }}</td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                             @if($trx->type == 'masuk')
+                             {{-- [FIXED] Pengecekan menggunakan nilai dengan huruf kapital --}}
+                             @if($trx->type == 'Masuk')
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300">
                                     Barang Masuk
                                 </span>
@@ -59,8 +61,9 @@
                                 </span>
                             @endif
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center font-medium {{ $trx->type == 'masuk' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
-                            {{ $trx->type == 'masuk' ? '+' : '-' }}{{ $trx->quantity }}
+                        {{-- [FIXED] Pengecekan menggunakan nilai dengan huruf kapital --}}
+                        <td class="px-6 py-4 whitespace-nowrap text-center font-medium {{ $trx->type == 'Masuk' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
+                            {{ $trx->type == 'Masuk' ? '+' : '-' }}{{ $trx->quantity }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-gray-500 dark:text-gray-300">{{ $trx->user->name ?? '-' }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-gray-500 dark:text-gray-300">{{ $trx->created_at->format('d M Y, H:i') }}</td>

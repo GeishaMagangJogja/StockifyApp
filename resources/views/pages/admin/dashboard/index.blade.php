@@ -6,11 +6,11 @@
     {{-- Header Halaman --}}
     <div class="flex flex-wrap items-center justify-between mb-6 gap-4">
         <div>
-            <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Selamat Datang Kembali, Admin!</h1>
+            <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Selamat Datang Kembali, {{ Auth::user()->name }}!</h1>
             <p class="mt-1 text-gray-600 dark:text-gray-400">Berikut adalah ringkasan aktivitas sistem hari ini.</p>
         </div>
         <div class="flex items-center space-x-2">
-            <a href="{{-- route('admin.reports.index') --}}" class="px-4 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-slate-800 dark:text-gray-300 dark:border-slate-600 dark:hover:bg-slate-700">
+            <a href="{{ route('admin.reports.index') }}" class="px-4 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-slate-800 dark:text-gray-300 dark:border-slate-600 dark:hover:bg-slate-700">
                 Lihat Laporan
             </a>
             <a href="{{ route('admin.products.create') }}" class="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-md">

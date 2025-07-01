@@ -1,4 +1,4 @@
-@extends('layouts.dashboardstaff')
+@extends('layouts.dashboard')
 
 @section('title', $reportTitle)
 

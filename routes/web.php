@@ -206,7 +206,6 @@ Route::middleware(['auth', 'role:Staff Gudang'])->prefix('staff')->name('staff.'
     Route::prefix('reports')->name('reports.')->group(function () {
         Route::get('/incoming', [StaffReportController::class, 'showIncomingReport'])->name('incoming');
         Route::get('/outgoing', [StaffReportController::class, 'showOutgoingReport'])->name('outgoing');
-        Route::get('/my-work', [StaffDashboardController::class, 'reportMyWork'])->name('my-work');
     });
 
     // Products (Read Only)
@@ -226,7 +225,7 @@ Route::middleware(['auth', 'role:Staff Gudang'])->prefix('staff')->name('staff.'
 
     // Profile
     Route::get('/profile', [StaffDashboardController::class, 'profile'])->name('profile');
-    Route::put('/profile', [StaffDashboardController::class, 'profileUpdate'])->name('profile.update');
+    Route::put('/profile', [StaffDashboardController::class, 'updateProfile'])->name('profile.update');
 });
 
 // Tambahkan route ini di dalam group admin routes

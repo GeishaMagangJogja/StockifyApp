@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class AdminDashboardController extends Controller
 {
@@ -209,16 +210,16 @@ class AdminDashboardController extends Controller
 
     public function productStore(Request $request)
     {
-        // 1. Define validation rules for ALL form fields
+        // 1. Validasi semua input yang berasal dari form
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
             'sku' => 'required|string|max:100|unique:products,sku',
             'category_id' => 'required|exists:categories,id',
-            'supplier_id' => 'nullable|exists:suppliers,id', // Use nullable if supplier is optional
+            'supplier_id' => 'nullable|exists:suppliers,id', // Ganti jadi nullable jika supplier boleh kosong
             'description' => 'nullable|string',
             'purchase_price' => 'required|numeric|min:0',
             'selling_price' => 'required|numeric|min:0',
-            'initial_stock' => 'required|integer|min:0', // <-- Validate this
+            'initial_stock' => 'required|integer|min:0', // Validasi stok awal
             'min_stock' => 'required|integer|min:0',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // <-- Validate this
             'is_active' => 'nullable|boolean', // <-- Validate this
@@ -250,16 +251,15 @@ class AdminDashboardController extends Controller
                 'is_active' => $validatedData['is_active'],
                 'category_id' => $validatedData['category_id'],
                 'supplier_id' => $validatedData['supplier_id'],
-                // Assuming your products table has a 'unit' column
-                // 'unit' => $validatedData['unit'],
+                // 'current_stock' tidak di-set di sini, karena akan dihitung dari transaksi
             ]);
 
-            // 5. Create an initial stock transaction if stock is added
+            // 4. Buat transaksi stok awal jika ada
             if ($validatedData['initial_stock'] > 0) {
                 StockTransaction::create([
                     'product_id' => $product->id,
                     'user_id' => Auth::id(),
-                    'type' => 'Masuk', // 'Incoming'
+                    'type' => 'Masuk',
                     'quantity' => $validatedData['initial_stock'],
                     'notes' => 'Stok awal produk baru.',
                     'date' => now(),
@@ -272,9 +272,14 @@ class AdminDashboardController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            // Log the error for debugging
-            // Log::error('Failed to create product: ' . $e->getMessage()); 
-            return redirect()->back()->with('error', 'Terjadi kesalahan saat menyimpan produk. Silakan coba lagi.')->withInput();
+            
+            // Opsional: Log error untuk debugging nanti
+            // \Log::error('Gagal menyimpan produk: ' . $e->getMessage());
+
+            // 6. Jika gagal, kembali ke form dengan notifikasi error dan input sebelumnya
+            return redirect()->back()
+                            ->with('error', 'Terjadi kesalahan saat menyimpan produk. Error: ' . $e->getMessage())
+                            ->withInput();
         }
     }
 
@@ -607,6 +612,14 @@ class AdminDashboardController extends Controller
 
         $user->name = $request->name;
         $user->email = $request->email;
+
+        if ($request->hasFile('photo')) {
+            if ($user->profile_photo_path) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($user->profile_photo_path);
+            }
+            $path = $request->file('photo')->store('profile-photos', 'public');
+            $user->profile_photo_path = $path;
+        }
 
         if ($request->filled('new_password')) {
             if (!Hash::check($request->current_password, $user->password)) {

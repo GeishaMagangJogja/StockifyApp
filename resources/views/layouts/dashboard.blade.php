@@ -87,10 +87,13 @@
     
                     <!-- Navigation -->
                     <nav class="flex-1 mt-2 px-1">
+                        {{-- DISINILAH PERUBAHAN UTAMANYA --}}
                         @if (auth()->user()->role === 'Admin')
                             <x-sidebar.admin-sidebar />
                         @elseif (auth()->user()->role === 'Manajer Gudang')
                             <x-sidebar.manajergudang-sidebar />
+                        @elseif (auth()->user()->role === 'Staff Gudang')
+                            <x-sidebar.staffgudang-sidebar />
                         @endif
                     </nav>
                 </div>

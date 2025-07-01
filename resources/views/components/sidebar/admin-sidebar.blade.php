@@ -1,115 +1,39 @@
 <div class="space-y-2">
-    <!-- Dashboard -->
-    <a href="{{ route('admin.dashboard') }}"
-       class="flex items-center px-4 py-2.5 rounded-lg transition-colors duration-200 {{ request()->routeIs('admin.dashboard') ? 'bg-blue-600 text-white' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-white' }}">
-        <i class="fas fa-tachometer-alt fa-fw w-5 mr-3"></i>
-        <span class="font-medium">Dashboard</span>
-    </a>
+    <x-sidebar.link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')" icon="fas fa-tachometer-alt">
+        Dashboard
+    </x-sidebar.link>
 
-    <!-- Kelola User Dropdown -->
-    <div x-data="{ open: {{ request()->routeIs('admin.users.*') ? 'true' : 'false' }} }">
-        <button @click="open = !open"
-                class="flex items-center justify-between w-full px-4 py-2.5 rounded-lg transition-colors duration-200 {{ request()->routeIs('admin.users.*') ? 'bg-blue-600 text-white' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-white' }}">
-            <span class="flex items-center">
-                <i class="fas fa-users fa-fw w-5 mr-3"></i>
-                <span class="font-medium">Kelola User</span>
-            </span>
-            <i class="fas fa-chevron-down text-xs transform transition-transform" :class="{'rotate-180': open}"></i>
-        </button>
-        <div x-show="open" x-collapse class="pl-6 mt-1 space-y-1">
-            <a href="{{ route('admin.users.index') }}" class="block px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.users.index') ? 'text-blue-600 dark:text-white font-semibold' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white' }}">
-               Daftar User
-            </a>
-            <a href="{{ route('admin.users.create') }}" class="block px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.users.create') ? 'text-blue-600 dark:text-white font-semibold' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white' }}">
-               Tambah User
-            </a>
-        </div>
-    </div>
+    <x-sidebar.dropdown :active="request()->routeIs('admin.users.*')" icon="fas fa-users">
+        <x-slot name="trigger">Kelola User</x-slot>
+        <x-sidebar.sublink :href="route('admin.users.index')" :active="request()->routeIs('admin.users.index', 'admin.users.edit', 'admin.users.show')">Daftar User</x-sidebar.sublink>
+        <x-sidebar.sublink :href="route('admin.users.create')" :active="request()->routeIs('admin.users.create')">Tambah User</x-sidebar.sublink>
+    </x-sidebar.dropdown>
+
+    <x-sidebar.dropdown :active="request()->routeIs('admin.products.*')" icon="fas fa-box-open">
+        <x-slot name="trigger">Kelola Produk</x-slot>
+        <x-sidebar.sublink :href="route('admin.products.index')" :active="request()->routeIs('admin.products.index', 'admin.products.edit', 'admin.products.show')">Daftar Produk</x-sidebar.sublink>
+        <x-sidebar.sublink :href="route('admin.products.create')" :active="request()->routeIs('admin.products.create')">Tambah Produk</x-sidebar.sublink>
+    </x-sidebar.dropdown>
+
+    <x-sidebar.dropdown :active="request()->routeIs('admin.categories.*')" icon="fas fa-tags">
+        <x-slot name="trigger">Kategori</x-slot>
+        <x-sidebar.sublink :href="route('admin.categories.index')" :active="request()->routeIs('admin.categories.index', 'admin.categories.edit', 'admin.categories.show')">Daftar Kategori</x-sidebar.sublink>
+        <x-sidebar.sublink :href="route('admin.categories.create')" :active="request()->routeIs('admin.categories.create')">Tambah Kategori</x-sidebar.sublink>
+    </x-sidebar.dropdown>
     
-    <!-- Kelola Produk Dropdown -->
-    <div x-data="{ open: {{ request()->routeIs('admin.products.*') ? 'true' : 'false' }} }">
-        <button @click="open = !open"
-                class="flex items-center justify-between w-full px-4 py-2.5 rounded-lg transition-colors duration-200 {{ request()->routeIs('admin.products.*') ? 'bg-blue-600 text-white' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-white' }}">
-            <span class="flex items-center">
-                <i class="fas fa-box fa-fw w-5 mr-3"></i>
-                <span class="font-medium">Kelola Produk</span>
-            </span>
-            <i class="fas fa-chevron-down text-xs transform transition-transform" :class="{'rotate-180': open}"></i>
-        </button>
-        <div x-show="open" x-collapse class="pl-6 mt-1 space-y-1">
-            <a href="{{ route('admin.products.index') }}" class="block px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.products.index') ? 'text-blue-600 dark:text-white font-semibold' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white' }}">
-               Daftar Produk
-            </a>
-            <a href="{{ route('admin.products.create') }}" class="block px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.products.create') ? 'text-blue-600 dark:text-white font-semibold' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white' }}">
-               Tambah Produk
-            </a>
-        </div>
-    </div>
+    <x-sidebar.dropdown :active="request()->routeIs('admin.suppliers.*')" icon="fas fa-truck">
+        <x-slot name="trigger">Supplier</x-slot>
+        <x-sidebar.sublink :href="route('admin.suppliers.index')" :active="request()->routeIs('admin.suppliers.index', 'admin.suppliers.edit', 'admin.suppliers.show')">Daftar Supplier</x-sidebar.sublink>
+        <x-sidebar.sublink :href="route('admin.suppliers.create')" :active="request()->routeIs('admin.suppliers.create')">Tambah Supplier</x-sidebar.sublink>
+    </x-sidebar.dropdown>
 
-    <!-- Kategori (Link Tunggal) -->
-    <div x-data="{ open: {{ request()->routeIs('admin.categories.*') ? 'true' : 'false' }} }">
-        <button @click="open = !open"
-                class="flex items-center justify-between w-full px-4 py-2.5 rounded-lg transition-colors duration-200 {{ request()->routeIs('admin.categories.*') ? 'bg-blue-600 text-white' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-white' }}">
-            <span class="flex items-center">
-                <i class="fas fa-tags fa-fw w-5 mr-3"></i>
-                <span class="font-medium">Kategori</span>
-            </span>
-            <i class="fas fa-chevron-down text-xs transform transition-transform" :class="{'rotate-180': open}"></i>
-        </button>
-        <div x-show="open" x-collapse class="pl-6 mt-1 space-y-1">
-            <a href="{{ route('admin.categories.index') }}" class="block px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.categories.index') ? 'text-blue-600 dark:text-white font-semibold' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white' }}">
-               Daftar Kategori
-            </a>
-            <a href="{{ route('admin.categories.create') }}" class="block px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.categories.create') ? 'text-blue-600 dark:text-white font-semibold' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white' }}">
-               Tambah Kategori
-            </a>
-        </div>
-    </div>
-    
-    <!-- Supplier (Link Tunggal) -->
-    <div x-data="{ open: {{ request()->routeIs('admin.suppliers.*') ? 'true' : 'false' }} }">
-        <button @click="open = !open"
-                class="flex items-center justify-between w-full px-4 py-2.5 rounded-lg transition-colors duration-200 {{ request()->routeIs('admin.suppliers.*') ? 'bg-blue-600 text-white' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-white' }}">
-            <span class="flex items-center">
-                <i class="fas fa-truck fa-fw w-5 mr-3"></i>
-                <span class="font-medium">Supplier</span>
-            </span>
-            <i class="fas fa-chevron-down text-xs transform transition-transform" :class="{'rotate-180': open}"></i>
-        </button>
-        <div x-show="open" x-collapse class="pl-6 mt-1 space-y-1">
-            <a href="{{ route('admin.suppliers.index') }}" class="block px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.suppliers.index') ? 'text-blue-600 dark:text-white font-semibold' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white' }}">
-               Daftar Supplier
-            </a>
-            <a href="{{ route('admin.suppliers.create') }}" class="block px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.suppliers.create') ? 'text-blue-600 dark:text-white font-semibold' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white' }}">
-               Tambah Supplier
-            </a>
-        </div>
-    </div>
+    <x-sidebar.dropdown :active="request()->routeIs('admin.reports.*')" icon="fas fa-chart-pie">
+        <x-slot name="trigger">Laporan</x-slot>
+        <x-sidebar.sublink :href="route('admin.reports.stock')" :active="request()->routeIs('admin.reports.stock')">Laporan Stok</x-sidebar.sublink>
+        <x-sidebar.sublink :href="route('admin.reports.transactions')" :active="request()->routeIs('admin.reports.transactions')">Laporan Transaksi</x-sidebar.sublink>
+    </x-sidebar.dropdown>
 
-    <!-- Laporan Dropdown -->
-    <div x-data="{ open: {{ request()->routeIs('admin.reports.*') ? 'true' : 'false' }} }">
-        <button @click="open = !open"
-                class="flex items-center justify-between w-full px-4 py-2.5 rounded-lg transition-colors duration-200 {{ request()->routeIs('admin.reports.*') ? 'bg-blue-600 text-white' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-white' }}">
-            <span class="flex items-center">
-                <i class="fas fa-chart-pie fa-fw w-5 mr-3"></i>
-                <span class="font-medium">Laporan</span>
-            </span>
-            <i class="fas fa-chevron-down text-xs transform transition-transform" :class="{'rotate-180': open}"></i>
-        </button>
-        <div x-show="open" x-collapse class="pl-6 mt-1 space-y-1">
-            <a href="{{ route('admin.reports.stock') }}" class="block px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.reports.stock') ? 'text-blue-600 dark:text-white font-semibold' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white' }}">
-               Laporan Stok
-            </a>
-            <a href="{{ route('admin.reports.transactions') }}" class="block px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.reports.transactions') ? 'text-blue-600 dark:text-white font-semibold' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white' }}">
-               Laporan Transaksi
-            </a>
-        </div>
-    </div>
-
-    <!-- Pengaturan -->
-    <a href="{{ route('admin.settings') }}"
-       class="flex items-center px-4 py-2.5 rounded-lg transition-colors duration-200 {{ request()->routeIs('admin.settings') ? 'bg-blue-600 text-white' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-white' }}">
-        <i class="fas fa-cog fa-fw w-5 mr-3"></i>
-        <span class="font-medium">Setting</span>
-    </a>
+    <x-sidebar.link :href="route('admin.settings')" :active="request()->routeIs('admin.settings')" icon="fas fa-cog">
+        Setting
+    </x-sidebar.link>
 </div>

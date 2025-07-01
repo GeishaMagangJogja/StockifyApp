@@ -71,8 +71,10 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Stok</label>
                             <p class="mt-1 text-sm text-gray-900 dark:text-white">
-                                {{ $product->stock }}
-                                @if($product->stock <= $product->min_stock)
+                                {{-- [FIX] Gunakan accessor 'current_stock' yang dihitung dari transaksi --}}
+                                {{ $product->current_stock }}
+                                {{-- [FIX] Gunakan 'current_stock' juga untuk perbandingan --}}
+                                @if($product->current_stock <= $product->min_stock)
                                     <span class="ml-2 text-xs text-red-500">(Stok Rendah)</span>
                                 @endif
                             </p>

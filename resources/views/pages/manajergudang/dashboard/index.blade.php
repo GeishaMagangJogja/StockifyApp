@@ -3,6 +3,20 @@
 @section('title', 'Dashboard Manajer Gudang')
 
 @section('content')
+    <div class="flex flex-wrap items-center justify-between mb-6 gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Selamat Datang Kembali, {{ Auth::user()->name }}!</h1>
+            <p class="mt-1 text-gray-600 dark:text-gray-400">Berikut adalah ringkasan aktivitas gudang terkini.</p>
+        </div>
+        <div class="flex items-center space-x-2">
+            <a href="{{ route('manajergudang.stock.in') }}" class="px-4 py-2 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700 shadow-md">
+                <i class="fas fa-plus mr-1"></i> Catat Barang Masuk
+            </a>
+            <a href="{{ route('manajergudang.stock.out') }}" class="px-4 py-2 text-sm text-white bg-red-600 rounded-lg hover:bg-red-700 shadow-md">
+                <i class="fas fa-minus mr-1"></i> Catat Barang Keluar
+            </a>
+        </div>
+    </div>
     {{-- Notifikasi --}}
     @if(session('success'))
         <div class="mb-6 p-4 bg-green-100 text-green-700 rounded-lg">{{ session('success') }}</div>
