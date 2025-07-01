@@ -299,7 +299,7 @@ class AdminDashboardController extends Controller
     {
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
-            'sku' => 'required|string|max:100|unique:products,sku,' . $product->id, 
+            'sku' => 'required|string|max:100|unique:products,sku,' . $product->id,
             'category_id' => 'required|exists:categories,id',
             'supplier_id' => 'nullable|exists:suppliers,id',
             'description' => 'nullable|string',
@@ -336,7 +336,7 @@ class AdminDashboardController extends Controller
 
             return redirect()->route('admin.products.index')
                 ->with('success', 'Produk berhasil diperbarui');
-                
+
         } catch (\Exception $e) {
             return redirect()->back()
                 ->with('error', 'Gagal memperbarui produk: ' . $e->getMessage())
@@ -366,11 +366,19 @@ class AdminDashboardController extends Controller
         }
     }
     // Categories Management
-    public function categoryList()
-    {
-        $categories = Category::withCount('products')->paginate(10);
-        return view('pages.admin.categories.index', compact('categories'));
+   public function categoryList(Request $request)
+{
+    $query = Category::withCount('products');
+
+    if ($request->filled('search')) {
+        $search = $request->input('search');
+        $query->where('name', 'like', "%{$search}%");
     }
+
+    $categories = $query->paginate(10);
+
+    return view('pages.admin.categories.index', compact('categories'));
+}
 
     public function categoryCreate()
     {
@@ -388,11 +396,14 @@ class AdminDashboardController extends Controller
         return redirect()->route('admin.categories.index')->with('success', 'Kategori berhasil ditambahkan');
     }
 
-    public function categoryShow(Category $category)
-    {
-        $category->load('products');
-        return view('pages.admin.categories.show', compact('category'));
-    }
+   public function categoryShow(Category $category)
+{
+    $category->load(['products' => function($query) {
+        $query->select('id', 'name', 'sku', 'current_stock', 'min_stock', 'unit', 'category_id');
+    }]);
+
+    return view('pages.admin.categories.show', compact('category'));
+}
 
     public function categoryEdit(Category $category)
     {
