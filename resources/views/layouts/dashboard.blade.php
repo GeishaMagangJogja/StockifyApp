@@ -4,8 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    {{-- Judul halaman dinamis yang mengambil dari config('app.name') --}}
     <title>@yield('title', 'Dashboard') - {{ config('app.name', 'Stockify') }}</title>
     
+    {{-- =================================================================== --}}
+    {{-- BARIS YANG DITAMBAHKAN - UNTUK MENAMPILKAN FAVICON DINAMIS --}}
+    {{-- =================================================================== --}}
+    <link id="favicon" rel="icon" href="{{ get_favicon_url() }}" type="image/x-icon">
+    {{-- =================================================================== --}}
+
     <script>
         // Menerapkan tema dari localStorage SEGERA untuk mencegah FOUC (Flash of Unstyled Content)
         if (localStorage.getItem('darkMode') === 'true' || (!('darkMode' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -192,4 +200,4 @@
         }
     </style>
 </body>
-</html> 
+</html>

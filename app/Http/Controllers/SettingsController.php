@@ -2,14 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use Dotenv\Dotenv;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator; // Import Validator
 
 class SettingsController extends Controller
 {
+    /**
+     * Menampilkan halaman pengaturan.
+     */
     public function index()
     {
         return view('pages.admin.settings.index', [
@@ -18,95 +21,107 @@ class SettingsController extends Controller
         ]);
     }
 
-private function handleLogoUpload($file)
-{
-    // Hapus logo lama jika ada
-    $oldLogo = config('app.logo');
-    if ($oldLogo && Storage::disk('public')->exists($oldLogo)) {
-        Storage::disk('public')->delete($oldLogo);
-    }
+    /**
+     * Memperbarui pengaturan aplikasi.
+     */
+    public function update(Request $request)
+    {
+        // 1. Validasi Input
+        $validator = Validator::make($request->all(), [
+            'app_name' => 'required|string|max:255',
+            'app_logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048', // max 2MB
+        ]);
 
-    // Simpan logo baru
-    $path = $file->store('logos', 'public');
-
-    // Update .env
-    $this->updateEnv('APP_LOGO', $path);
-
-    return $path;
-}
-
-public function update(Request $request)
-{
-    Log::info('Mulai update settings', $request->all());
-
-    try {
-        $this->updateEnv('APP_NAME', $request->app_name);
-        Log::info('APP_NAME berhasil diupdate');
-
-        if ($request->hasFile('app_logo')) {
-            $path = $this->handleLogoUpload($request->file('app_logo'));
-            Log::info('Logo berhasil diupload ke: '.$path);
+        if ($validator->fails()) {
+            return redirect()->route('admin.settings')
+                ->withErrors($validator)
+                ->withInput();
         }
 
-        Artisan::call('config:clear');
-        Log::info('Config cleared');
+        try {
+            // 2. Update Nama Aplikasi di .env
+            $this->updateEnv('APP_NAME', $request->app_name);
+            Log::info('APP_NAME berhasil diupdate di file .env');
 
-        return back()->with('success', 'Pengaturan berhasil diperbarui!');
-    } catch (\Exception $e) {
-        Log::error('Error update settings: '.$e->getMessage());
-        return back()->with('error', 'Gagal memperbarui: '.$e->getMessage());
-    }
-}
+            // 3. Handle Upload Logo
+            if ($request->hasFile('app_logo')) {
+                $path = $this->handleLogoUpload($request->file('app_logo'));
+                Log::info('Logo berhasil diupload dan path disimpan di .env: ' . $path);
+            }
 
-private function getLogoUrl()
-{
-    $logoPath = config('app.logo');
-    if ($logoPath && Storage::disk('public')->exists($logoPath)) {
-        return asset('storage/' . $logoPath);
-    }
-    return null;
-}
+            // 4. Bersihkan Cache (Sangat Penting!)
+            Artisan::call('config:clear');
+            Log::info('Cache konfigurasi berhasil dibersihkan.');
 
+            // 5. Redirect dengan pesan sukses
+            return redirect()->route('admin.settings')->with('success', 'Pengaturan berhasil diperbarui!');
 
-
-private function updateEnv($key, $value)
-{
-    $envPath = app()->environmentFilePath();
-
-    // Pastikan file .env ada dan bisa diakses
-    if (!file_exists($envPath)) {
-        throw new \Exception("File .env tidak ditemukan");
+        } catch (\Exception $e) {
+            Log::error('Gagal memperbarui pengaturan: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            return redirect()->route('admin.settings')->with('error', 'Terjadi kesalahan saat memperbarui pengaturan: ' . $e->getMessage());
+        }
     }
 
-    // Baca konten file
-    $envContent = file_get_contents($envPath);
-    if ($envContent === false) {
-        throw new \Exception("Gagal membaca file .env");
+    /**
+     * Mendapatkan URL logo saat ini.
+     */
+    private function getLogoUrl()
+    {
+        // Gunakan env() untuk mendapatkan nilai mentah dari file .env
+        $logoPath = env('APP_LOGO');
+        if ($logoPath && Storage::disk('public')->exists($logoPath)) {
+            return asset('storage/' . $logoPath);
+        }
+        return null; // Return null jika tidak ada logo
     }
 
-    // Escape value jika mengandung spasi
-    if (preg_match('/\s/', $value) && !preg_match('/^[\'"].*[\'"]$/', $value)) {
-        $value = '"'.$value.'"';
+    /**
+     * Mengelola upload logo baru dan menghapus yang lama.
+     */
+    private function handleLogoUpload($file)
+    {
+        // Hapus logo lama jika ada path-nya di .env
+        $oldLogoPath = env('APP_LOGO');
+        if ($oldLogoPath && Storage::disk('public')->exists($oldLogoPath)) {
+            Storage::disk('public')->delete($oldLogoPath);
+            Log::info('Logo lama dihapus: ' . $oldLogoPath);
+        }
+
+        // Simpan logo baru di 'public/logos'
+        $path = $file->store('logos', 'public');
+
+        // Update path logo baru di .env
+        $this->updateEnv('APP_LOGO', $path);
+
+        return $path;
     }
 
-    // Update existing key atau tambahkan baru
-    $pattern = "/^{$key}=[^\r\n]*/m";
-    if (preg_match($pattern, $envContent)) {
-        $envContent = preg_replace($pattern, "{$key}={$value}", $envContent);
-    } else {
-        $envContent .= "\n{$key}={$value}\n";
-    }
+    /**
+     * Fungsi untuk menulis perubahan ke file .env
+     */
+    private function updateEnv($key, $value)
+    {
+        $envPath = app()->environmentFilePath();
+        $envContent = file_get_contents($envPath);
 
-    // Tulis kembali ke file
-    $written = file_put_contents($envPath, $envContent);
-    if ($written === false) {
-        throw new \Exception("Gagal menulis ke file .env");
-    }
+        // Bungkus value dengan kutip jika mengandung spasi
+        if (preg_match('/\s/', $value)) {
+            $value = '"' . $value . '"';
+        }
 
-    // Verifikasi perubahan
-    $newContent = file_get_contents($envPath);
-    if (!preg_match("/^{$key}={$value}/m", $newContent)) {
-        throw new \Exception("Gagal memverifikasi perubahan .env");
+        $newEntry = "{$key}={$value}";
+        $pattern = "/^{$key}=.*/m";
+
+        if (preg_match($pattern, $envContent)) {
+            // Update key yang sudah ada
+            $envContent = preg_replace($pattern, $newEntry, $envContent);
+        } else {
+            // Tambahkan key baru di akhir file
+            $envContent .= "\n" . $newEntry . "\n";
+        }
+
+        file_put_contents($envPath, $envContent);
     }
-}
 }

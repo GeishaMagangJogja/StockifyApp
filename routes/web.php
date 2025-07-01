@@ -126,8 +126,8 @@ Route::middleware(['auth', 'role:Admin'])->prefix('admin')->name('admin.')->grou
 
     // Settings
 
-    Route::get('/settings', [AdminDashboardController::class, 'settings'])->name('settings');
-    Route::put('/settings', [AdminDashboardController::class, 'settingsUpdate'])->name('settings.update');
+    Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
+    Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
 
     Route::get('/profile', [AdminDashboardController::class, 'profile'])->name('profile');
     Route::put('/profile', [AdminDashboardController::class, 'updateProfile'])->name('profile.update');
