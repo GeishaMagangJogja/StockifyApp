@@ -35,13 +35,18 @@ class ReportController extends Controller
 
         // Tambahkan summary stok
         $stockSummary = [
-            'safe' => Product::whereColumn('current_stock', '>', 'minimum_stock')
+            // ===================================================================
+            // PERBAIKAN DI BAWAH INI
+            // Mengubah 'minimum_stock' menjadi 'min_stock'
+            // ===================================================================
+            'safe' => Product::whereColumn('current_stock', '>', 'min_stock') // <-- DIUBAH
                 ->when($request->category_id, fn($q) => $q->where('category_id', $request->category_id))
                 ->count(),
             'low' => Product::where('current_stock', '>', 0)
-                ->whereColumn('current_stock', '<=', 'minimum_stock')
+                ->whereColumn('current_stock', '<=', 'min_stock') // <-- DIUBAH
                 ->when($request->category_id, fn($q) => $q->where('category_id', $request->category_id))
                 ->count(),
+            // ===================================================================
             'out' => Product::where('current_stock', '<=', 0)
                 ->when($request->category_id, fn($q) => $q->where('category_id', $request->category_id))
                 ->count(),
