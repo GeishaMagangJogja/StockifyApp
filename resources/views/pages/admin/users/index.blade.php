@@ -1,145 +1,122 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Kelola User')
+@section('title', 'Kelola Pengguna')
 
 @section('content')
-    <div class="flex justify-between items-center mb-6">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Kelola User</h1>
-            <p class="text-gray-600 dark:text-gray-400">Kelola semua pengguna sistem gudang</p>
+    <div class="mb-6">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Kelola Pengguna</h1>
+                <p class="text-gray-600 dark:text-gray-400">Manajemen semua pengguna sistem</p>
+            </div>
+            <a href="{{ route('admin.users.create') }}"
+               class="px-4 py-2 text-white transition duration-150 bg-blue-600 rounded-lg hover:bg-blue-700">
+                <i class="mr-2 fas fa-plus"></i>Tambah Pengguna
+            </a>
         </div>
-        <a href="{{ route('admin.users.create') }}"
-           class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-            <i class="fas fa-plus mr-2"></i>Tambah User
-        </a>
     </div>
 
-    {{-- Filter & Search --}}
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow mb-6 p-6">
-        <form method="GET" action="{{ route('admin.users.index') }}">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    @include('partials.alert')
+
+    <div class="bg-white rounded-lg shadow dark:bg-slate-800">
+        <div class="p-4 border-b border-gray-200 dark:border-slate-700">
+            <form action="{{ route('admin.users.index') }}" method="GET" class="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Cari User</label>
+                    <label class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Cari Pengguna</label>
                     <input type="text" name="search" value="{{ request('search') }}"
                            placeholder="Nama atau email..."
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                           class="w-full px-4 py-2 border rounded-lg dark:bg-slate-700 dark:border-gray-600 dark:text-white">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Filter Role</label>
-                    <select name="role" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    <label class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Role</label>
+                    <select name="role" class="w-full px-4 py-2 border rounded-lg dark:bg-slate-700 dark:border-gray-600 dark:text-white">
                         <option value="">Semua Role</option>
-                        @foreach($roles as $role)
+                        @foreach(['Admin', 'Manajer Gudang', 'Staff Gudang'] as $role)
                             <option value="{{ $role }}" {{ request('role') == $role ? 'selected' : '' }}>
                                 {{ $role }}
                             </option>
                         @endforeach
                     </select>
                 </div>
-                <div class="flex items-end">
-                    <button type="submit" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors mr-2">
-                        <i class="fas fa-search mr-2"></i>Filter
+                <div class="flex items-end gap-2">
+                    <button type="submit" class="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700">
+                        <i class="mr-2 fas fa-search"></i> Filter
                     </button>
-                    <a href="{{ route('admin.users.index') }}" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors">
-                        Reset
-                    </a>
+                    @if(request()->anyFilled(['search', 'role']))
+                        <a href="{{ route('admin.users.index') }}"
+                           class="px-4 py-2 text-gray-600 bg-gray-200 rounded-lg hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-300">
+                            Reset
+                        </a>
+                    @endif
                 </div>
-            </div>
-        </form>
-    </div>
-
-    {{-- Success Message --}}
-    @if(session('success'))
-        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
-            {{ session('success') }}
+            </form>
         </div>
-    @endif
 
-    {{-- Users Table --}}
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="w-full table-auto">
-                <thead class="bg-gray-50 dark:bg-gray-700">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
+                <thead class="bg-gray-50 dark:bg-slate-700">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                            User
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                            Role
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                            Status
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                            Bergabung
-                        </th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                            Aksi
-                        </th>
+                        <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-300">Pengguna</th>
+                        <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-300">Role</th>
+                        <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-300">Status</th>
+                        <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-300">Bergabung</th>
+                        <th class="px-6 py-3 text-xs font-medium tracking-wider text-right text-gray-500 uppercase dark:text-gray-300">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                <tbody class="bg-white divide-y divide-gray-200 dark:bg-slate-800 dark:divide-gray-700">
                     @forelse($users as $user)
-                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <tr class="hover:bg-gray-50 dark:hover:bg-slate-700/50">
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center">
-                                    <div class="h-10 w-10 flex-shrink-0">
-                                        <div class="h-10 w-10 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center">
-                                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                                {{ substr($user->name, 0, 2) }}
-                                            </span>
-                                        </div>
+                                    <div class="flex items-center justify-center flex-shrink-0 w-10 h-10 bg-gray-200 rounded-full dark:bg-slate-600">
+                                        <span class="font-medium text-gray-700 dark:text-gray-300">{{ substr($user->name, 0, 2) }}</span>
                                     </div>
                                     <div class="ml-4">
-                                        <div class="text-sm font-medium text-gray-900 dark:text-white">
-                                            {{ $user->name }}
-                                        </div>
-                                        <div class="text-sm text-gray-500 dark:text-gray-400">
-                                            {{ $user->email }}
-                                        </div>
+                                        <div class="font-medium text-gray-900 dark:text-white">{{ $user->name }}</div>
+                                        <div class="text-sm text-gray-500 dark:text-gray-400">{{ $user->email }}</div>
                                     </div>
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
-                                    @if($user->role == 'Admin') bg-red-100 text-red-800
-                                    @elseif($user->role == 'Manajer Gudang') bg-blue-100 text-blue-800
-                                    @else bg-green-100 text-green-800 @endif">
+                                <span @class([
+                                    'px-2 py-1 text-xs font-semibold rounded-full',
+                                    'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300' => $user->role == 'Admin',
+                                    'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300' => $user->role == 'Manajer Gudang',
+                                    'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300' => $user->role == 'Staff Gudang'
+                                ])>
                                     {{ $user->role }}
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                <span class="inline-flex px-2 py-1 text-xs font-semibold leading-5 text-green-800 bg-green-100 rounded-full dark:bg-green-900/50 dark:text-green-300">
                                     Aktif
                                 </span>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                            <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap dark:text-gray-400">
                                 {{ $user->created_at->format('d M Y') }}
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <td class="px-6 py-4 text-sm font-medium text-right whitespace-nowrap">
                                 <div class="flex justify-end space-x-2">
-                                    <a href="{{ route('admin.users.show', $user) }}"
-                                       class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
+                                    <a href="{{ route('admin.users.show', $user) }}" class="p-2 text-blue-500 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50" title="Detail">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    <a href="{{ route('admin.users.edit', $user) }}"
-                                       class="text-yellow-600 hover:text-yellow-900 dark:text-yellow-400 dark:hover:text-yellow-300">
+                                    <a href="{{ route('admin.users.edit', $user) }}" class="p-2 text-yellow-500 rounded-lg hover:bg-yellow-100 dark:hover:bg-yellow-900/50" title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <form action="{{ route('admin.users.destroy', $user) }}" method="POST" class="inline"
-                                          onsubmit="return confirm('Yakin ingin menghapus user ini?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </form>
+                                    <a href="{{ route('admin.users.delete', $user) }}" class="p-2 text-red-500 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/50" title="Hapus">
+    <i class="fas fa-trash"></i>
+</a>
                                 </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
-                                Tidak ada data user ditemukan
+                            <td colspan="5" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                                <i class="mx-auto mb-2 text-4xl fas fa-user-slash"></i>
+                                <p class="text-lg">Tidak ada pengguna ditemukan</p>
+                                @if(request()->anyFilled(['search', 'role']))
+                                    <a href="{{ route('admin.users.index') }}" class="mt-2 text-blue-500 hover:underline">Reset pencarian</a>
+                                @endif
                             </td>
                         </tr>
                     @endforelse
@@ -147,10 +124,9 @@
             </table>
         </div>
 
-        {{-- Pagination --}}
         @if($users->hasPages())
-            <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-                {{ $users->links() }}
+            <div class="px-6 py-4 border-t border-gray-200 dark:border-slate-700">
+                {{ $users->appends(request()->query())->links() }}
             </div>
         @endif
     </div>
