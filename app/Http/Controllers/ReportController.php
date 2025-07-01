@@ -14,9 +14,17 @@ class ReportController extends Controller
     /**
      * Display the main report navigation hub.
      */
-    public function index()
-    {
-        return view('pages.admin.reports.index');
+    public function index(Request $request)
+{
+    $categories = Category::all();
+
+    $products = Product::with('category')
+        ->when($request->category_id, function ($query) use ($request) {
+            $query->where('category_id', $request->category_id);
+        })
+        ->paginate(10);
+
+    return view('pages.admin.reports.index', compact('categories', 'products'));
     }
 
     /**
