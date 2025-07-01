@@ -82,24 +82,28 @@ class AdminDashboardController extends Controller
     }
 
     // Users Management
-    public function userList(Request $request)
+  public function userList(Request $request)
     {
-        $query = User::query();
+    $query = User::query();
 
-        if ($request->has('search')) {
-            $search = $request->get('search');
-            $query->where('name', 'like', "%{$search}%")
-                ->orWhere('email', 'like', "%{$search}%");
-        }
+    // Filter pencarian
+    if ($request->filled('search')) {
+        $search = $request->search;
+        $query->where(function($q) use ($search) {
+            $q->where('name', 'like', "%{$search}%")
+              ->orWhere('email', 'like', "%{$search}%");
+        });
+    }
 
-        if ($request->has('role') && $request->role != '') {
-            $query->where('role', $request->role);
-        }
+    // Filter role - perbaikan disini
+    if ($request->filled('role')) {
+        $query->where('role', $request->role);
+    }
 
-        $users = $query->paginate(10);
-        $roles = ['Admin', 'Manajer Gudang', 'Staff Gudang'];
+    $users = $query->latest()->paginate(10);
+    $roles = ['Admin', 'Manajer Gudang', 'Staff Gudang']; // Daftar role yang tersedia
 
-        return view('pages.admin.users.index', compact('users', 'roles'));
+    return view('pages.admin.users.index', compact('users', 'roles'));
     }
 
     public function userCreate()
@@ -162,11 +166,44 @@ class AdminDashboardController extends Controller
         return redirect()->route('admin.users.index')->with('success', 'User berhasil diupdate');
     }
 
-    public function userDestroy(User $user)
-    {
+   // Add this method for showing delete confirmation
+public function confirmDeleteUser(User $user)
+{
+    return view('pages.admin.users.delete', compact('user'));
+}
+
+// Update the destroy method
+public function userDestroy(User $user)
+{
+    DB::beginTransaction();
+    try {
+        // Prevent deleting yourself
+        if ($user->id === auth()->id()) {
+            return redirect()->route('admin.users.index')
+                ->with('error', 'Anda tidak dapat menghapus akun sendiri');
+        }
+
+        // Check if user has any related data (transactions, etc.)
+        $hasTransactions = StockTransaction::where('user_id', $user->id)->exists();
+
+        if ($hasTransactions) {
+            return redirect()->route('admin.users.index')
+                ->with('error', 'Tidak dapat menghapus pengguna karena memiliki riwayat transaksi terkait');
+        }
+
+        $userName = $user->name;
         $user->delete();
-        return redirect()->route('admin.users.index')->with('success', 'User berhasil dihapus');
+
+        DB::commit();
+
+        return redirect()->route('admin.users.index')
+            ->with('success', "Pengguna '{$userName}' berhasil dihapus");
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return redirect()->route('admin.users.index')
+            ->with('error', 'Gagal menghapus pengguna: ' . $e->getMessage());
     }
+}
 
     // Products Management
    public function productList(Request $request)

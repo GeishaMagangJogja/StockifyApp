@@ -81,6 +81,7 @@ Route::middleware(['auth', 'role:Admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/users/{user}', [AdminDashboardController::class, 'userShow'])->name('users.show');
     Route::get('/users/{user}/edit', [AdminDashboardController::class, 'userEdit'])->name('users.edit');
     Route::put('/users/{user}', [AdminDashboardController::class, 'userUpdate'])->name('users.update');
+    Route::get('/users/{user}/delete', [AdminDashboardController::class, 'confirmDeleteUser'])->name('users.delete');
     Route::delete('/users/{user}', [AdminDashboardController::class, 'userDestroy'])->name('users.destroy');
 
     // Products Management (alternative routes)
