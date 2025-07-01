@@ -83,24 +83,15 @@
                         <!-- Minimum Stok -->
                         <div>
                             <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Minimum Stok</label>
-                            <p class="mt-1 text-sm text-gray-900 dark:text-white">{{ $product->min_stock }}</p>
+                            <p class="mt-1 text-sm text-gray-900 dark:text-white">{{ $product->minimum_stock }}</p>
                         </div>
 
-                        <!-- Status -->
+                        <!-- Unit -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Status</label>
-                            <p class="mt-1 text-sm text-gray-900 dark:text-white">
-                                @if($product->is_active)
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                                        Aktif
-                                    </span>
-                                @else
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
-                                        Nonaktif
-                                    </span>
-                                @endif
-                            </p>
+                            <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Satuan</label>
+                            <p class="mt-1 text-sm text-gray-900 dark:text-white">{{ $product->unit }}</p>
                         </div>
+
 
                         <!-- Dibuat Pada -->
                         <div>
@@ -126,6 +117,71 @@
                             {{ $product->description ?: '-' }}
                         </p>
                     </div>
+                </div>
+            </div>
+
+            <!-- Riwayat Stok Terakhir -->
+            <div class="mt-6 overflow-hidden bg-white rounded-lg shadow dark:bg-gray-800">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h2 class="text-lg font-medium text-gray-900 dark:text-white">Riwayat Stok Terakhir</h2>
+                </div>
+                <div class="p-6">
+                    @if($product->stockTransactions->count() > 0)
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                <thead class="bg-gray-50 dark:bg-gray-700">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-400">
+                                            Tanggal
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-400">
+                                            Jenis
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-400">
+                                            Jumlah
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-400">
+                                            Catatan
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-400">
+                                            User
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
+                                    @foreach($product->stockTransactions as $transaction)
+                                        <tr>
+                                            <td class="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                                                {{ $transaction->date->translatedFormat('d F Y H:i') }}
+                                            </td>
+                                            <td class="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                                                @if($transaction->type === 'Masuk')
+                                                    <span class="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full dark:bg-green-900 dark:text-green-200">
+                                                        Masuk
+                                                    </span>
+                                                @else
+                                                    <span class="px-2 py-1 text-xs font-semibold text-red-800 bg-red-100 rounded-full dark:bg-red-900 dark:text-red-200">
+                                                        Keluar
+                                                    </span>
+                                                @endif
+                                            </td>
+                                            <td class="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                                                {{ $transaction->quantity }}
+                                            </td>
+                                            <td class="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                                                {{ $transaction->notes ?: '-' }}
+                                            </td>
+                                            <td class="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                                                {{ $transaction->user->name }}
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @else
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Belum ada riwayat stok untuk produk ini.</p>
+                    @endif
                 </div>
             </div>
         </div>

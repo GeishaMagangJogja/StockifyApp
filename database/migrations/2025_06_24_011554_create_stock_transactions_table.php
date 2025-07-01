@@ -15,7 +15,7 @@ return new class extends Migration
             $table->foreignId('supplier_id')->nullable()->constrained()->onDelete('set null');
             $table->enum('type', ['Masuk', 'Keluar']);
             $table->integer('quantity');
-            $table->dateTime('date')->change();
+            $table->dateTime('date');
             $table->enum('status', ['Pending', 'Diterima', 'Ditolak', 'Dikeluarkan']);
             $table->foreignId('processed_by')->nullable()->constrained('users')->onDelete('set null');
             $table->text('notes')->nullable();

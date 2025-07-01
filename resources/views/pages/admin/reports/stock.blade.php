@@ -5,32 +5,68 @@
 @section('content')
 {{-- Unified Card Layout --}}
 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden border border-gray-200 dark:border-gray-700">
-    
+
     {{-- Card Header: Title & Filters --}}
     <div class="p-6 border-b border-gray-200 dark:border-gray-700">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center">
             <div>
                 <h2 class="text-xl font-bold text-gray-900 dark:text-white">Laporan Stok Barang</h2>
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Analisis stok produk berdasarkan kategori.</p>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    Analisis stok produk berdasarkan kategori dan status stok.
+                    @if(request('category_id'))
+                        <span class="font-medium">Filter: {{ $categories->find(request('category_id'))->name }}</span>
+                    @endif
+                </p>
             </div>
-            
-            {{-- Filter Form --}}
-            <form method="GET" class="mt-4 sm:mt-0 flex items-center gap-4">
-                <select name="category_id" class="w-52 px-3 py-2 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                    <option value="">-- Semua Kategori --</option>
-                    @foreach ($categories as $cat)
-                        <option value="{{ $cat->id }}" {{ request('category_id') == $cat->id ? 'selected' : '' }}>
-                            {{ $cat->name }}
-                        </option>
-                    @endforeach
-                </select>
 
-                <button type="submit" class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 text-sm rounded-md font-medium shadow-sm transition">
-                    <i class="fas fa-filter"></i>
-                    <span>Filter</span>
-                </button>
-                <a href="{{ route('admin.reports.stock') }}" class="text-sm text-gray-500 hover:text-blue-600 dark:hover:text-blue-400">Reset</a>
+            {{-- Filter Form --}}
+            <form method="GET" class="mt-4 sm:mt-0 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                <div class="flex items-center gap-4">
+                    <select name="category_id" class="w-52 px-3 py-2 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">-- Semua Kategori --</option>
+                        @foreach ($categories as $cat)
+                            <option value="{{ $cat->id }}" {{ request('category_id') == $cat->id ? 'selected' : '' }}>
+                                {{ $cat->name }}
+                            </option>
+                        @endforeach
+                    </select>
+
+                    <select name="stock_status" class="w-40 px-3 py-2 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">-- Semua Status --</option>
+                        <option value="low" {{ request('stock_status') == 'low' ? 'selected' : '' }}>Stok Menipis</option>
+                        <option value="out" {{ request('stock_status') == 'out' ? 'selected' : '' }}>Stok Habis</option>
+                        <option value="safe" {{ request('stock_status') == 'safe' ? 'selected' : '' }}>Stok Aman</option>
+                    </select>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button type="submit" class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 text-sm rounded-md font-medium shadow-sm transition">
+                        <i class="fas fa-filter"></i>
+                        <span>Filter</span>
+                    </button>
+                    <a href="{{ route('admin.reports.stock') }}" class="text-sm text-gray-500 hover:text-blue-600 dark:hover:text-blue-400">Reset</a>
+                </div>
             </form>
+        </div>
+    </div>
+
+    {{-- Summary Cards --}}
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 p-6 border-b border-gray-200 dark:border-gray-700">
+        <div class="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg">
+            <h3 class="text-sm font-medium text-blue-800 dark:text-blue-200">Total Produk</h3>
+            <p class="mt-1 text-2xl font-semibold text-blue-600 dark:text-blue-100">{{ $products->total() }}</p>
+        </div>
+        <div class="bg-green-50 dark:bg-green-900/30 p-4 rounded-lg">
+            <h3 class="text-sm font-medium text-green-800 dark:text-green-200">Stok Aman</h3>
+            <p class="mt-1 text-2xl font-semibold text-green-600 dark:text-green-100">{{ $stockSummary['safe'] }}</p>
+        </div>
+        <div class="bg-yellow-50 dark:bg-yellow-900/30 p-4 rounded-lg">
+            <h3 class="text-sm font-medium text-yellow-800 dark:text-yellow-200">Stok Menipis</h3>
+            <p class="mt-1 text-2xl font-semibold text-yellow-600 dark:text-yellow-100">{{ $stockSummary['low'] }}</p>
+        </div>
+        <div class="bg-red-50 dark:bg-red-900/30 p-4 rounded-lg">
+            <h3 class="text-sm font-medium text-red-800 dark:text-red-200">Stok Habis</h3>
+            <p class="mt-1 text-2xl font-semibold text-red-600 dark:text-red-100">{{ $stockSummary['out'] }}</p>
         </div>
     </div>
 
@@ -43,16 +79,35 @@
                     <th scope="col" class="px-6 py-3 text-left font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">Produk</th>
                     <th scope="col" class="px-6 py-3 text-left font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">Kategori</th>
                     <th scope="col" class="px-6 py-3 text-center font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">Stok Saat Ini</th>
+                    <th scope="col" class="px-6 py-3 text-center font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">Stok Minimum</th>
+                    <th scope="col" class="px-6 py-3 text-center font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">Selisih</th>
                     <th scope="col" class="px-6 py-3 text-left font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">Status</th>
                 </tr>
             </thead>
             {{-- Zebra-striping and hover effect --}}
             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                 @forelse($products as $product)
+                    @php
+                        $difference = $product->current_stock - $product->min_stock;
+                    @endphp
                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                        <td class="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-white">{{ $product->name }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-white">
+                            <div class="flex items-center">
+                                @if($product->image)
+                                    <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="w-8 h-8 rounded-md object-cover mr-3">
+                                @endif
+                                <div>
+                                    <div class="font-medium">{{ $product->name }}</div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">{{ $product->sku }}</div>
+                                </div>
+                            </div>
+                        </td>
                         <td class="px-6 py-4 whitespace-nowrap text-gray-500 dark:text-gray-300">{{ $product->category->name ?? '-' }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center text-gray-900 dark:text-white font-semibold">{{ $product->current_stock }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center text-gray-900 dark:text-white font-semibold">{{ $product->current_stock }} {{ $product->unit }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center text-gray-500 dark:text-gray-300">{{ $product->min_stock }} {{ $product->unit }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center font-medium {{ $difference < 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400' }}">
+                            {{ $difference > 0 ? '+' : '' }}{{ $difference }} {{ $product->unit }}
+                        </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             @if($product->current_stock <= 0)
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300">
@@ -61,12 +116,12 @@
                                 </span>
                             @elseif($product->current_stock <= $product->min_stock)
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300">
-                                     <span class="w-2 h-2 mr-1.5 bg-yellow-500 rounded-full"></span>
+                                    <span class="w-2 h-2 mr-1.5 bg-yellow-500 rounded-full"></span>
                                     Stok Menipis
                                 </span>
                             @else
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300">
-                                     <span class="w-2 h-2 mr-1.5 bg-green-500 rounded-full"></span>
+                                    <span class="w-2 h-2 mr-1.5 bg-green-500 rounded-full"></span>
                                     Stok Aman
                                 </span>
                             @endif
@@ -74,9 +129,12 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="4" class="text-center py-10 text-gray-500 dark:text-gray-400">
+                        <td colspan="6" class="text-center py-10 text-gray-500 dark:text-gray-400">
                             <i class="fas fa-box-open fa-2x mb-2"></i>
                             <p>Tidak ada data stok ditemukan.</p>
+                            @if(request()->anyFilled(['category_id', 'stock_status']))
+                                <a href="{{ route('admin.reports.stock') }}" class="text-blue-600 dark:text-blue-400 hover:underline">Reset filter</a>
+                            @endif
                         </td>
                     </tr>
                 @endforelse

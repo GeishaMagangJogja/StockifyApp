@@ -55,7 +55,7 @@
                 </div>
             </div>
         </div>
-        
+
         {{-- Kolom Kanan: Aktivitas Terbaru --}}
         <div class="space-y-6">
             <div class="p-6 bg-white rounded-lg shadow dark:bg-slate-800">

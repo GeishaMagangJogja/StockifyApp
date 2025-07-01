@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden border border-gray-200 dark:border-gray-700">
-    
+
     {{-- Card Header: Title & Filters --}}
     <div class="p-6 border-b border-gray-200 dark:border-gray-700">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center">
@@ -12,12 +12,11 @@
                 <h2 class="text-xl font-bold text-gray-900 dark:text-white">Laporan Transaksi Barang</h2>
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Detail riwayat barang masuk dan keluar.</p>
             </div>
-            
+
             {{-- Filter Form --}}
             <form method="GET" class="mt-4 sm:mt-0 flex flex-wrap items-center gap-4">
                 <select name="type" class="w-48 px-3 py-2 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white shadow-sm focus:ring-blue-500 focus:border-blue-500">
                     <option value="">-- Semua Jenis --</option>
-                    {{-- [FIXED] Menggunakan nilai dengan huruf kapital --}}
                     <option value="Masuk" {{ request('type') == 'Masuk' ? 'selected' : '' }}>Barang Masuk</option>
                     <option value="Keluar" {{ request('type') == 'Keluar' ? 'selected' : '' }}>Barang Keluar</option>
                 </select>
@@ -43,6 +42,7 @@
                     <th scope="col" class="px-6 py-3 text-center font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">Jumlah</th>
                     <th scope="col" class="px-6 py-3 text-left font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">Pengguna</th>
                     <th scope="col" class="px-6 py-3 text-left font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">Tanggal</th>
+                    <th scope="col" class="px-6 py-3 text-left font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">Catatan</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
@@ -66,11 +66,14 @@
                             {{ $trx->type == 'Masuk' ? '+' : '-' }}{{ $trx->quantity }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-gray-500 dark:text-gray-300">{{ $trx->user->name ?? '-' }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-gray-500 dark:text-gray-300">{{ $trx->created_at->format('d M Y, H:i') }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-gray-500 dark:text-gray-300">
+                            {{ $trx->date ? \Carbon\Carbon::parse($trx->date)->format('d M Y, H:i') : '-' }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-gray-500 dark:text-gray-300">{{ $trx->notes ?? '-' }}</td>
                     </tr>
                 @empty
                     <tr>
-                         <td colspan="5" class="text-center py-10 text-gray-500 dark:text-gray-400">
+                         <td colspan="6" class="text-center py-10 text-gray-500 dark:text-gray-400">
                             <i class="fas fa-exchange-alt fa-2x mb-2"></i>
                             <p>Tidak ada data transaksi ditemukan.</p>
                         </td>

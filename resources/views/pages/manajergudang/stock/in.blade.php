@@ -9,17 +9,14 @@
             selectedProductId: '{{ old('product_id') }}' || null,
             quantity: '{{ old('quantity') }}' || '',
             products: {!! json_encode($products->keyBy('id')) !!},
-            
+
             init() {
                 const selectEl = document.getElementById('product_id');
                 if (!selectEl) return;
 
                 const tomselect = new TomSelect(selectEl, {
                     create: false,
-                    sortField: {
-                        field: "text",
-                        direction: "asc"
-                    }
+                    sortField: { field: "text", direction: "asc" }
                 });
                 
                 if (this.selectedProductId) {
@@ -35,16 +32,25 @@
                 return this.selectedProductId ? this.products[this.selectedProductId] : null;
             },
             get currentStock() {
-                return this.currentProduct ? this.currentProduct.current_stock : '...';
+                return this.currentProduct ? this.currentProduct.current_stock : 0;
             },
             get unit() {
                 return this.currentProduct ? this.currentProduct.unit : '';
+            },
+            get minimumStock() {
+                return this.currentProduct ? this.currentProduct.minimum_stock : 0;
             },
             get finalStock() {
                 const current = parseInt(this.currentStock);
                 const added = parseInt(this.quantity);
                 if (!isNaN(current) && !isNaN(added)) return current + added;
-                return this.currentStock;
+                return current;
+            },
+            validateQuantity() {
+                if (this.quantity <= 0) {
+                    alert('Jumlah masuk harus lebih dari 0!');
+                    this.quantity = 1;
+                }
             }
         }));
     });
@@ -71,8 +77,11 @@
                             <ul>@foreach ($errors->all() as $error)<li>- {{ $error }}</li>@endforeach</ul>
                         </div>
                     @endif
+
                     <div>
-                        <label for="product_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Produk <span class="text-red-500">*</span></label>
+                        <label for="product_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Produk <span class="text-red-500">*</span>
+                        </label>
                         <select id="product_id" name="product_id" placeholder="Cari dan pilih produk..." required>
                             <option value="">-- Pilih Produk --</option>
                             @foreach ($products as $product)

@@ -23,41 +23,54 @@ class ManagerDashboardController extends Controller
     /**
      * Menampilkan halaman dashboard untuk Manajer Gudang.
      */
-    public function index()
-    {
-        $totalProducts = Product::count();
-        $totalSuppliers = Supplier::count();
+   public function index()
+{
+    $totalProducts = Product::count();
+    $totalSuppliers = Supplier::count();
 
-        // ... (logika lowStockProducts tidak berubah)
-        $lowStockProducts = Product::all()->filter(function ($product) {
-            return isset($product->min_stock) && $product->current_stock <= $product->min_stock;
-        })->sortBy('current_stock')->take(5);
+    $lowStockProducts = Product::all()->filter(function ($product) {
+        return isset($product->min_stock) && $product->current_stock <= $product->min_stock;
+    })->sortBy('current_stock')->take(5);
 
-        // ... (logika chartData tidak berubah)
-        $chartData = ['categories' => [], 'incoming' => [], 'outgoing' => []];
-        for ($i = 6; $i >= 0; $i--) {
-            $day = now()->subDays($i);
-            $chartData['categories'][] = $day->format('d M');
-            $chartData['incoming'][] = StockTransaction::where('type', 'Masuk')->whereDate('date', $day->format('Y-m-d'))->sum('quantity');
-            $chartData['outgoing'][] = StockTransaction::where('type', 'Keluar')->whereDate('date', $day->format('Y-m-d'))->sum('quantity');
-        }
+    // Chart data dengan whereBetween
+    $chartData = ['categories' => [], 'incoming' => [], 'outgoing' => []];
+    for ($i = 6; $i >= 0; $i--) {
+        $day = now()->subDays($i);
+        $chartData['categories'][] = $day->format('d M');
 
-        $incomingTodayCount = StockTransaction::where('type', 'Masuk')->whereDate('date', today())->count();
-        $outgoingTodayCount = StockTransaction::where('type', 'Keluar')->whereDate('date', today())->count();
+        $chartData['incoming'][] = StockTransaction::where('type', 'Masuk')
+            ->whereBetween('date', [$day->copy()->startOfDay(), $day->copy()->endOfDay()])
+            ->sum('quantity');
 
-        $recentTransactions = StockTransaction::with('product', 'user')->orderBy('date', 'desc')->latest()->limit(5)->get();
-            
-        // TAMBAHAN BARU: Ambil data supplier terbaru
-        $recentSuppliers = Supplier::latest()->limit(5)->get();
-
-        return view('pages.manajergudang.dashboard.index', compact(
-            'totalProducts', 'totalSuppliers', 'lowStockProducts', 
-            'incomingTodayCount', 'outgoingTodayCount', 'recentTransactions', 
-            'chartData', 'recentSuppliers' // <-- Kirim data baru ke view
-        ));
+        $chartData['outgoing'][] = StockTransaction::where('type', 'Keluar')
+            ->whereBetween('date', [$day->copy()->startOfDay(), $day->copy()->endOfDay()])
+            ->sum('quantity');
     }
 
-    
+    // Hitungan hari ini dengan whereBetween
+    $incomingTodayCount = StockTransaction::where('type', 'Masuk')
+        ->whereBetween('date', [now()->startOfDay(), now()->endOfDay()])
+        ->count();
+
+    $outgoingTodayCount = StockTransaction::where('type', 'Keluar')
+        ->whereBetween('date', [now()->startOfDay(), now()->endOfDay()])
+        ->count();
+
+    $recentTransactions = StockTransaction::with('product', 'user')
+        ->orderBy('date', 'desc')
+        ->limit(5)
+        ->get();
+
+    $recentSuppliers = Supplier::latest()->limit(5)->get();
+
+    return view('pages.manajergudang.dashboard.index', compact(
+        'totalProducts', 'totalSuppliers', 'lowStockProducts',
+        'incomingTodayCount', 'outgoingTodayCount', 'recentTransactions',
+        'chartData', 'recentSuppliers'
+    ));
+}
+
+
     // ... (productList dan productShow tidak perlu diubah) ...
     public function productList(Request $request)
     {
@@ -80,7 +93,7 @@ class ManagerDashboardController extends Controller
                   ->orWhere('sku', 'like', "%{$search}%");
             });
         }
-        
+
         $products = $query->latest()->paginate(15);
         return view('pages.manajergudang.products.index', compact('products'));
     }
@@ -117,7 +130,7 @@ class ManagerDashboardController extends Controller
             'product_id' => $request->product_id,
             'user_id' => Auth::id(),
             'supplier_id' => $request->supplier_id,
-            'type' => 'Masuk', 
+            'type' => 'Masuk',
             'quantity' => $request->quantity,
             'notes' => $request->notes,
             'date' => $transactionDateTime, // <-- Gunakan variabel baru
@@ -161,7 +174,7 @@ class ManagerDashboardController extends Controller
 
         return redirect()->route('manajergudang.dashboard')->with('success', 'Transaksi barang keluar berhasil dicatat.');
     }
-    
+
     public function stockOpname()
     {
         $products = Product::with('stockTransactions')->orderBy('name')->paginate(20);
@@ -181,10 +194,10 @@ class ManagerDashboardController extends Controller
             foreach ($request->products as $item) {
                 $systemStock = (int)$item['system_stock'];
                 $physicalStock = (int)$item['physical_stock'];
-                
+
                 // Lanjutkan hanya jika stok fisik yang diinput berbeda dengan stok sistem
                 if ($physicalStock !== $systemStock) {
-                    
+
                     // Langkah 1: Buat transaksi KELUAR untuk mengosongkan stok sistem
                     // (Hanya jika stok sistem lebih dari 0)
                     if ($systemStock > 0) {
@@ -218,11 +231,11 @@ class ManagerDashboardController extends Controller
 
         return redirect()->route('manajergudang.stock.opname')->with('success', 'Stock opname berhasil disimpan dan stok telah disesuaikan.');
     }
-    
+
     // ... (supplier dan report methods) ...
     public function supplierList(Request $request)
     {
-        $query = Supplier::withCount('products'); 
+        $query = Supplier::withCount('products');
 
         if ($request->has('search') && $request->filled('search')) {
             $search = $request->get('search');
@@ -239,7 +252,7 @@ class ManagerDashboardController extends Controller
         $supplier->load('products');
         return view('pages.manajergudang.suppliers.show', compact('supplier'));
     }
-    
+
     public function reportStock(Request $request)
     {
         // Query dasar untuk mengambil produk dengan kalkulasi stok
@@ -253,7 +266,7 @@ class ManagerDashboardController extends Controller
                 ->whereColumn('product_id', 'products.id')
                 ->where('type', 'Keluar')
         ]);
-        
+
         // Filter berdasarkan kategori jika ada
         if ($request->has('category_id') && $request->filled('category_id')) {
             $query->where('category_id', $request->category_id);
@@ -281,7 +294,7 @@ class ManagerDashboardController extends Controller
         if ($request->has('end_date') && $request->filled('end_date')) {
             $query->whereDate('date', '<=', $request->end_date);
         }
-        
+
         $transactions = $query->paginate(20);
 
         return view('pages.manajergudang.reports.transactions', compact('transactions'));

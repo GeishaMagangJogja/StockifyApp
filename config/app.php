@@ -19,6 +19,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Application Logo Path
+    |--------------------------------------------------------------------------
+    |
+    | Ini adalah path ke logo aplikasi yang akan digunakan untuk favicon.
+    | Nilainya diambil dari variabel APP_LOGO di file .env.
+    |
+    */
+
+    'logo' => env('APP_LOGO', null), // <-- INI BARIS YANG SAYA TAMBAHKAN
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------
     |

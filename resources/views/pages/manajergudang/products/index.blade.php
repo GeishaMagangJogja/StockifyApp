@@ -63,13 +63,13 @@
                             {{-- Kolom Stok --}}
                             <td class="px-6 py-4 whitespace-nowrap text-sm">
                                 <div class="text-gray-900 dark:text-white">{{ number_format($product->current_stock) }} <span class="text-gray-500 dark:text-gray-400 text-xs">{{ $product->unit }}</span></div>
-                                <div class="text-xs text-gray-500 dark:text-gray-400">Min: {{ number_format($product->min_stock) }}</div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">Min: {{ number_format($product->minimum_stock) }}</div>
                             </td>
                             {{-- Kolom Status --}}
                             <td class="px-6 py-4 whitespace-nowrap">
                                 @if($product->current_stock <= 0)
                                     <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300">Habis</span>
-                                @elseif($product->current_stock <= $product->min_stock)
+                                @elseif($product->current_stock <= $product->minimum_stock)
                                     <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300">Stok Rendah</span>
                                 @else
                                     <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300">Tersedia</span>

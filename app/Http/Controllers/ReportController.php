@@ -33,7 +33,21 @@ class ReportController extends Controller
         $products = $query->latest()->paginate(20);
         $categories = Category::orderBy('name')->get();
 
-        return view('pages.admin.reports.stock', compact('products', 'categories'));
+        // Tambahkan summary stok
+        $stockSummary = [
+            'safe' => Product::whereColumn('current_stock', '>', 'minimum_stock')
+                ->when($request->category_id, fn($q) => $q->where('category_id', $request->category_id))
+                ->count(),
+            'low' => Product::where('current_stock', '>', 0)
+                ->whereColumn('current_stock', '<=', 'minimum_stock')
+                ->when($request->category_id, fn($q) => $q->where('category_id', $request->category_id))
+                ->count(),
+            'out' => Product::where('current_stock', '<=', 0)
+                ->when($request->category_id, fn($q) => $q->where('category_id', $request->category_id))
+                ->count(),
+        ];
+
+        return view('pages.admin.reports.stock', compact('products', 'categories', 'stockSummary'));
     }
 
     /**
@@ -46,7 +60,7 @@ class ReportController extends Controller
         if ($request->filled('type')) {
             $query->where('type', $request->type);
         }
-        
+
         if ($request->filled('from') && $request->filled('to')) {
             $query->whereBetween('created_at', [$request->from, $request->to]);
         }
