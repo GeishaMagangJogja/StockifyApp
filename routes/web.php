@@ -45,7 +45,7 @@ Route::middleware('guest')->group(function () {
 
 // Auth actions (available for all)
 Route::post('/login', [AuthController::class, 'login'])->name('login.process');
-Route::post('/login/simple', [AuthController::class, 'simpleLogin'])->name('login.simple'); // Fallback
+Route::post('/login/simple', [AuthController::class, 'simpleLogin'])->name('login.simple');
 Route::post('/register', [AuthController::class, 'register'])->name('register.process');
 
 // Auth actions (require authentication)
@@ -62,7 +62,7 @@ Route::middleware(['auth', 'role:Admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
     // Resource Routes
-    Route::resource('products', ProductController::class);
+    Route::resource('products', ProductController::class)->except(['destroy']);
     Route::resource('categories', CategoryController::class);
     Route::resource('suppliers', SupplierController::class)->names([
         'index'   => 'suppliers.index',
@@ -73,8 +73,6 @@ Route::middleware(['auth', 'role:Admin'])->prefix('admin')->name('admin.')->grou
         'update'  => 'suppliers.update',
         'destroy' => 'suppliers.destroy',
     ]);
-
-    Route::resource('users', UserController::class);
 
     // Users Management (alternative routes)
     Route::get('/users', [AdminDashboardController::class, 'userList'])->name('users.index');
@@ -92,8 +90,9 @@ Route::middleware(['auth', 'role:Admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/products/{product}', [AdminDashboardController::class, 'productShow'])->name('products.show');
     Route::get('/products/{product}/edit', [AdminDashboardController::class, 'productEdit'])->name('products.edit');
     Route::put('/products/{product}', [AdminDashboardController::class, 'productUpdate'])->name('products.update');
-    Route::delete('/products/{product}', [AdminDashboardController::class, 'productDestroy'])->name('products.destroy');
-    Route::get('/products/export', [AdminDashboardController::class, 'exportProducts'])->name('products.export');
+    Route::get('/products/{product}/delete', [AdminDashboardController::class, 'confirmDeleteProduct'])->name('products.confirm-delete');
+    Route::delete('/products/{product}', [AdminDashboardController::class, 'destroy'])->name('products.destroy');
+    Route::delete('/products/{product}/force', [AdminDashboardController::class, 'forceDestroy'])->name('products.force-destroy');
     Route::post('/products/generate-sku', [AdminDashboardController::class, 'generateSku'])->name('products.generate-sku');
 
     // Categories Management (alternative routes)
@@ -112,9 +111,9 @@ Route::middleware(['auth', 'role:Admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/suppliers/{supplier}', [AdminDashboardController::class, 'supplierShow'])->name('suppliers.show');
     Route::get('/suppliers/{supplier}/edit', [AdminDashboardController::class, 'supplierEdit'])->name('suppliers.edit');
     Route::put('/suppliers/{supplier}', [AdminDashboardController::class, 'supplierUpdate'])->name('suppliers.update');
-    Route::get('/suppliers/{supplier}/delete', [AdminDashboardController::class, 'confirmDelete'])->name('suppliers.confirm-delete');
+    Route::get('/suppliers/{supplier}/delete', [AdminDashboardController::class, 'confirmDeleteSupplier'])->name('suppliers.confirm-delete');
 
-    // System Reports (gunakan controller khusus untuk laporan)
+    // System Reports
     Route::prefix('reports')->name('reports.')->group(function () {
         Route::get('/', [ReportController::class, 'index'])->name('index');
         Route::get('/stock', [ReportController::class, 'stock'])->name('stock');
@@ -123,12 +122,9 @@ Route::middleware(['auth', 'role:Admin'])->prefix('admin')->name('admin.')->grou
         Route::get('/system', [ReportController::class, 'system'])->name('system');
     });
 
-
     // Settings
-
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
     Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
-
     Route::get('/profile', [AdminDashboardController::class, 'profile'])->name('profile');
     Route::put('/profile', [AdminDashboardController::class, 'updateProfile'])->name('profile.update');
 });
@@ -137,15 +133,10 @@ Route::middleware(['auth', 'role:Admin'])->prefix('admin')->name('admin.')->grou
 // MANAJER GUDANG ROUTES
 // ===================================
 Route::middleware(['auth', 'role:Manajer Gudang'])->prefix('manajergudang')->name('manajergudang.')->group(function () {
-    // Dashboard
     Route::get('/dashboard', [ManagerDashboardController::class, 'index'])->name('dashboard');
-
-    // Products Management (Read Only)
-    Route::resource('products', ProductController::class);
+    Route::resource('products', ProductController::class)->except(['destroy']);
     Route::get('/products', [ManagerDashboardController::class, 'productList'])->name('products.index');
     Route::get('/products/{product}', [ManagerDashboardController::class, 'productShow'])->name('products.show');
-
-    // Stock Management
     Route::get('/stock', [ManagerDashboardController::class, 'stockIndex'])->name('stock.index');
     Route::get('/stock/in', [ManagerDashboardController::class, 'stockIn'])->name('stock.in');
     Route::post('/stock/in', [ManagerDashboardController::class, 'stockInStore'])->name('stock.in.store');
@@ -154,8 +145,6 @@ Route::middleware(['auth', 'role:Manajer Gudang'])->prefix('manajergudang')->nam
     Route::get('/stock/opname', [ManagerDashboardController::class, 'stockOpname'])->name('stock.opname');
     Route::post('/stock/opname', [ManagerDashboardController::class, 'stockOpnameStore'])->name('stock.opname.store');
     Route::get('/stock/history', [ManagerDashboardController::class, 'stockHistory'])->name('stock.history');
-
-    // Transactions
     Route::get('/transactions', [ManagerDashboardController::class, 'transactionList'])->name('transactions.index');
     Route::get('/transactions/{transaction}', [ManagerDashboardController::class, 'transactionShow'])->name('transactions.show');
     Route::get('/transactions/create/in', [ManagerDashboardController::class, 'transactionCreateIn'])->name('transactions.create.in');
@@ -164,25 +153,17 @@ Route::middleware(['auth', 'role:Manajer Gudang'])->prefix('manajergudang')->nam
     Route::put('/transactions/{transaction}/approve', [ManagerDashboardController::class, 'transactionApprove'])->name('transactions.approve');
     Route::put('/transactions/{transaction}/reject', [ManagerDashboardController::class, 'transactionReject'])->name('transactions.reject');
     Route::post('/{transaction}/complete', [StaffTaskController::class, 'processIncomingConfirmation'])->name('complete');
-
-    // Suppliers (Read Only)
     Route::get('/suppliers', [ManagerDashboardController::class, 'supplierList'])->name('suppliers.index');
     Route::get('/suppliers/{supplier}', [ManagerDashboardController::class, 'supplierShow'])->name('suppliers.show');
-
-    // Reports
     Route::get('/reports', [ManagerDashboardController::class, 'reportIndex'])->name('reports.index');
     Route::get('/reports/stock', [ManagerDashboardController::class, 'reportStock'])->name('reports.stock');
     Route::get('/reports/transactions', [ManagerDashboardController::class, 'reportTransactions'])->name('reports.transactions');
     Route::get('/reports/inventory', [ManagerDashboardController::class, 'reportInventory'])->name('reports.inventory');
     Route::post('/reports/export', [ManagerDashboardController::class, 'reportExport'])->name('reports.export');
-
-    // Staff Management
     Route::get('/staff', [ManagerDashboardController::class, 'staffList'])->name('staff.index');
     Route::get('/staff/{user}', [ManagerDashboardController::class, 'staffShow'])->name('staff.show');
     Route::get('/staff/{user}/tasks', [ManagerDashboardController::class, 'staffTasks'])->name('staff.tasks');
     Route::post('/staff/{user}/assign-task', [ManagerDashboardController::class, 'staffAssignTask'])->name('staff.assign-task');
-
-    // Profile
     Route::get('/profile', [ManagerDashboardController::class, 'profile'])->name('profile');
     Route::put('/profile', [ManagerDashboardController::class, 'updateProfile'])->name('profile.update');
 });
@@ -191,51 +172,35 @@ Route::middleware(['auth', 'role:Manajer Gudang'])->prefix('manajergudang')->nam
 // STAFF GUDANG ROUTES
 // ===================================
 Route::middleware(['auth', 'role:Staff Gudang'])->prefix('staff')->name('staff.')->group(function () {
-    // Dashboard
     Route::get('/dashboard', [StaffDashboardController::class, 'index'])->name('dashboard');
-
-    // MANAJEMEN STOK
     Route::prefix('stock')->name('stock.')->group(function () {
         Route::prefix('incoming')->name('incoming.')->group(function () {
             Route::get('/', [StaffTaskController::class, 'listIncoming'])->name('list');
             Route::get('/{transaction}/confirm', [StaffTaskController::class, 'showIncomingConfirmationForm'])->name('confirm');
             Route::post('/{transaction}/complete', [StaffTaskController::class, 'processIncomingConfirmation'])->name('complete');
         });
-
         Route::prefix('outgoing')->name('outgoing.')->group(function () {
             Route::get('/', [StaffTaskController::class, 'listOutgoing'])->name('list');
             Route::get('/{transaction}/prepare', [StaffTaskController::class, 'showOutgoingPreparationForm'])->name('prepare');
             Route::post('/{transaction}/dispatch', [StaffTaskController::class, 'processOutgoingDispatch'])->name('dispatch');
         });
-
-        // Stock Operations (Limited)
         Route::get('/', [StaffDashboardController::class, 'stockIndex'])->name('index');
         Route::get('/check', [StaffDashboardController::class, 'stockCheck'])->name('check');
         Route::post('/update', [StaffDashboardController::class, 'stockUpdate'])->name('update');
     });
-
-    // LAPORAN
     Route::prefix('reports')->name('reports.')->group(function () {
         Route::get('/incoming', [StaffReportController::class, 'showIncomingReport'])->name('incoming');
         Route::get('/outgoing', [StaffReportController::class, 'showOutgoingReport'])->name('outgoing');
     });
-
-    // Products (Read Only)
     Route::get('/products', [StaffDashboardController::class, 'productList'])->name('products.index');
     Route::get('/products/{product}', [StaffDashboardController::class, 'productShow'])->name('products.show');
-
-    // Tasks
     Route::get('/tasks', [StaffDashboardController::class, 'taskList'])->name('tasks.index');
     Route::get('/tasks/{task}', [StaffDashboardController::class, 'taskShow'])->name('tasks.show');
     Route::put('/tasks/{task}/complete', [StaffDashboardController::class, 'taskComplete'])->name('tasks.complete');
     Route::put('/tasks/{task}/update-status', [StaffDashboardController::class, 'taskUpdateStatus'])->name('tasks.update-status');
-
-    // Transactions (View assigned only)
     Route::get('/transactions', [StaffDashboardController::class, 'transactionList'])->name('transactions.index');
     Route::get('/transactions/{transaction}', [StaffDashboardController::class, 'transactionShow'])->name('transactions.show');
     Route::put('/transactions/{transaction}/process', [StaffDashboardController::class, 'transactionProcess'])->name('transactions.process');
-
-    // Profile
     Route::get('/profile', [StaffDashboardController::class, 'profile'])->name('profile');
     Route::put('/profile', [StaffDashboardController::class, 'updateProfile'])->name('profile.update');
 });

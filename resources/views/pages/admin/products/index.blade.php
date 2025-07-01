@@ -161,18 +161,11 @@
                                    title="Edit">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <form action="{{ route('admin.products.destroy', $product->id) }}"
-                                      method="POST"
-                                      onsubmit="return confirm('Apakah Anda yakin ingin menghapus produk ini?')"
-                                      class="inline">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit"
-                                            class="p-2 text-red-500 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/50"
-                                            title="Hapus">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
+                                <a href="{{ route('admin.products.confirm-delete', $product->id) }}"
+                                   class="p-2 text-red-500 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/50"
+                                   title="Hapus">
+                                    <i class="fas fa-trash"></i>
+                                </a>
                             </div>
                         </td>
                     </tr>

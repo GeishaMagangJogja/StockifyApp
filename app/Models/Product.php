@@ -60,7 +60,7 @@ class Product extends Model
         return Attribute::make(
             get: fn () => match (true) {
                 $this->current_stock <= 0 => 'out_of_stock',
-                $this->current_stock <= $this->min_stock => 'low_stock', // Pastikan ini 'min_stock'
+                $this->current_stock <= $this->min_stock => 'low_stock',
                 default => 'in_stock',
             }
         );
@@ -81,4 +81,11 @@ class Product extends Model
         return $this->stockTransactions()->where('type', 'Masuk')->sum('quantity') -
                $this->stockTransactions()->where('type', 'Keluar')->sum('quantity');
     }
+    // Di Model Product
+public function getCurrentStockAttribute()
+{
+    return $this->stockTransactions()
+        ->selectRaw('SUM(CASE WHEN type = "Masuk" THEN quantity ELSE -quantity END) as stock')
+        ->value('stock') ?? 0;
+}
 }

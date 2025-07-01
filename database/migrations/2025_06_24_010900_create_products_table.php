@@ -22,7 +22,7 @@ return new class extends Migration
             $table->integer('min_stock')->default(0);
             $table->string('unit')->default('pcs');
             $table->timestamps();
-            $table->softDeletes(); // ⬅ Kolom deleted_at langsung ditambahkan di sini
+            $table->softDeletes();
         });
     }
 
