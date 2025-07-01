@@ -112,7 +112,7 @@ Route::middleware(['auth', 'role:Admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/suppliers/{supplier}', [AdminDashboardController::class, 'supplierShow'])->name('suppliers.show');
     Route::get('/suppliers/{supplier}/edit', [AdminDashboardController::class, 'supplierEdit'])->name('suppliers.edit');
     Route::put('/suppliers/{supplier}', [AdminDashboardController::class, 'supplierUpdate'])->name('suppliers.update');
-    Route::get('/suppliers/{supplier}/delete', [AdminDashboardController::class, 'confirmDeleteSupplier'])->name('suppliers.confirm-delete');
+    Route::get('/suppliers/{supplier}/delete', [AdminDashboardController::class, 'confirmDeleteSupplier'])->name('suppliers.delete');
 
     // System Reports
     Route::prefix('reports')->name('reports.')->group(function () {
