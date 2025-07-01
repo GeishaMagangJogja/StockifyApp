@@ -297,36 +297,41 @@ class AdminDashboardController extends Controller
 
     public function productUpdate(Request $request, Product $product)
     {
-        // [FIX] Validasi yang lebih lengkap dan benar
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
-            // [FIX] Aturan SKU yang benar untuk update: unik kecuali untuk produk ini sendiri
             'sku' => 'required|string|max:100|unique:products,sku,' . $product->id, 
             'category_id' => 'required|exists:categories,id',
             'supplier_id' => 'nullable|exists:suppliers,id',
             'description' => 'nullable|string',
             'purchase_price' => 'required|numeric|min:0',
             'selling_price' => 'required|numeric|min:0',
-            'min_stock' => 'required|integer|min:0', // Menggunakan 'min_stock'
+            'min_stock' => 'required|integer|min:0',
             'unit' => 'required|string|max:20',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'is_active' => 'nullable|boolean', // [FIX] Tambahkan validasi untuk is_active
+            'is_active' => 'nullable|boolean',
+            'remove_image' => 'nullable|in:0,1', // <-- Tambahkan validasi untuk input baru
         ]);
 
         try {
-            // [FIX] Handle checkbox 'is_active'
             $validatedData['is_active'] = $request->has('is_active');
 
+            // [LOGIKA GAMBAR DIPERBARUI]
             if ($request->hasFile('image')) {
-                // Hapus gambar lama jika ada
+                // Kasus 1: User mengupload gambar BARU
                 if ($product->image) {
                     Storage::disk('public')->delete($product->image);
                 }
-                // Simpan gambar baru
                 $validatedData['image'] = $request->file('image')->store('product_images', 'public');
-            }
 
-            // [FIX] Lakukan update dengan data yang sudah divalidasi dan diproses
+            } elseif ($request->input('remove_image') == '1') {
+                // Kasus 2: User menekan tombol HAPUS gambar
+                if ($product->image) {
+                    Storage::disk('public')->delete($product->image);
+                }
+                $validatedData['image'] = null; // Set kolom image di database menjadi NULL
+            }
+            // Jika tidak ada kondisi di atas, jangan sentuh kolom 'image' sama sekali
+
             $product->update($validatedData);
 
             return redirect()->route('admin.products.index')

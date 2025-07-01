@@ -109,14 +109,18 @@ class ManagerDashboardController extends Controller
 
     public function stockIn()
     {
-        $products = Product::with('stockTransactions')->orderBy('name')->get();
+        // [PERBAIKAN KECIL] Gunakan query yang lebih efisien untuk mengambil stok
+        $products = Product::orderBy('name')->get();
+        // Load relasi stockTransactions untuk setiap produk jika belum di-load
+        $products->load('stockTransactions');
+
         $suppliers = Supplier::orderBy('name')->get(['id', 'name']);
         return view('pages.manajergudang.stock.in', compact('products', 'suppliers'));
     }
 
     public function stockInStore(Request $request)
     {
-        $request->validate([
+        $validatedData = $request->validate([
             'product_id' => 'required|exists:products,id',
             'supplier_id' => 'required|exists:suppliers,id',
             'quantity' => 'required|integer|min:1',
@@ -124,55 +128,82 @@ class ManagerDashboardController extends Controller
             'notes' => 'nullable|string|max:255',
         ]);
 
-        $transactionDateTime = Carbon::parse($request->transaction_date)->setTimeFrom(now());
+        try {
+            DB::transaction(function () use ($validatedData) {
+                // 1. Cari produk yang akan diupdate
+                $product = Product::findOrFail($validatedData['product_id']);
 
-        StockTransaction::create([
-            'product_id' => $request->product_id,
-            'user_id' => Auth::id(),
-            'supplier_id' => $request->supplier_id,
-            'type' => 'Masuk',
-            'quantity' => $request->quantity,
-            'notes' => $request->notes,
-            'date' => $transactionDateTime, // <-- Gunakan variabel baru
-            'status' => 'Diterima',
-        ]);
+                // 2. Buat catatan transaksi
+                StockTransaction::create([
+                    'product_id' => $validatedData['product_id'],
+                    'user_id' => Auth::id(),
+                    'supplier_id' => $validatedData['supplier_id'],
+                    'type' => 'Masuk',
+                    'quantity' => $validatedData['quantity'],
+                    'notes' => $validatedData['notes'],
+                    'date' => Carbon::parse($validatedData['transaction_date'])->setTimeFrom(now()),
+                    'status' => 'Diterima',
+                ]);
 
-        return redirect()->route('manajergudang.dashboard')->with('success', 'Transaksi barang masuk berhasil dicatat.');
+                // 3. [FIX] Update stok di tabel products menggunakan increment
+                $product->increment('current_stock', $validatedData['quantity']);
+            });
+
+            return redirect()->route('manajergudang.dashboard')->with('success', 'Transaksi barang masuk berhasil dicatat.');
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage())->withInput();
+        }
     }
 
     public function stockOut()
     {
-        $products = Product::with('stockTransactions')->orderBy('name')->get();
+        // Sama seperti stockIn, gunakan query yang lebih efisien
+        $products = Product::orderBy('name')->get();
+        $products->load('stockTransactions');
         return view('pages.manajergudang.stock.out', compact('products'));
     }
 
     public function stockOutStore(Request $request)
     {
-        $request->validate([
+        $validatedData = $request->validate([
             'product_id' => 'required|exists:products,id',
             'quantity' => 'required|integer|min:1',
             'transaction_date' => 'required|date',
             'notes' => 'nullable|string|max:255',
         ]);
+        
+        try {
+            DB::transaction(function () use ($validatedData) {
+                // 1. Cari produk
+                $product = Product::findOrFail($validatedData['product_id']);
 
-        $product = Product::findOrFail($request->product_id);
-        if ($request->quantity > $product->current_stock) {
-            return back()->withErrors(['quantity' => 'Jumlah barang keluar tidak boleh melebihi stok yang ada (Stok saat ini: ' . $product->current_stock . ').'])->withInput();
+                // 2. Validasi stok sebelum melanjutkan
+                if ($validatedData['quantity'] > $product->current_stock) {
+                    // Melemparkan exception akan otomatis me-rollback transaksi DB
+                    throw new \Exception('Stok tidak mencukupi. Stok tersedia: ' . $product->current_stock);
+                }
+
+                // 3. Buat catatan transaksi keluar
+                StockTransaction::create([
+                    'product_id' => $validatedData['product_id'],
+                    'user_id' => Auth::id(),
+                    'type' => 'Keluar',
+                    'quantity' => $validatedData['quantity'],
+                    'notes' => $validatedData['notes'],
+                    'date' => Carbon::parse($validatedData['transaction_date'])->setTimeFrom(now()),
+                    'status' => 'Dikeluarkan',
+                ]);
+
+                // 4. [FIX] Update stok di tabel products menggunakan decrement
+                $product->decrement('current_stock', $validatedData['quantity']);
+            });
+
+            return redirect()->route('manajergudang.dashboard')->with('success', 'Transaksi barang keluar berhasil dicatat.');
+        
+        } catch (\Exception $e) {
+            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage())->withInput();
         }
-
-        $transactionDateTime = Carbon::parse($request->transaction_date)->setTimeFrom(now());
-
-        StockTransaction::create([
-            'product_id' => $request->product_id,
-            'user_id' => Auth::id(),
-            'type' => 'Keluar',
-            'quantity' => $request->quantity,
-            'notes' => $request->notes,
-            'date' => $transactionDateTime, // <-- Gunakan variabel baru
-            'status' => 'Dikeluarkan',
-        ]);
-
-        return redirect()->route('manajergudang.dashboard')->with('success', 'Transaksi barang keluar berhasil dicatat.');
     }
 
     public function stockOpname()
@@ -183,48 +214,38 @@ class ManagerDashboardController extends Controller
 
     public function stockOpnameStore(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'products' => 'required|array',
             'products.*.id' => 'required|exists:products,id',
             'products.*.system_stock' => 'required|integer',
             'products.*.physical_stock' => 'required|integer|min:0',
         ]);
 
-        DB::transaction(function () use ($request) {
-            foreach ($request->products as $item) {
+        DB::transaction(function () use ($validated) {
+            foreach ($validated['products'] as $item) {
                 $systemStock = (int)$item['system_stock'];
                 $physicalStock = (int)$item['physical_stock'];
-
-                // Lanjutkan hanya jika stok fisik yang diinput berbeda dengan stok sistem
+                
+                // Lanjutkan hanya jika ada perbedaan stok
                 if ($physicalStock !== $systemStock) {
+                    $product = Product::findOrFail($item['id']);
+                    $difference = $physicalStock - $systemStock;
 
-                    // Langkah 1: Buat transaksi KELUAR untuk mengosongkan stok sistem
-                    // (Hanya jika stok sistem lebih dari 0)
-                    if ($systemStock > 0) {
-                        StockTransaction::create([
-                            'product_id' => $item['id'],
-                            'user_id' => Auth::id(),
-                            'type' => 'Keluar',
-                            'quantity' => $systemStock,
-                            'notes' => 'Opname out',
-                            'date' => now(),
-                            'status' => 'Dikeluarkan',
-                        ]);
-                    }
-
-                    // Langkah 2: Buat transaksi MASUK sesuai dengan jumlah fisik
-                    // (Hanya jika stok fisik lebih dari 0)
-                    if ($physicalStock > 0) {
-                         StockTransaction::create([
-                            'product_id' => $item['id'],
-                            'user_id' => Auth::id(),
-                            'type' => 'Masuk',
-                            'quantity' => $physicalStock,
-                            'notes' => 'Opname physic stock',
-                            'date' => now(),
-                            'status' => 'Diterima',
-                        ]);
-                    }
+                    // Buat SATU transaksi penyesuaian
+                    StockTransaction::create([
+                        'product_id' => $product->id,
+                        'user_id' => Auth::id(),
+                        // Tipe transaksi tergantung selisih
+                        'type' => $difference > 0 ? 'Masuk' : 'Keluar', 
+                        // Quantity adalah nilai absolut dari selisih
+                        'quantity' => abs($difference), 
+                        'notes' => 'Penyesuaian Stock Opname',
+                        'date' => now(),
+                        'status' => $difference > 0 ? 'Diterima' : 'Dikeluarkan',
+                    ]);
+                    
+                    // [FIX UTAMA] Update kolom current_stock di tabel products
+                    $product->update(['current_stock' => $physicalStock]);
                 }
             }
         });

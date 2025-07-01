@@ -131,7 +131,7 @@
                                 {{ number_format($product->current_stock, 0) }} {{ $product->unit }}
                             </div>
                             <div class="text-xs text-gray-500 dark:text-gray-400">
-                                Min: {{ number_format($product->minimum_stock, 0) }} {{ $product->unit }}
+                                Min: {{ number_format($product->min_stock, 0) }} {{ $product->unit }}
                             </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
@@ -139,7 +139,7 @@
                                 <span class="inline-flex px-2 py-1 text-xs font-semibold leading-5 text-red-800 bg-red-100 rounded-full dark:bg-red-900/50 dark:text-red-300">
                                     Habis
                                 </span>
-                            @elseif($product->current_stock <= $product->minimum_stock)
+                            @elseif($product->current_stock <= $product->min_stock)
                                 <span class="inline-flex px-2 py-1 text-xs font-semibold leading-5 text-yellow-800 bg-yellow-100 rounded-full dark:bg-yellow-900/50 dark:text-yellow-300">
                                     Rendah
                                 </span>

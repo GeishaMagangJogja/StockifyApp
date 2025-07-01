@@ -63,7 +63,7 @@
                             {{-- Kolom Stok --}}
                             <td class="px-6 py-4 whitespace-nowrap text-sm">
                                 <div class="text-gray-900 dark:text-white">{{ number_format($product->current_stock) }} <span class="text-gray-500 dark:text-gray-400 text-xs">{{ $product->unit }}</span></div>
-                                <div class="text-xs text-gray-500 dark:text-gray-400">Min: {{ number_format($product->minimum_stock) }}</div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">Min: {{ number_format($product->min_stock) }}</div>
                             </td>
                             {{-- Kolom Status --}}
                             <td class="px-6 py-4 whitespace-nowrap">

@@ -58,13 +58,10 @@ class Product extends Model
     protected function stockStatus(): Attribute
     {
         return Attribute::make(
-            get: function () {
-                if ($this->current_stock <= 0) {
-                    return 'out_of_stock';
-                } elseif ($this->current_stock <= $this->minimum_stock) {
-                    return 'low_stock';
-                }
-                return 'in_stock';
+            get: fn () => match (true) {
+                $this->current_stock <= 0 => 'out_of_stock',
+                $this->current_stock <= $this->min_stock => 'low_stock', // Pastikan ini 'min_stock'
+                default => 'in_stock',
             }
         );
     }

@@ -83,7 +83,7 @@
                         <!-- Minimum Stok -->
                         <div>
                             <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Minimum Stok</label>
-                            <p class="mt-1 text-sm text-gray-900 dark:text-white">{{ $product->minimum_stock }}</p>
+                            <p class="mt-1 text-sm text-gray-900 dark:text-white">{{ $product->min_stock }}</p>
                         </div>
 
                         <!-- Unit -->

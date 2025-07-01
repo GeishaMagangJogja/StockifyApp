@@ -95,7 +95,7 @@
         </div>
 
         <!-- Form Body -->
-        <form action="{{ route('admin.products.update', $product->id) }}" method="POST" enctype="multipart/form-data" class="p-6" id="productForm">
+        <form action="{{ route('admin.products.update', $product->id) }}" method="POST" enctype="multipart/form-data" class="p-6" id="productForm" novalidate>
             @csrf
             @method('PUT')
 
@@ -322,11 +322,11 @@
                             <div class="mb-4">
                                 <div class="relative group">
                                     <img id="imagePreview" class="object-cover w-full h-48 transition-all border-2 border-gray-300 border-dashed rounded-lg dark:border-gray-600 group-hover:border-blue-400"
-                                        src="{{ $product->image ? asset('storage/' . $product->image) : 'https://via.placeholder.com/300x200?text=No+Image' }}"
-                                        alt="Preview gambar">
-                                    {{-- Tombol ini selalu ada, tapi disembunyikan/ditampilkan oleh JS --}}
-                                    <button type="button" id="removeImageBtn" class="absolute p-2 text-white transition-colors bg-red-500 rounded-full shadow-lg -top-2 -right-2 hover:bg-red-600"
-                                            style="{{ !$product->image ? 'display: none;' : '' }}">
+                                    src="{{ $product->image ? asset('storage/' . $product->image) : 'https://via.placeholder.com/300x200?text=No+Image' }}"
+                                    alt="Preview gambar">
+                                    <button type="button" id="removeImageBtn" 
+                                            class="absolute flex items-center justify-center p-2 text-white transition-colors bg-red-500 rounded-full shadow-lg -top-2 -right-2 hover:bg-red-600"
+                                            style="{{ !$product->image || str_contains($product->image, 'placeholder') ? 'display: none;' : '' }}">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                                         </svg>
@@ -336,6 +336,7 @@
 
                             <!-- Upload Button -->
                             <div>
+                                <input type="hidden" name="remove_image" id="removeImageInput" value="0">
                                 <input type="file" id="image" name="image" accept="image/*" class="hidden">
                                 <label for="image" class="cursor-pointer">
                                     <div class="flex flex-col items-center justify-center w-full px-4 py-6 text-sm font-medium text-gray-700 transition-all bg-white border-2 border-gray-300 border-dashed rounded-lg hover:bg-gray-50 hover:border-blue-400 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600 dark:hover:border-blue-500">
@@ -442,77 +443,76 @@
 @endpush
 
 @push('scripts')
-    <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // --- Elemen-elemen penting ---
-        const imageInput = document.getElementById('image');
-        const imagePreview = document.getElementById('imagePreview');
-        const removeImageBtn = document.getElementById('removeImageBtn');
-        const originalImageSrc = imagePreview.src; // Simpan src gambar asli
-
-        const purchasePriceInput = document.getElementById('purchase_price_display');
-        const sellingPriceInput = document.getElementById('selling_price_display');
-        const purchasePriceRaw = document.getElementById('purchase_price_raw');
-        const sellingPriceRaw = document.getElementById('selling_price_raw');
-        const profitMarginEl = document.getElementById('profitMargin');
-
-        // --- LOGIKA GAMBAR (DIPERBAIKI TOTAL) ---
-
-        // Fungsi tunggal untuk mengupdate tampilan preview
-        function updateImagePreview() {
-            const file = imageInput.files[0];
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // -----------------------------------------------------------------
+    // LOGIKA UNTUK GAMBAR
+    // -----------------------------------------------------------------
+    const imageInput = document.getElementById('image');
+    const imagePreview = document.getElementById('imagePreview');
+    const removeImageBtn = document.getElementById('removeImageBtn');
+    const removeImageInput = document.getElementById('removeImageInput');
+    const placeholderSrc = 'https://via.placeholder.com/300x200?text=No+Image';
+    let originalImageSrc = imagePreview.src;
+    // Pastikan semua elemen ada sebelum memasang listener
+    if (imageInput && imagePreview && removeImageBtn && removeImageInput) {
+    
+        imageInput.addEventListener('change', function() {
+            const file = this.files[0];
             if (file) {
-                // Jika ada file dipilih, tampilkan previewnya
+                removeImageInput.value = '0'; // <-- Reset jika file baru dipilih
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     imagePreview.src = e.target.result;
                 }
                 reader.readAsDataURL(file);
-                removeImageBtn.style.display = 'flex'; // Tampilkan tombol hapus
-            } else {
-                // Jika tidak ada file, kembali ke gambar asli
-                imagePreview.src = originalImageSrc;
-                // Sembunyikan tombol hapus jika gambar asli adalah placeholder
-                if (originalImageSrc.includes('placeholder')) {
-                    removeImageBtn.style.display = 'none';
-                }
+                removeImageBtn.style.display = 'flex';
             }
-        }
-
-        // Listener saat file dipilih
-        imageInput.addEventListener('change', updateImagePreview);
-
-        // Listener untuk tombol hapus
-        removeImageBtn.addEventListener('click', function() {
-            imageInput.value = ''; // Hapus file dari input
-            updateImagePreview(); // Panggil fungsi update untuk reset tampilan
         });
 
-        // --- LOGIKA HARGA (Tetap sama, hanya dirapikan) ---
+        // Listener saat tombol Hapus (X) diklik
+        removeImageBtn.addEventListener('click', function() {
+            imageInput.value = '';
+            imagePreview.src = placeholderSrc;
+            removeImageBtn.style.display = 'none';
+            removeImageInput.value = '1'; // <-- [PENTING] Set nilai menjadi 1
+        });
+    }
 
-        function formatCurrency(inputEl, rawInputEl) {
-            let value = inputEl.value.replace(/[^0-9]/g, '');
-            value = value === '' ? '0' : value;
-            rawInputEl.value = value;
-            inputEl.value = new Intl.NumberFormat('id-ID').format(value);
+    // -----------------------------------------------------------------
+    // LOGIKA UNTUK HARGA (Tidak Berubah)
+    // -----------------------------------------------------------------
+    const purchasePriceInput = document.getElementById('purchase_price_display');
+    const sellingPriceInput = document.getElementById('selling_price_display');
+    const purchasePriceRaw = document.getElementById('purchase_price_raw');
+    const sellingPriceRaw = document.getElementById('selling_price_raw');
+    const profitMarginEl = document.getElementById('profitMargin');
+
+    function formatCurrency(inputEl, rawInputEl) {
+        let value = inputEl.value.replace(/[^0-9]/g, '');
+        rawInputEl.value = value || '0';
+        inputEl.value = new Intl.NumberFormat('id-ID').format(value || 0);
+    }
+
+    function calculateProfitMargin() {
+        if (!profitMarginEl) return;
+        
+        const purchase = parseInt(purchasePriceRaw.value) || 0;
+        const selling = parseInt(sellingPriceRaw.value) || 0;
+
+        if (purchase > 0 && selling >= purchase) {
+            const margin = selling - purchase;
+            const percent = ((margin / purchase) * 100).toFixed(2);
+            
+            profitMarginEl.querySelector('#marginAmount').textContent = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(margin);
+            profitMarginEl.querySelector('#marginPercent').textContent = percent;
+            profitMarginEl.style.display = 'block';
+        } else {
+            profitMarginEl.style.display = 'none';
         }
-
-        function calculateProfitMargin() {
-            const purchase = parseInt(purchasePriceRaw.value) || 0;
-            const selling = parseInt(sellingPriceRaw.value) || 0;
-
-            if (purchase > 0 && selling >= purchase) {
-                const margin = selling - purchase;
-                const percent = ((margin / purchase) * 100).toFixed(2);
-
-                document.getElementById('marginAmount').textContent = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(margin);
-                document.getElementById('marginPercent').textContent = percent;
-                profitMarginEl.style.display = 'block';
-            } else {
-                profitMarginEl.style.display = 'none';
-            }
-        }
-
+    }
+    
+    if (purchasePriceInput && sellingPriceInput) {
         purchasePriceInput.addEventListener('input', () => {
             formatCurrency(purchasePriceInput, purchasePriceRaw);
             calculateProfitMargin();
@@ -522,23 +522,10 @@
             formatCurrency(sellingPriceInput, sellingPriceRaw);
             calculateProfitMargin();
         });
-
+        
         // Inisialisasi saat halaman dimuat
         calculateProfitMargin();
-
-        const deleteBtn = document.getElementById('deleteProductBtn');
-        const deleteForm = document.getElementById('deleteProductForm');
-
-        if(deleteBtn && deleteForm) {
-            deleteBtn.addEventListener('click', function() {
-                // Tampilkan konfirmasi
-                if (confirm('Apakah Anda yakin ingin menghapus produk ini? Tindakan ini tidak dapat diurungkan.')) {
-                    // Jika user setuju, submit form tersembunyi
-                    deleteForm.submit();
-                }
-            });
-        }
-
-    });
-    </script>
+    }
+});
+</script>
 @endpush
