@@ -255,13 +255,13 @@
 
                             <!-- Minimum Stock -->
                             <div>
-                                <label for="minimum_stock" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                <label for="min_stock" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                                     Stok Minimum <span class="text-red-500">*</span>
                                 </label>
-                                <input type="number" id="minimum_stock" name="minimum_stock" value="{{ old('minimum_stock', $product->minimum_stock) }}" min="0" required
-                                       class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full p-3 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 transition-all @error('minimum_stock') border-red-500 dark:border-red-500 @enderror"
+                                <input type="number" id="min_stock" name="min_stock" value="{{ old('min_stock', $product->min_stock) }}" min="0" required
+                                       class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full p-3 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 transition-all @error('min_stock') border-red-500 dark:border-red-500 @enderror"
                                        placeholder="0">
-                                @error('minimum_stock')
+                                @error('min_stock')
                                     <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                                 @enderror
                                 <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Sistem akan memberikan peringatan jika stok mencapai batas ini</p>
@@ -322,15 +322,15 @@
                             <div class="mb-4">
                                 <div class="relative group">
                                     <img id="imagePreview" class="object-cover w-full h-48 transition-all border-2 border-gray-300 border-dashed rounded-lg dark:border-gray-600 group-hover:border-blue-400"
-                                         src="{{ $product->image ? asset('storage/' . $product->image) : 'https://via.placeholder.com/300x200?text=No+Image' }}"
-                                         alt="Preview gambar">
-                                    @if($product->image)
-                                        <button type="button" id="removeImageBtn" class="absolute p-2 text-white transition-colors bg-red-500 rounded-full shadow-lg -top-2 -right-2 hover:bg-red-600">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                            </svg>
-                                        </button>
-                                    @endif
+                                        src="{{ $product->image ? asset('storage/' . $product->image) : 'https://via.placeholder.com/300x200?text=No+Image' }}"
+                                        alt="Preview gambar">
+                                    {{-- Tombol ini selalu ada, tapi disembunyikan/ditampilkan oleh JS --}}
+                                    <button type="button" id="removeImageBtn" class="absolute p-2 text-white transition-colors bg-red-500 rounded-full shadow-lg -top-2 -right-2 hover:bg-red-600"
+                                            style="{{ !$product->image ? 'display: none;' : '' }}">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                    </button>
                                 </div>
                             </div>
 
@@ -399,15 +399,11 @@
                                 <i class="mr-2 fas fa-eye"></i>
                                 Lihat Detail Produk
                             </a>
-                            <form action="{{ route('admin.products.destroy', $product->id) }}" method="POST" class="w-full">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit"
-                                        class="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition-colors bg-red-600 rounded-lg hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700">
-                                    <i class="mr-2 fas fa-trash-alt"></i>
-                                    Hapus Produk
-                                </button>
-                            </form>
+                            <button type="button" id="deleteProductBtn"
+                                    class="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition-colors bg-red-600 rounded-lg hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700">
+                                <i class="mr-2 fas fa-trash-alt"></i>
+                                Hapus Produk
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -433,6 +429,11 @@
                 </div>
             </div>
         </form>
+
+        <form id="deleteProductForm" action="{{ route('admin.products.destroy', $product->id) }}" method="POST" style="display: none;">
+            @csrf
+            @method('DELETE')
+        </form>
     </div>
 @endsection
 
@@ -442,79 +443,102 @@
 
 @push('scripts')
     <script>
-        // Image Preview
-        document.getElementById('image').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    document.getElementById('imagePreview').src = event.target.result;
-                    document.getElementById('removeImageBtn').style.display = 'block';
-                }
-                reader.readAsDataURL(file);
-            }
-        });
+    document.addEventListener('DOMContentLoaded', function () {
+        // --- Elemen-elemen penting ---
+        const imageInput = document.getElementById('image');
+        const imagePreview = document.getElementById('imagePreview');
+        const removeImageBtn = document.getElementById('removeImageBtn');
+        const originalImageSrc = imagePreview.src; // Simpan src gambar asli
 
-        // Remove Image
-        document.getElementById('removeImageBtn')?.addEventListener('click', function() {
-            document.getElementById('image').value = '';
-            document.getElementById('imagePreview').src = 'https://via.placeholder.com/300x200?text=No+Image';
-            this.style.display = 'none';
-        });
-
-        // Currency Formatting for Prices
         const purchasePriceInput = document.getElementById('purchase_price_display');
         const sellingPriceInput = document.getElementById('selling_price_display');
         const purchasePriceRaw = document.getElementById('purchase_price_raw');
         const sellingPriceRaw = document.getElementById('selling_price_raw');
-        const profitMargin = document.getElementById('profitMargin');
+        const profitMarginEl = document.getElementById('profitMargin');
 
-        function formatCurrency(input, rawInput) {
-            let value = input.value.replace(/[^0-9]/g, '');
+        // --- LOGIKA GAMBAR (DIPERBAIKI TOTAL) ---
+
+        // Fungsi tunggal untuk mengupdate tampilan preview
+        function updateImagePreview() {
+            const file = imageInput.files[0];
+            if (file) {
+                // Jika ada file dipilih, tampilkan previewnya
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                }
+                reader.readAsDataURL(file);
+                removeImageBtn.style.display = 'flex'; // Tampilkan tombol hapus
+            } else {
+                // Jika tidak ada file, kembali ke gambar asli
+                imagePreview.src = originalImageSrc;
+                // Sembunyikan tombol hapus jika gambar asli adalah placeholder
+                if (originalImageSrc.includes('placeholder')) {
+                    removeImageBtn.style.display = 'none';
+                }
+            }
+        }
+
+        // Listener saat file dipilih
+        imageInput.addEventListener('change', updateImagePreview);
+
+        // Listener untuk tombol hapus
+        removeImageBtn.addEventListener('click', function() {
+            imageInput.value = ''; // Hapus file dari input
+            updateImagePreview(); // Panggil fungsi update untuk reset tampilan
+        });
+
+        // --- LOGIKA HARGA (Tetap sama, hanya dirapikan) ---
+
+        function formatCurrency(inputEl, rawInputEl) {
+            let value = inputEl.value.replace(/[^0-9]/g, '');
             value = value === '' ? '0' : value;
-            rawInput.value = value;
-            input.value = new Intl.NumberFormat('id-ID').format(value);
+            rawInputEl.value = value;
+            inputEl.value = new Intl.NumberFormat('id-ID').format(value);
         }
 
         function calculateProfitMargin() {
             const purchase = parseInt(purchasePriceRaw.value) || 0;
             const selling = parseInt(sellingPriceRaw.value) || 0;
 
-            if (purchase > 0 && selling > 0) {
+            if (purchase > 0 && selling >= purchase) {
                 const margin = selling - purchase;
                 const percent = ((margin / purchase) * 100).toFixed(2);
 
-                document.getElementById('marginAmount').textContent = new Intl.NumberFormat('id-ID', {
-                    style: 'currency',
-                    currency: 'IDR',
-                    minimumFractionDigits: 0
-                }).format(margin);
-
+                document.getElementById('marginAmount').textContent = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(margin);
                 document.getElementById('marginPercent').textContent = percent;
-                profitMargin.classList.remove('hidden');
+                profitMarginEl.style.display = 'block';
             } else {
-                profitMargin.classList.add('hidden');
+                profitMarginEl.style.display = 'none';
             }
         }
 
-        purchasePriceInput.addEventListener('input', function() {
+        purchasePriceInput.addEventListener('input', () => {
             formatCurrency(purchasePriceInput, purchasePriceRaw);
             calculateProfitMargin();
         });
 
-        sellingPriceInput.addEventListener('input', function() {
+        sellingPriceInput.addEventListener('input', () => {
             formatCurrency(sellingPriceInput, sellingPriceRaw);
             calculateProfitMargin();
         });
 
-        // Initialize values on load
-        formatCurrency(purchasePriceInput, purchasePriceRaw);
-        formatCurrency(sellingPriceInput, sellingPriceRaw);
+        // Inisialisasi saat halaman dimuat
         calculateProfitMargin();
 
-        // Form submission - convert formatted values back to raw numbers
-        document.getElementById('productForm').addEventListener('submit', function(e) {
-            // No need to do anything here as we're using hidden inputs for raw values
-        });
+        const deleteBtn = document.getElementById('deleteProductBtn');
+        const deleteForm = document.getElementById('deleteProductForm');
+
+        if(deleteBtn && deleteForm) {
+            deleteBtn.addEventListener('click', function() {
+                // Tampilkan konfirmasi
+                if (confirm('Apakah Anda yakin ingin menghapus produk ini? Tindakan ini tidak dapat diurungkan.')) {
+                    // Jika user setuju, submit form tersembunyi
+                    deleteForm.submit();
+                }
+            });
+        }
+
+    });
     </script>
 @endpush

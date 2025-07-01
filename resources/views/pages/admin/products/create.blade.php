@@ -260,13 +260,13 @@
 
                             <!-- Minimum Stock -->
                             <div>
-                                <label for="minimum_stock" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                <label for="min_stock" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                                     Stok Minimum <span class="text-red-500">*</span>
                                 </label>
-                                <input type="number" id="minimum_stock" name="minimum_stock" value="{{ old('minimum_stock', '0') }}" min="0" required
-                                       class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full p-3 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 transition-all @error('minimum_stock') border-red-500 dark:border-red-500 @enderror"
+                                <input type="number" id="min_stock" name="min_stock" value="{{ old('min_stock', '0') }}" min="0" required
+                                       class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full p-3 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 transition-all @error('min_stock') border-red-500 dark:border-red-500 @enderror"
                                        placeholder="0">
-                                @error('minimum_stock')
+                                @error('min_stock')
                                     <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                                 @enderror
                                 <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Sistem akan memberikan peringatan jika stok mencapai batas ini</p>
@@ -483,4 +483,3 @@
         calculateProfitMargin();
     </script>
 @endpush
-

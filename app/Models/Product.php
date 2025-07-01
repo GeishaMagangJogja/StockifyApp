@@ -19,14 +19,15 @@ class Product extends Model
         'description',
         'purchase_price',
         'selling_price',
-        'min_stock',     // <-- UBAH DARI 'minimum_stock'
         'image',
-        'is_active',     // <-- TAMBAHKAN INI
+        'current_stock',
+        'min_stock',
+        'unit',
     ];
 
     protected $attributes = [
         'current_stock' => 0,
-        'minimum_stock' => 0,
+        'min_stock' => 0,
         'unit' => 'pcs',
     ];
 

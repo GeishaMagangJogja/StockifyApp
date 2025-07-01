@@ -19,10 +19,10 @@ return new class extends Migration
             $table->decimal('selling_price', 12, 2)->default(0);
             $table->string('image')->nullable();
             $table->integer('current_stock')->default(0);
-            $table->integer('minimum_stock')->default(0);
+            $table->integer('min_stock')->default(0);
             $table->string('unit')->default('pcs');
             $table->timestamps();
-            $table->softDeletes();
+            $table->softDeletes(); // ⬅ Kolom deleted_at langsung ditambahkan di sini
         });
     }
 

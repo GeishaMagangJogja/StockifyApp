@@ -15,7 +15,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class AdminDashboardController extends Controller
 {
@@ -210,10 +209,10 @@ class AdminDashboardController extends Controller
                 break;
             case 'low_stock':
                 $query->having('current_stock', '>', 0)
-                      ->having('current_stock', '<=', DB::raw('minimum_stock'));
+                      ->having('current_stock', '<=', DB::raw('min_stock'));
                 break;
             case 'in_stock':
-                $query->having('current_stock', '>', DB::raw('minimum_stock'));
+                $query->having('current_stock', '>', DB::raw('min_stock'));
                 break;
         }
     }
@@ -256,68 +255,31 @@ class AdminDashboardController extends Controller
             'description' => 'nullable|string',
             'purchase_price' => 'required|numeric|min:0',
             'selling_price' => 'required|numeric|min:0',
-            'initial_stock' => 'required|integer|min:0', // Validasi stok awal
+            'current_stock' => 'required|integer|min:0',
             'min_stock' => 'required|integer|min:0',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // <-- Validate this
-            'is_active' => 'nullable|boolean', // <-- Validate this
-            // We will add the 'unit' field to the form next
+            'unit' => 'required|string|max:20',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        DB::beginTransaction();
-        try {
-            // 2. Handle the 'is_active' checkbox
-            // If the checkbox is not ticked, it won't be in the request.
-            $validatedData['is_active'] = $request->has('is_active');
-
-            // 3. Handle image upload
-            if ($request->hasFile('image')) {
-                $path = $request->file('image')->store('product_images', 'public');
-                $validatedData['image'] = $path;
-            }
-            
-            // 4. Create the product using ONLY the validated data
-            $product = Product::create([
-                'name' => $validatedData['name'],
-                'sku' => $validatedData['sku'],
-                'description' => $validatedData['description'],
-                'purchase_price' => $validatedData['purchase_price'],
-                'selling_price' => $validatedData['selling_price'],
-                'current_stock' => $validatedData['initial_stock'], // Set initial stock as current stock
-                'min_stock' => $validatedData['min_stock'],
-                'image' => $validatedData['image'] ?? null,
-                'is_active' => $validatedData['is_active'],
-                'category_id' => $validatedData['category_id'],
-                'supplier_id' => $validatedData['supplier_id'],
-                // 'current_stock' tidak di-set di sini, karena akan dihitung dari transaksi
-            ]);
-
-            // 4. Buat transaksi stok awal jika ada
-            if ($validatedData['initial_stock'] > 0) {
-                StockTransaction::create([
-                    'product_id' => $product->id,
-                    'user_id' => Auth::id(),
-                    'type' => 'Masuk',
-                    'quantity' => $validatedData['initial_stock'],
-                    'notes' => 'Stok awal produk baru.',
-                    'date' => now(),
-                ]);
-            }
-
-            DB::commit();
-
-            return redirect()->route('admin.products.index')->with('success', 'Produk berhasil ditambahkan.');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            
-            // Opsional: Log error untuk debugging nanti
-            // \Log::error('Gagal menyimpan produk: ' . $e->getMessage());
-
-            // 6. Jika gagal, kembali ke form dengan notifikasi error dan input sebelumnya
-            return redirect()->back()
-                            ->with('error', 'Terjadi kesalahan saat menyimpan produk. Error: ' . $e->getMessage())
-                            ->withInput();
+        if ($request->hasFile('image')) {
+            $validated['image'] = $request->file('image')->store('product_images', 'public');
         }
+
+        $product = Product::create($validated);
+
+        if ($validated['current_stock'] > 0) {
+            StockTransaction::create([
+                'product_id' => $product->id,
+                'user_id' => auth()->id(),
+                'type' => 'Masuk',
+                'quantity' => $validated['current_stock'],
+                'notes' => 'Stok awal produk',
+                'date' => now(),
+            ]);
+        }
+
+        return redirect()->route('admin.products.index')
+            ->with('success', 'Produk berhasil ditambahkan');
     }
 
     public function productShow(Product $product)
@@ -335,34 +297,44 @@ class AdminDashboardController extends Controller
 
     public function productUpdate(Request $request, Product $product)
     {
+        // [FIX] Validasi yang lebih lengkap dan benar
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
-            'sku' => 'required|string|max:100|unique:products,sku,'.$product->id,
+            // [FIX] Aturan SKU yang benar untuk update: unik kecuali untuk produk ini sendiri
+            'sku' => 'required|string|max:100|unique:products,sku,' . $product->id, 
             'category_id' => 'required|exists:categories,id',
             'supplier_id' => 'nullable|exists:suppliers,id',
             'description' => 'nullable|string',
             'purchase_price' => 'required|numeric|min:0',
             'selling_price' => 'required|numeric|min:0',
-            'minimum_stock' => 'required|integer|min:0',
+            'min_stock' => 'required|integer|min:0', // Menggunakan 'min_stock'
             'unit' => 'required|string|max:20',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'is_active' => 'nullable|boolean', // [FIX] Tambahkan validasi untuk is_active
         ]);
 
         try {
+            // [FIX] Handle checkbox 'is_active'
+            $validatedData['is_active'] = $request->has('is_active');
+
             if ($request->hasFile('image')) {
+                // Hapus gambar lama jika ada
                 if ($product->image) {
                     Storage::disk('public')->delete($product->image);
                 }
+                // Simpan gambar baru
                 $validatedData['image'] = $request->file('image')->store('product_images', 'public');
             }
 
+            // [FIX] Lakukan update dengan data yang sudah divalidasi dan diproses
             $product->update($validatedData);
 
             return redirect()->route('admin.products.index')
                 ->with('success', 'Produk berhasil diperbarui');
+                
         } catch (\Exception $e) {
             return redirect()->back()
-                ->with('error', 'Gagal memperbarui produk: '.$e->getMessage())
+                ->with('error', 'Gagal memperbarui produk: ' . $e->getMessage())
                 ->withInput();
         }
     }
@@ -739,14 +711,6 @@ public function confirmDelete(Supplier $supplier)
 
         $user->name = $request->name;
         $user->email = $request->email;
-
-        if ($request->hasFile('photo')) {
-            if ($user->profile_photo_path) {
-                \Illuminate\Support\Facades\Storage::disk('public')->delete($user->profile_photo_path);
-            }
-            $path = $request->file('photo')->store('profile-photos', 'public');
-            $user->profile_photo_path = $path;
-        }
 
         if ($request->filled('new_password')) {
             if (!Hash::check($request->current_password, $user->password)) {
