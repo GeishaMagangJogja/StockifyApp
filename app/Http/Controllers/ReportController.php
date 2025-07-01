@@ -30,39 +30,50 @@ class ReportController extends Controller
     /**
      * Display the stock report.
      */
-    public function stock(Request $request)
-    {
-        $query = Product::with('category')->withCount('stockTransactions');
+   public function stock(Request $request)
+{
+    $query = Product::with('category')->withCount('stockTransactions');
 
-        if ($request->filled('category_id')) {
-            $query->where('category_id', $request->category_id);
-        }
-
-        $products = $query->latest()->paginate(20);
-        $categories = Category::orderBy('name')->get();
-
-        // Tambahkan summary stok
-        $stockSummary = [
-            // ===================================================================
-            // PERBAIKAN DI BAWAH INI
-            // Mengubah 'minimum_stock' menjadi 'min_stock'
-            // ===================================================================
-            'safe' => Product::whereColumn('current_stock', '>', 'min_stock') // <-- DIUBAH
-                ->when($request->category_id, fn($q) => $q->where('category_id', $request->category_id))
-                ->count(),
-            'low' => Product::where('current_stock', '>', 0)
-                ->whereColumn('current_stock', '<=', 'min_stock') // <-- DIUBAH
-                ->when($request->category_id, fn($q) => $q->where('category_id', $request->category_id))
-                ->count(),
-            // ===================================================================
-            'out' => Product::where('current_stock', '<=', 0)
-                ->when($request->category_id, fn($q) => $q->where('category_id', $request->category_id))
-                ->count(),
-        ];
-
-        return view('pages.admin.reports.stock', compact('products', 'categories', 'stockSummary'));
+    // Filter by category
+    if ($request->filled('category_id')) {
+        $query->where('category_id', $request->category_id);
     }
 
+    // Filter by stock status
+    if ($request->filled('stock_status')) {
+        switch ($request->stock_status) {
+            case 'low':
+                $query->where('current_stock', '>', 0)
+                      ->whereColumn('current_stock', '<=', 'min_stock');
+                break;
+            case 'out':
+                $query->where('current_stock', '<=', 0);
+                break;
+            case 'safe':
+                $query->whereColumn('current_stock', '>', 'min_stock');
+                break;
+        }
+    }
+
+    $products = $query->latest()->paginate(20);
+    $categories = Category::orderBy('name')->get();
+
+    // Stock summary
+    $stockSummary = [
+        'safe' => Product::whereColumn('current_stock', '>', 'min_stock')
+            ->when($request->category_id, fn($q) => $q->where('category_id', $request->category_id))
+            ->count(),
+        'low' => Product::where('current_stock', '>', 0)
+            ->whereColumn('current_stock', '<=', 'min_stock')
+            ->when($request->category_id, fn($q) => $q->where('category_id', $request->category_id))
+            ->count(),
+        'out' => Product::where('current_stock', '<=', 0)
+            ->when($request->category_id, fn($q) => $q->where('category_id', $request->category_id))
+            ->count(),
+    ];
+
+    return view('pages.admin.reports.stock', compact('products', 'categories', 'stockSummary'));
+}
     /**
      * Display the transactions report.
      */
