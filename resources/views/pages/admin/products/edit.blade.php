@@ -98,7 +98,6 @@
         <form action="{{ route('admin.products.update', $product->id) }}" method="POST" enctype="multipart/form-data" class="p-6" id="productForm" novalidate>
             @csrf
             @method('PUT')
-
             <div class="grid grid-cols-1 gap-8 lg:grid-cols-12">
                 <!-- Left Column - Basic Information -->
                 <div class="space-y-6 lg:col-span-8">
@@ -203,55 +202,33 @@
                             Harga & Stok
                         </h3>
                         <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-                            <!-- Purchase Price -->
-                            <div>
-                                <label for="purchase_price" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                                    Harga Beli <span class="text-red-500">*</span>
-                                </label>
-                                <div class="relative">
-                                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                        <span class="font-medium text-gray-500 dark:text-gray-400">Rp</span>
-                                    </div>
-                                    <input type="hidden" id="purchase_price_raw" name="purchase_price" value="{{ old('purchase_price', $product->purchase_price) }}">
-                                    <input type="text" id="purchase_price_display" value="{{ number_format(old('purchase_price', $product->purchase_price), 0, ',', '.') }}" required
-                                           class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full pl-12 p-3 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 transition-all @error('purchase_price') border-red-500 dark:border-red-500 @enderror"
-                                           placeholder="0">
-                                </div>
-                                @error('purchase_price')
-                                    <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                                @enderror
-                            </div>
+                          <!-- Harga Beli -->
+<div>
+    <label for="purchase_price" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+        Harga Beli <span class="text-red-500">*</span>
+    </label>
+    <input type="hidden" id="purchase_price_raw" name="purchase_price" value="{{ old('purchase_price', $product->purchase_price) }}">
+    <input type="text" id="purchase_price_display" value="{{ number_format(old('purchase_price', $product->purchase_price), 0, ',', '.') }}" required
+           class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full p-3 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 transition-all @error('purchase_price') border-red-500 dark:border-red-500 @enderror"
+           placeholder="0">
+    @error('purchase_price')
+        <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+    @enderror
+</div>
 
-                            <!-- Selling Price -->
-                            <div>
-                                <label for="selling_price" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                                    Harga Jual <span class="text-red-500">*</span>
-                                </label>
-                                <div class="relative">
-                                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                        <span class="font-medium text-gray-500 dark:text-gray-400">Rp</span>
-                                    </div>
-                                    <input type="hidden" id="selling_price_raw" name="selling_price" value="{{ old('selling_price', $product->selling_price) }}">
-                                    <input type="text" id="selling_price_display" value="{{ number_format(old('selling_price', $product->selling_price), 0, ',', '.') }}" required
-                                           class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full pl-12 p-3 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 transition-all @error('selling_price') border-red-500 dark:border-red-500 @enderror"
-                                           placeholder="0">
-                                </div>
-                                @error('selling_price')
-                                    <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                                @enderror
-                                <!-- Profit Margin Display -->
-                                <div id="profitMargin" class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                                    <span class="font-medium">Margin: </span>
-                                    <span id="marginAmount" class="text-green-600 dark:text-green-400">
-                                        Rp{{ number_format($product->selling_price - $product->purchase_price, 0, ',', '.') }}
-                                    </span>
-                                    <span class="text-gray-500">(
-                                        <span id="marginPercent">
-                                            {{ $product->purchase_price > 0 ? number_format((($product->selling_price - $product->purchase_price) / $product->purchase_price) * 100, 2) : 0 }}
-                                        </span>%)
-                                    </span>
-                                </div>
-                            </div>
+<!-- Harga Jual -->
+<div>
+    <label for="selling_price" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+        Harga Jual <span class="text-red-500">*</span>
+    </label>
+    <input type="hidden" id="selling_price_raw" name="selling_price" value="{{ old('selling_price', $product->selling_price) }}">
+    <input type="text" id="selling_price_display" value="{{ number_format(old('selling_price', $product->selling_price), 0, ',', '.') }}" required
+           class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full p-3 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 transition-all @error('selling_price') border-red-500 dark:border-red-500 @enderror"
+           placeholder="0">
+    @error('selling_price')
+        <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+    @enderror
+</div>
 
                             <!-- Minimum Stock -->
                             <div>
@@ -427,88 +404,77 @@
 
 @push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    // -----------------------------------------------------------------
-    // LOGIKA UNTUK GAMBAR
-    // -----------------------------------------------------------------
-    const imageInput = document.getElementById('image');
-    const imagePreview = document.getElementById('imagePreview');
-    const removeImageBtn = document.getElementById('removeImageBtn');
-    const removeImageInput = document.getElementById('removeImageInput');
-    const placeholderSrc = 'https://via.placeholder.com/300x200?text=No+Image';
-    let originalImageSrc = imagePreview.src;
-    // Pastikan semua elemen ada sebelum memasang listener
-    if (imageInput && imagePreview && removeImageBtn && removeImageInput) {
+document.addEventListener('DOMContentLoaded', function() {
+    // Format currency inputs
+    const formatCurrencyInputs = () => {
+        const purchasePriceInput = document.getElementById('purchase_price_display');
+        const sellingPriceInput = document.getElementById('selling_price_display');
+        const purchasePriceRaw = document.getElementById('purchase_price_raw');
+        const sellingPriceRaw = document.getElementById('selling_price_raw');
 
-        imageInput.addEventListener('change', function() {
-            const file = this.files[0];
-            if (file) {
-                removeImageInput.value = '0'; // <-- Reset jika file baru dipilih
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    imagePreview.src = e.target.result;
-                }
-                reader.readAsDataURL(file);
-                removeImageBtn.style.display = 'flex';
+        if (purchasePriceInput && purchasePriceRaw) {
+            purchasePriceInput.addEventListener('input', function(e) {
+                let value = this.value.replace(/[^0-9]/g, '');
+                purchasePriceRaw.value = value;
+                this.value = new Intl.NumberFormat('id-ID').format(value);
+            });
+
+            // Set initial value
+            if (purchasePriceRaw.value) {
+                purchasePriceInput.value = new Intl.NumberFormat('id-ID').format(purchasePriceRaw.value);
             }
-        });
-
-        // Listener saat tombol Hapus (X) diklik
-        removeImageBtn.addEventListener('click', function() {
-            imageInput.value = '';
-            imagePreview.src = placeholderSrc;
-            removeImageBtn.style.display = 'none';
-            removeImageInput.value = '1'; // <-- [PENTING] Set nilai menjadi 1
-        });
-    }
-
-    // -----------------------------------------------------------------
-    // LOGIKA UNTUK HARGA (Tidak Berubah)
-    // -----------------------------------------------------------------
-    const purchasePriceInput = document.getElementById('purchase_price_display');
-    const sellingPriceInput = document.getElementById('selling_price_display');
-    const purchasePriceRaw = document.getElementById('purchase_price_raw');
-    const sellingPriceRaw = document.getElementById('selling_price_raw');
-    const profitMarginEl = document.getElementById('profitMargin');
-
-    function formatCurrency(inputEl, rawInputEl) {
-        let value = inputEl.value.replace(/[^0-9]/g, '');
-        rawInputEl.value = value || '0';
-        inputEl.value = new Intl.NumberFormat('id-ID').format(value || 0);
-    }
-
-    function calculateProfitMargin() {
-        if (!profitMarginEl) return;
-
-        const purchase = parseInt(purchasePriceRaw.value) || 0;
-        const selling = parseInt(sellingPriceRaw.value) || 0;
-
-        if (purchase > 0 && selling >= purchase) {
-            const margin = selling - purchase;
-            const percent = ((margin / purchase) * 100).toFixed(2);
-
-            profitMarginEl.querySelector('#marginAmount').textContent = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(margin);
-            profitMarginEl.querySelector('#marginPercent').textContent = percent;
-            profitMarginEl.style.display = 'block';
-        } else {
-            profitMarginEl.style.display = 'none';
         }
-    }
 
-    if (purchasePriceInput && sellingPriceInput) {
-        purchasePriceInput.addEventListener('input', () => {
-            formatCurrency(purchasePriceInput, purchasePriceRaw);
-            calculateProfitMargin();
-        });
+        if (sellingPriceInput && sellingPriceRaw) {
+            sellingPriceInput.addEventListener('input', function(e) {
+                let value = this.value.replace(/[^0-9]/g, '');
+                sellingPriceRaw.value = value;
+                this.value = new Intl.NumberFormat('id-ID').format(value);
+            });
 
-        sellingPriceInput.addEventListener('input', () => {
-            formatCurrency(sellingPriceInput, sellingPriceRaw);
-            calculateProfitMargin();
-        });
+            // Set initial value
+            if (sellingPriceRaw.value) {
+                sellingPriceInput.value = new Intl.NumberFormat('id-ID').format(sellingPriceRaw.value);
+            }
+        }
+    };
 
-        // Inisialisasi saat halaman dimuat
-        calculateProfitMargin();
-    }
+    // Handle image preview and removal
+    const handleImageUpload = () => {
+        const imageInput = document.getElementById('image');
+        const imagePreview = document.getElementById('imagePreview');
+        const removeImageBtn = document.getElementById('removeImageBtn');
+        const removeImageInput = document.getElementById('removeImageInput');
+        const placeholderImage = 'https://via.placeholder.com/300x200?text=No+Image';
+
+        if (imageInput && imagePreview) {
+            imageInput.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        imagePreview.src = e.target.result;
+                        if (removeImageBtn) removeImageBtn.style.display = 'flex';
+                        if (removeImageInput) removeImageInput.value = '0';
+                    }
+                    reader.readAsDataURL(this.files[0]);
+                }
+            });
+        }
+
+        if (removeImageBtn && removeImageInput) {
+            removeImageBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (imageInput) imageInput.value = '';
+                if (imagePreview) imagePreview.src = placeholderImage;
+                this.style.display = 'none';
+                if (removeImageInput) removeImageInput.value = '1';
+            });
+        }
+    };
+
+    // Initialize all functions
+    formatCurrencyInputs();
+    handleImageUpload();
 });
 </script>
 @endpush
