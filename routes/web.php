@@ -103,6 +103,7 @@ Route::middleware(['auth', 'role:Admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/categories/{category}', [AdminDashboardController::class, 'categoryShow'])->name('categories.show');
     Route::get('/categories/{category}/edit', [AdminDashboardController::class, 'categoryEdit'])->name('categories.edit');
     Route::put('/categories/{category}', [AdminDashboardController::class, 'categoryUpdate'])->name('categories.update');
+    Route::get('/categories/{category}/delete', [AdminDashboardController::class, 'confirmDeleteCategory'])->name('categories.delete');
     Route::delete('/categories/{category}', [AdminDashboardController::class, 'categoryDestroy'])->name('categories.destroy');
 
     // Suppliers Management (alternative routes)

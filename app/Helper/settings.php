@@ -7,30 +7,29 @@ use Illuminate\Support\Facades\Storage;
  * Ini adalah praktik terbaik untuk file helper.
  */
 if (!function_exists('get_favicon_url')) {
-
     /**
-     * Fungsi untuk mendapatkan URL favicon (logo aplikasi).
-     * Fungsi ini akan secara otomatis memeriksa apakah logo kustom sudah diatur.
-     * Jika tidak ada, fungsi ini akan mengembalikan path ke favicon default.
+     * Get the application favicon URL with cache-busting support
      *
-     * @return string URL ke file favicon.
+     * @param bool $useCacheBusting Whether to append cache-busting query string
+     * @return string
      */
-    function get_favicon_url()
+    function get_favicon_url(bool $useCacheBusting = true): string
     {
-        // 1. Ambil path logo dari file konfigurasi (yang membaca dari .env)
         $logoPath = config('app.logo');
+        $defaultFavicon = 'favicon.ico';
 
-        // 2. Periksa apakah path tersebut ada dan file-nya benar-benar ada di storage
+        // Check for custom logo
         if ($logoPath && Storage::disk('public')->exists($logoPath)) {
-            // 3. Jika ada, kembalikan URL yang bisa diakses publik.
-            // Tambahkan timestamp '?v=' . time() untuk "cache-busting".
-            // Ini memaksa browser untuk selalu mengunduh versi terbaru dari favicon
-            // setiap kali halaman dimuat, sehingga perubahan langsung terlihat.
-            return asset('storage/' . $logoPath) . '?v=' . time();
+            $url = asset('storage/' . $logoPath);
+
+            // Append cache-busting only in development or when explicitly requested
+            if ($useCacheBusting && (app()->environment('local') || config('app.debug'))) {
+                return $url . '?v=' . time();
+            }
+
+            return $url;
         }
 
-        // 4. Jika tidak ada logo kustom, kembalikan path ke favicon.ico default
-        //    yang biasanya ada di folder /public.
-        return asset('favicon.ico');
+        return asset($defaultFavicon);
     }
 }

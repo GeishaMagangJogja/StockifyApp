@@ -475,7 +475,7 @@ public function userDestroy(User $user)
             DB::commit();
 
             return redirect()->route('admin.products.index')
-                ->with('success', "Produk '{$productName}' berhasil dihapus secara paksa");
+                ->with('success', "Produk '{$productName}' berhasil dihapus");
         } catch (\Exception $e) {
             DB::rollBack();
             DB::statement('SET FOREIGN_KEY_CHECKS=1');
@@ -540,33 +540,66 @@ public function userDestroy(User $user)
         return redirect()->route('admin.categories.index')->with('success', 'Kategori berhasil diupdate');
     }
 
-    public function categoryDestroy(Category $category)
-    {
+
+    public function confirmDeleteCategory(Category $category)
+{
+    $category->loadCount('products');
+    return view('pages.admin.categories.delete', compact('category'));
+}
+  public function categoryDestroy(Category $category)
+{
+    DB::beginTransaction();
+    try {
+        // Check if category has products
+        if ($category->products()->exists()) {
+            // Move products to uncategorized (assuming you have a default category)
+            $uncategorized = Category::firstOrCreate(
+                ['name' => 'Tidak Berkategori'],
+                ['description' => 'Produk tanpa kategori']
+            );
+
+            $category->products()->update(['category_id' => $uncategorized->id]);
+        }
+
+        $categoryName = $category->name;
         $category->delete();
-        return redirect()->route('admin.categories.index')->with('success', 'Kategori berhasil dihapus');
+
+        DB::commit();
+
+        return redirect()->route('admin.categories.index')
+            ->with('success', "Kategori '{$categoryName}' berhasil dihapus" .
+                   ($category->products_count > 0 ? ' dan produk terkait dipindahkan ke Tidak Berkategori' : ''));
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return redirect()->route('admin.categories.index')
+            ->with('error', 'Gagal menghapus kategori: ' . $e->getMessage());
     }
+}
 
     // Suppliers Management
     public function supplierList(Request $request)
-    {
-        $query = Supplier::query()
-            ->withCount('products')
-            ->latest();
+{
+    $query = Supplier::query()
+        ->withCount('products')
+        ->latest();
 
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('contact_person', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
-            });
-        }
-
-        $suppliers = $query->paginate(10);
-
-        return view('pages.admin.suppliers.index', compact('suppliers'));
+    if ($request->filled('search')) {
+        $search = $request->search;
+        $query->where(function($q) use ($search) {
+            $q->where('name', 'like', "%{$search}%")
+              ->orWhere('contact_person', 'like', "%{$search}%")
+              ->orWhere('phone', 'like', "%{$search}%")
+              ->orWhere('email', 'like', "%{$search}%");
+        });
     }
+
+    $suppliers = $query->paginate(10);
+
+    // Add this line to calculate total products from all suppliers
+    $totalProductsFromSuppliers = Supplier::withCount('products')->get()->sum('products_count');
+
+    return view('pages.admin.suppliers.index', compact('suppliers', 'totalProductsFromSuppliers'));
+}
 
     public function supplierCreate()
     {

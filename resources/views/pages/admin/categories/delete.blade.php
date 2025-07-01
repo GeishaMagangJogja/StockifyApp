@@ -1,20 +1,20 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Konfirmasi Hapus Produk')
+@section('title', 'Konfirmasi Hapus Kategori')
 
 @section('content')
     <div class="mb-6">
         <div class="flex items-center mb-2 space-x-2 text-sm text-gray-600 dark:text-gray-400">
             <a href="{{ route('admin.dashboard') }}" class="hover:text-blue-600">Dashboard</a>
             <span>/</span>
-            <a href="{{ route('admin.products.index') }}" class="hover:text-blue-600">Produk</a>
+            <a href="{{ route('admin.categories.index') }}" class="hover:text-blue-600">Kategori</a>
             <span>/</span>
             <span>Konfirmasi Hapus</span>
         </div>
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Konfirmasi Hapus Produk</h1>
-                <p class="text-gray-600 dark:text-gray-400">Anda akan menghapus produk ini secara permanen</p>
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Konfirmasi Hapus Kategori</h1>
+                <p class="text-gray-600 dark:text-gray-400">Anda akan menghapus kategori ini secara permanen</p>
             </div>
         </div>
     </div>
@@ -58,19 +58,15 @@
     <div class="overflow-hidden bg-white rounded-lg shadow dark:bg-gray-800">
         <div class="p-6 border-b border-gray-200 dark:border-gray-700">
             <div class="flex items-start">
-                <div class="flex-shrink-0 w-24 h-24 mr-6">
-                    <img class="object-cover w-full h-full rounded-lg"
-                         src="{{ $product->image ? asset('storage/'.$product->image) : asset('images/default-product.png') }}"
-                         alt="{{ $product->name }}"
-                         onerror="this.src='{{ asset('images/default-product.png') }}'">
+                <div class="flex items-center justify-center flex-shrink-0 w-16 h-16 mr-6 bg-gray-100 rounded-lg dark:bg-gray-700">
+                    <i class="text-2xl text-gray-500 fas fa-tags dark:text-gray-400"></i>
                 </div>
                 <div>
-                    <h2 class="text-xl font-semibold text-gray-900 dark:text-white">{{ $product->name }}</h2>
+                    <h2 class="text-xl font-semibold text-gray-900 dark:text-white">{{ $category->name }}</h2>
                     <div class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                        <p><span class="font-medium">SKU:</span> {{ $product->sku }}</p>
-                        <p><span class="font-medium">Kategori:</span> {{ $product->category->name ?? '-' }}</p>
-                        <p><span class="font-medium">Supplier:</span> {{ $product->supplier->name ?? '-' }}</p>
-                        <p><span class="font-medium">Stok:</span> {{ $product->current_stock ?? 0 }} {{ $product->unit }}</p>
+                        <p><span class="font-medium">Jumlah Produk:</span> {{ $category->products_count }}</p>
+                        <p><span class="font-medium">Dibuat:</span> {{ $category->created_at->format('d M Y H:i') }}</p>
+                        <p><span class="font-medium">Diperbarui:</span> {{ $category->updated_at->format('d M Y H:i') }}</p>
                     </div>
                 </div>
             </div>
@@ -87,8 +83,10 @@
                         <h3 class="text-sm font-semibold">Peringatan!</h3>
                         <div class="mt-1 text-sm">
                             <ul class="pl-5 space-y-1 list-disc">
-                                <li>Produk ini memiliki {{ $product->stockTransactionsCount ?? $product->stockTransactions()->count() }} riwayat transaksi stok</li>
-                                <li>Semua data terkait produk ini akan dihapus secara permanen</li>
+                                @if($category->products_count > 0)
+                                <li>Kategori ini memiliki {{ $category->products_count }} produk terkait</li>
+                                <li>Semua produk dalam kategori ini akan dikategorikan sebagai "Tidak Berkategori"</li>
+                                @endif
                                 <li>Tindakan ini tidak dapat dibatalkan</li>
                             </ul>
                         </div>
@@ -97,12 +95,12 @@
             </div>
 
             <!-- Delete Form -->
-            <form id="forceDeleteForm" action="{{ route('admin.products.force-destroy', $product->id) }}" method="POST">
+            <form id="deleteForm" action="{{ route('admin.categories.destroy', $category->id) }}" method="POST">
                 @csrf
                 @method('DELETE')
 
                 <div class="flex items-center justify-end space-x-3">
-                    <a href="{{ route('admin.products.index') }}"
+                    <a href="{{ route('admin.categories.index') }}"
                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600">
                         Batal
                     </a>
@@ -132,7 +130,10 @@
                             <div class="ml-4">
                                 <h3 class="text-lg font-medium text-gray-900 dark:text-white">Konfirmasi Penghapusan</h3>
                                 <div class="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                                    <p>Anda akan menghapus produk <span class="font-semibold">${@json($product->name)}</span> secara permanen.</p>
+                                    <p>Anda akan menghapus kategori <span class="font-semibold">"{{ $category->name }}"</span> secara permanen.</p>
+                                    @if($category->products_count > 0)
+                                    <p class="mt-2">Kategori ini memiliki {{ $category->products_count }} produk yang akan menjadi tidak berkategori.</p>
+                                    @endif
                                     <p class="mt-2 text-red-500 dark:text-red-400">Tindakan ini tidak dapat dibatalkan!</p>
                                 </div>
                             </div>
@@ -162,7 +163,7 @@
         }
 
         function submitDelete() {
-            const form = document.getElementById('forceDeleteForm');
+            const form = document.getElementById('deleteForm');
             const button = form.querySelector('button[type="button"]');
 
             // Change button state
