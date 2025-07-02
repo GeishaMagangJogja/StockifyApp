@@ -206,10 +206,29 @@ class ManagerDashboardController extends Controller
         }
     }
 
-    public function stockOpname()
+    public function stockOpname(Request $request)
     {
-        $products = Product::with('stockTransactions')->orderBy('name')->paginate(20);
-        return view('pages.manajergudang.stock.opname', compact('products'));
+        $query = Product::with('supplier')->orderBy('name');
+
+        // Search filter
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                ->orWhere('sku', 'like', "%{$search}%");
+            });
+        }
+
+        // Category filter
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->category_id);
+        }
+        
+        $products = $query->paginate(15);
+        $suppliers = Supplier::orderBy('name')->get();
+        $categories = Category::orderBy('name')->get(); // For the filter
+        
+        return view('pages.manajergudang.stock.opname', compact('products', 'suppliers', 'categories'));
     }
 
     public function stockOpnameStore(Request $request)
@@ -219,6 +238,7 @@ class ManagerDashboardController extends Controller
             'products.*.id' => 'required|exists:products,id',
             'products.*.system_stock' => 'required|integer',
             'products.*.physical_stock' => 'required|integer|min:0',
+            'products.*.supplier_id' => 'nullable|exists:suppliers,id', // [BARU] Validasi supplier_id
         ]);
 
         DB::transaction(function () use ($validated) {
@@ -226,25 +246,21 @@ class ManagerDashboardController extends Controller
                 $systemStock = (int)$item['system_stock'];
                 $physicalStock = (int)$item['physical_stock'];
                 
-                // Lanjutkan hanya jika ada perbedaan stok
                 if ($physicalStock !== $systemStock) {
                     $product = Product::findOrFail($item['id']);
                     $difference = $physicalStock - $systemStock;
 
-                    // Buat SATU transaksi penyesuaian
                     StockTransaction::create([
                         'product_id' => $product->id,
                         'user_id' => Auth::id(),
-                        // Tipe transaksi tergantung selisih
+                        'supplier_id' => $item['supplier_id'] ?? null, // [BARU] Simpan supplier_id
                         'type' => $difference > 0 ? 'Masuk' : 'Keluar', 
-                        // Quantity adalah nilai absolut dari selisih
                         'quantity' => abs($difference), 
                         'notes' => 'Penyesuaian Stock Opname',
                         'date' => now(),
                         'status' => $difference > 0 ? 'Diterima' : 'Dikeluarkan',
                     ]);
                     
-                    // [FIX UTAMA] Update kolom current_stock di tabel products
                     $product->update(['current_stock' => $physicalStock]);
                 }
             }
