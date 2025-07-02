@@ -205,6 +205,7 @@ Route::middleware(['auth', 'role:Staff Gudang'])->prefix('staff')->name('staff.'
     Route::put('/transactions/{transaction}/process', [StaffDashboardController::class, 'transactionProcess'])->name('transactions.process');
     Route::get('/profile', [StaffDashboardController::class, 'profile'])->name('profile');
     Route::put('/profile', [StaffDashboardController::class, 'updateProfile'])->name('profile.update');
+    Route::get('/reports/export', [ReportController::class, 'export'])->name('reports.export');
 });
 
 // Tambahkan route ini di dalam group admin routes
