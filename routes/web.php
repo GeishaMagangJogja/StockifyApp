@@ -125,6 +125,8 @@ Route::middleware(['auth', 'role:Admin'])->prefix('admin')->name('admin.')->grou
         Route::get('/transactions', [ReportController::class, 'transactions'])->name('transactions');
         Route::get('/users', [ReportController::class, 'users'])->name('users');
         Route::get('/system', [ReportController::class, 'system'])->name('system');
+        Route::get('/api/transactions', [ReportController::class, 'filterTransactions']);
+        
     });
 
     // Settings
