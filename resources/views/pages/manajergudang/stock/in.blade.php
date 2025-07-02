@@ -3,6 +3,7 @@
 @section('title', 'Catat Barang Masuk')
 
 @push('scripts')
+{{-- Script Alpine.js --}}
 <script>
     document.addEventListener('alpine:init', () => {
         Alpine.data('stockForm', () => ({
@@ -15,16 +16,9 @@
                 const tomselect = new TomSelect(selectEl, {
                     create: false,
                     sortField: { field: "text", direction: "asc" },
-                    // [IMPROVE] Custom rendering untuk menampilkan gambar dan stok
                     render: {
                         option: function(data, escape) {
-                            return `<div class="flex items-center space-x-3">
-                                        <img class="w-10 h-10 object-cover rounded" src="${escape(data.image_url)}" alt="${escape(data.text)}">
-                                        <div>
-                                            <div class="font-medium">${escape(data.text)}</div>
-                                            <div class="text-xs text-gray-500">Stok: ${escape(data.stock)} ${escape(data.unit)}</div>
-                                        </div>
-                                    </div>`;
+                            return `<div class="flex items-center space-x-3"><img class="w-10 h-10 object-cover rounded" src="${escape(data.image_url)}" alt="${escape(data.text)}"><div><div class="font-medium">${escape(data.text)}</div><div class="text-xs text-gray-500">Stok: ${escape(data.stock)} ${escape(data.unit)}</div></div></div>`;
                         },
                         item: function(item, escape) {
                             return `<div class="font-medium">${escape(item.text)}</div>`;
@@ -51,90 +45,48 @@
 <div class="container p-4 mx-auto sm:p-8">
     <div x-data="stockForm" x-init="init()">
         <div class="py-8">
-            <div class="flex items-center mb-6 space-x-4">
-                <a href="{{ route('manajergudang.dashboard') }}" class="flex items-center justify-center w-10 h-10 bg-white rounded-full shadow-md dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700" title="Kembali"><i class="text-gray-600 fas fa-arrow-left dark:text-gray-300"></i></a>
+            {{-- [IMPROVEMENT] Header yang lebih terintegrasi --}}
+            <div class="flex items-center gap-4 mb-8">
+                <div class="flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-green-100 to-green-200 dark:from-green-900/50 dark:to-green-800/50">
+                    <i class="text-xl text-green-600 fas fa-plus dark:text-green-400"></i>
+                </div>
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Catat Barang Masuk</h1>
-                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Tambah stok untuk produk yang sudah ada.</p>
+                    <h1 class="text-3xl font-bold text-gray-800 dark:text-white">Catat Barang Masuk</h1>
+                    <p class="mt-1 text-gray-500 dark:text-gray-400">Tambah stok untuk produk yang sudah ada di dalam sistem.</p>
                 </div>
             </div>
 
             <form action="{{ route('manajergudang.stock.in.store') }}" method="POST" class="grid grid-cols-1 gap-8 mt-8 lg:grid-cols-3">
                 @csrf
-                <div class="p-6 space-y-6 bg-white rounded-lg shadow-md lg:col-span-2 dark:bg-slate-800">
+                <div class="p-6 space-y-6 bg-white rounded-xl shadow-lg lg:col-span-2 dark:bg-slate-800">
                     @if ($errors->any())
-                        <div class="p-4 mb-4 text-red-700 bg-red-100 border-l-4 border-red-500" role="alert">
-                            <p class="font-bold">Terjadi Kesalahan</p>
-                            <ul>@foreach ($errors->all() as $error)<li>- {{ $error }}</li>@endforeach</ul>
-                        </div>
+                        <div class="p-4 mb-4 text-red-700 bg-red-100 border-l-4 border-red-500" role="alert"><p class="font-bold">Terjadi Kesalahan</p><ul>@foreach ($errors->all() as $error)<li>- {{ $error }}</li>@endforeach</ul></div>
                     @endif
-
-                    <div>
-                        <label for="product_id" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Produk <span class="text-red-500">*</span></label>
-                        <select id="product_id" name="product_id" placeholder="Cari dan pilih produk..." required>
-                            <option value="">-- Pilih Produk --</option>
-                            @foreach ($products as $product)
-                                <option value="{{ $product->id }}" 
-                                        data-image_url="{{ $product->image ? asset('storage/' . $product->image) : 'https://ui-avatars.com/api/?name='.urlencode($product->name) }}"
-                                        data-stock="{{ $product->current_stock }}"
-                                        data-unit="{{ $product->unit }}"
-                                        {{ old('product_id', request()->get('product_id')) == $product->id ? 'selected' : '' }}>
-                                    {{ $product->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
                     
-                    <div>
-                        <label for="supplier_id" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Supplier <span class="text-red-500">*</span></label>
-                        <select id="supplier_id" name="supplier_id" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-gray-600 dark:text-white" required>
-                            <option value="" disabled selected>-- Pilih Supplier --</option>
-                            @foreach ($suppliers as $supplier)
-                                <option value="{{ $supplier->id }}" {{ old('supplier_id') == $supplier->id ? 'selected' : '' }}>{{ $supplier->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
+                    <div><label for="product_id" class="flex items-center mb-2 text-sm font-medium text-gray-700 dark:text-gray-300"><i class="w-5 mr-2 fas fa-box"></i>Produk <span class="ml-1 text-red-500">*</span></label><select id="product_id" name="product_id" placeholder="Cari dan pilih produk..." required>@foreach ($products as $product)<option value="{{ $product->id }}" data-image_url="{{ $product->image ? asset('storage/' . $product->image) : 'https://ui-avatars.com/api/?name='.urlencode($product->name) }}" data-stock="{{ $product->current_stock }}" data-unit="{{ $product->unit }}" {{ old('product_id', request()->get('product_id')) == $product->id ? 'selected' : '' }}>{{ $product->name }}</option>@endforeach</select></div>
+                    <div><label for="supplier_id" class="flex items-center mb-2 text-sm font-medium text-gray-700 dark:text-gray-300"><i class="w-5 mr-2 fas fa-truck"></i>Supplier <span class="ml-1 text-red-500">*</span></label><select id="supplier_id" name="supplier_id" class="w-full px-4 py-2 text-sm border rounded-lg dark:bg-slate-700 dark:border-gray-600 dark:text-white" required><option value="" disabled selected>-- Pilih Supplier --</option>@foreach ($suppliers as $supplier)<option value="{{ $supplier->id }}" {{ old('supplier_id') == $supplier->id ? 'selected' : '' }}>{{ $supplier->name }}</option>@endforeach</select></div>
                     <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-                        <div>
-                            <label for="quantity" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Jumlah Masuk <span class="text-red-500">*</span></label>
-                            <input type="number" id="quantity" name="quantity" x-model.number="quantity" placeholder="1" min="1" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-gray-600 dark:text-white" required>
-                        </div>
-                        <div>
-                            <label for="transaction_date" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Tanggal Transaksi <span class="text-red-500">*</span></label>
-                            <input type="date" id="transaction_date" name="transaction_date" value="{{ old('transaction_date', now()->format('Y-m-d')) }}" max="{{ now()->format('Y-m-d') }}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-gray-600 dark:text-white" required>
-                        </div>
+                        <div><label for="quantity" class="flex items-center mb-2 text-sm font-medium text-gray-700 dark:text-gray-300"><i class="w-5 mr-2 fas fa-cubes"></i>Jumlah Masuk <span class="ml-1 text-red-500">*</span></label><input type="number" id="quantity" name="quantity" x-model.number="quantity" placeholder="1" min="1" class="w-full px-4 py-2 text-sm border rounded-lg dark:bg-slate-700 dark:border-gray-600 dark:text-white" required></div>
+                        <div><label for="transaction_date" class="flex items-center mb-2 text-sm font-medium text-gray-700 dark:text-gray-300"><i class="w-5 mr-2 fas fa-calendar-alt"></i>Tanggal Transaksi <span class="ml-1 text-red-500">*</span></label><input type="date" id="transaction_date" name="transaction_date" value="{{ old('transaction_date', now()->format('Y-m-d')) }}" max="{{ now()->format('Y-m-d') }}" class="w-full px-4 py-2 text-sm border rounded-lg dark:bg-slate-700 dark:border-gray-600 dark:text-white" required></div>
                     </div>
-                    <div>
-                        <label for="notes" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Catatan (Opsional)</label>
-                        <textarea id="notes" name="notes" rows="3" placeholder="Contoh: No. PO #12345" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-gray-600 dark:text-white">{{ old('notes') }}</textarea>
-                    </div>
+                    <div><label for="notes" class="flex items-center mb-2 text-sm font-medium text-gray-700 dark:text-gray-300"><i class="w-5 mr-2 fas fa-pencil-alt"></i>Catatan (Opsional)</label><textarea id="notes" name="notes" rows="3" placeholder="Contoh: No. PO #12345" class="w-full px-4 py-2 text-sm border rounded-lg dark:bg-slate-700 dark:border-gray-600 dark:text-white">{{ old('notes') }}</textarea></div>
                 </div>
 
                 <div class="lg:col-span-1">
-                    <div class="sticky p-6 bg-white rounded-lg shadow-md top-24 dark:bg-slate-800">
-                        <div x-show="!selectedProductId" class="py-10 text-center text-gray-500 dark:text-gray-400">
-                            <i class="mb-3 text-4xl fas fa-box-open"></i>
-                            <p>Pilih produk untuk melihat informasi stok.</p>
-                        </div>
+                    <div class="sticky p-6 bg-white rounded-xl shadow-lg top-24 dark:bg-slate-800">
+                        <div x-show="!selectedProductId" class="py-10 text-center text-gray-500 dark:text-gray-400"><i class="mb-4 text-5xl fas fa-box-open opacity-50"></i><p>Pilih produk untuk melihat informasi stok.</p></div>
                         <div x-show="selectedProductId" x-cloak class="space-y-4">
-                            <h3 class="pb-4 text-lg font-semibold text-gray-900 border-b dark:text-white dark:border-slate-700">Informasi Stok</h3>
+                            <h3 class="flex items-center pb-4 text-lg font-semibold text-gray-900 border-b dark:text-white dark:border-slate-700"><i class="mr-3 text-blue-500 fas fa-info-circle"></i>Informasi Stok</h3>
                             <div class="flex items-center space-x-4">
-                                <img :src="currentProduct?.image ? '{{ asset('storage') }}/' + currentProduct.image : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(currentProduct?.name || '')" alt="product" class="object-cover w-16 h-16 rounded-md">
-                                <div>
-                                    <p class="font-semibold text-gray-800 dark:text-white" x-text="currentProduct?.name"></p>
-                                    <p class="text-sm text-gray-500 dark:text-gray-400" x-text="`SKU: ${currentProduct?.sku}`"></p>
-                                </div>
+                                <img :src="currentProduct?.image ? '{{ asset('storage') }}/' + currentProduct.image : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(currentProduct?.name || '')" alt="product" class="object-cover w-16 h-16 rounded-lg">
+                                <div><p class="font-semibold text-gray-800 dark:text-white" x-text="currentProduct?.name"></p><p class="text-sm text-gray-500 dark:text-gray-400" x-text="`SKU: ${currentProduct?.sku}`"></p></div>
                             </div>
                             <div class="pt-4 space-y-2 border-t dark:border-slate-700">
                                 <div class="flex items-center justify-between"><span class="text-sm text-gray-600 dark:text-gray-400">Stok Saat Ini:</span><span class="text-lg font-bold text-gray-900 dark:text-white" x-text="`${currentStock} ${unit}`"></span></div>
                                 <div class="flex items-center justify-between text-sm"><span class="text-gray-600 dark:text-gray-400">Jumlah Masuk:</span><span class="font-semibold text-green-500" x-text="`+ ${quantity || 0} ${unit}`"></span></div>
                             </div>
                             <div class="pt-4 border-t dark:border-slate-700">
-                                <div class="flex items-center justify-between">
-                                    <span class="font-medium text-gray-600 dark:text-gray-400">Stok Setelahnya:</span>
-                                    <span class="text-2xl font-bold text-blue-600 dark:text-blue-400" x-text="`${finalStock} ${unit}`"></span>
-                                </div>
+                                <div class="flex items-center justify-between"><span class="font-medium text-gray-600 dark:text-gray-400">Stok Setelahnya:</span><span class="text-2xl font-bold text-blue-600 dark:text-blue-400" x-text="`${finalStock} ${unit}`"></span></div>
                             </div>
                             <div class="pt-6">
                                 <button type="submit" class="flex items-center justify-center w-full px-6 py-3 font-semibold text-white bg-blue-600 rounded-lg shadow-md hover:bg-blue-700"><i class="mr-2 fas fa-save"></i>Simpan Transaksi</button>

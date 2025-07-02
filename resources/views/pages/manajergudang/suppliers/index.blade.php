@@ -7,8 +7,11 @@
     <div class="py-8">
         {{-- Header Halaman --}}
         <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-800 dark:text-white">Daftar Supplier</h1>
-            <p class="mt-1 text-gray-500 dark:text-gray-400">Lihat semua data supplier yang bekerja sama dengan perusahaan.</p>
+            {{-- [DIHAPUS] Tombol kembali tidak lagi ada di sini --}}
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800 dark:text-white">Daftar Supplier</h1>
+                <p class="mt-1 text-gray-500 dark:text-gray-400">Lihat semua data supplier yang bekerja sama dengan perusahaan.</p>
+            </div>
         </div>
 
         {{-- Panel Filter & Tabel --}}
@@ -35,10 +38,10 @@
                 <table class="w-full table-auto">
                     <thead class="bg-gray-50 dark:bg-slate-700/50">
                         <tr>
-                            <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-400">Supplier</th>
-                            <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-400">Contact Person</th>
-                            <th class="px-6 py-3 text-xs font-medium tracking-wider text-center text-gray-500 uppercase dark:text-gray-400">Total Produk</th>
-                            <th class="px-6 py-3 text-xs font-medium tracking-wider text-center text-gray-500 uppercase dark:text-gray-400">Aksi</th>
+                            <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-400"><i class="mr-2 fas fa-truck"></i>Supplier</th>
+                            <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-400"><i class="mr-2 fas fa-address-card"></i>Contact Person</th>
+                            <th class="px-6 py-3 text-xs font-medium tracking-wider text-center text-gray-500 uppercase dark:text-gray-400"><i class="mr-2 fas fa-boxes"></i>Total Produk</th>
+                            <th class="px-6 py-3 text-xs font-medium tracking-wider text-center text-gray-500 uppercase dark:text-gray-400"><i class="mr-2 fas fa-eye"></i>Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y dark:divide-slate-700 dark:bg-slate-800">

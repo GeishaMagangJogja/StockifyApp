@@ -269,12 +269,10 @@ class ManagerDashboardController extends Controller
         return redirect()->route('manajergudang.stock.opname')->with('success', 'Stock opname berhasil disimpan dan stok telah disesuaikan.');
     }
 
-    // ... (supplier dan report methods) ...
     public function supplierList(Request $request)
     {
         $query = Supplier::withCount('products');
 
-        // 2. Terapkan filter pencarian jika ada
         if ($request->filled('search')) {
             $search = $request->get('search');
             $query->where(function($q) use ($search) {
@@ -284,11 +282,15 @@ class ManagerDashboardController extends Controller
             });
         }
 
-        // 3. Ambil data supplier dan lakukan paginasi
         $suppliers = $query->latest()->paginate(15);
         
-        // 4. Kirim data supplier ke view yang benar
-        return view('pages.manajergudang.suppliers.index', compact('suppliers'));
+        // [BARU] Hitung statistik untuk kartu
+        $stats = [
+            'total_suppliers' => Supplier::count(),
+            'total_products_from_suppliers' => Product::whereHas('supplier')->count(),
+        ];
+
+        return view('pages.manajergudang.suppliers.index', compact('suppliers', 'stats'));
     }
 
     public function supplierShow(Supplier $supplier)
