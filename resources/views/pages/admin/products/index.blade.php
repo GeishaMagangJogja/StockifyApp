@@ -141,50 +141,116 @@
                         </p>
                     </div>
 
-                    <!-- Enhanced Search Form -->
-                    <form method="GET" action="{{ route('admin.products.index') }}"
-                          class="flex flex-col space-y-3 sm:flex-row sm:items-center sm:space-x-3 sm:space-y-0">
-                        <div class="relative group">
-                            <input type="text" name="search" value="{{ request('search') }}"
-                                   placeholder="Cari berdasarkan nama/SKU..."
-                                   class="w-full px-4 py-3 pl-12 pr-4 placeholder-gray-400 transition-all duration-200 bg-white border border-gray-300 sm:w-80 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                            <div class="absolute inset-y-0 left-0 flex items-center pl-4">
-                                <i class="text-gray-400 transition-colors duration-200 group-focus-within:text-blue-500 fas fa-search"></i>
+                    <!-- Export/Import Buttons -->
+                    <div class="flex flex-wrap items-center gap-3 mt-4 lg:mt-0">
+                        <!-- Export Button -->
+                        <div x-data="{ open: false }" class="relative">
+                            <button @click="open = !open"
+                                    class="flex items-center px-4 py-3 text-sm font-medium text-gray-700 transition-all duration-200 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-600">
+                                <i class="mr-2 fas fa-file-export"></i>
+                                <span>Export</span>
+                                <i class="ml-2 fas fa-chevron-down"></i>
+                            </button>
+
+                            <!-- Export Dropdown -->
+                            <div x-show="open" @click.away="open = false"
+                                 x-transition:enter="transition ease-out duration-100"
+                                 x-transition:enter-start="transform opacity-0 scale-95"
+                                 x-transition:enter-end="transform opacity-100 scale-100"
+                                 x-transition:leave="transition ease-in duration-75"
+                                 x-transition:leave-start="transform opacity-100 scale-100"
+                                 x-transition:leave-end="transform opacity-0 scale-95"
+                                 class="absolute right-0 z-10 w-48 mt-2 origin-top-right bg-white rounded-md shadow-lg dark:bg-gray-800 ring-1 ring-black ring-opacity-5">
+                                <div class="py-1">
+                                    <a href="{{ route('admin.products.export', request()->query()) }}"
+                                       class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">
+                                        <i class="mr-2 fas fa-file-excel"></i> Export Data Produk
+                                    </a>
+                                    <a href="{{ route('admin.products.export-template') }}"
+                                       class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">
+                                        <i class="mr-2 fas fa-file-download"></i> Template Import
+                                    </a>
+                                </div>
                             </div>
                         </div>
-                        <div class="flex items-center space-x-2">
-                            <select name="category" class="px-4 py-3 pr-10 transition-all duration-200 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                                <option value="">Semua Kategori</option>
-                                @foreach($categories as $category)
-                                    <option value="{{ $category->id }}" {{ request('category') == $category->id ? 'selected' : '' }}>
-                                        {{ $category->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            <select name="stock_status" class="px-4 py-3 pr-10 transition-all duration-200 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                                <option value="">Semua Status</option>
-                                <option value="in_stock" {{ request('stock_status') == 'in_stock' ? 'selected' : '' }}>Stok Normal</option>
-                                <option value="low_stock" {{ request('stock_status') == 'low_stock' ? 'selected' : '' }}>Stok Rendah</option>
-                                <option value="out_of_stock" {{ request('stock_status') == 'out_of_stock' ? 'selected' : '' }}>Stok Habis</option>
-                            </select>
-                            <button type="submit"
-                                    class="px-6 py-3 font-medium text-white transition-all duration-200 shadow-lg bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl hover:from-blue-700 hover:to-blue-800 hover:shadow-xl">
-                                <i class="mr-2 fas fa-search"></i>Cari
+
+                        <!-- Import Button -->
+                        <div x-data="{ open: false }" class="relative">
+                            <button @click="open = !open"
+                                    class="flex items-center px-4 py-3 text-sm font-medium text-gray-700 transition-all duration-200 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-600">
+                                <i class="mr-2 fas fa-file-import"></i>
+                                <span>Import</span>
+                                <i class="ml-2 fas fa-chevron-down"></i>
                             </button>
-                            @if(request()->anyFilled(['search', 'category', 'stock_status']))
-                                <a href="{{ route('admin.products.index') }}"
-                                   class="px-6 py-3 font-medium text-gray-700 transition-all duration-200 bg-gray-200 rounded-xl hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">
-                                    <i class="mr-2 fas fa-times"></i>Reset
-                                </a>
-                            @endif
+
+                            <!-- Import Dropdown (Form) -->
+                            <div x-show="open" @click.away="open = false"
+                                 x-transition:enter="transition ease-out duration-100"
+                                 x-transition:enter-start="transform opacity-0 scale-95"
+                                 x-transition:enter-end="transform opacity-100 scale-100"
+                                 x-transition:leave="transition ease-in duration-75"
+                                 x-transition:leave-start="transform opacity-100 scale-100"
+                                 x-transition:leave-end="transform opacity-0 scale-95"
+                                 class="absolute right-0 z-10 w-64 p-4 mt-2 origin-top-right bg-white rounded-md shadow-lg dark:bg-gray-800 ring-1 ring-black ring-opacity-5">
+                                <form action="{{ route('admin.products.import') }}" method="POST" enctype="multipart/form-data">
+                                    @csrf
+                                    <div class="space-y-4">
+                                        <div>
+                                            <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                Pilih File Excel
+                                            </label>
+                                            <input type="file" name="file" accept=".xlsx,.xls" required
+                                                   class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-gray-700 dark:file:text-gray-200">
+                                        </div>
+
+                                        <div>
+                                            <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                Mode Import
+                                            </label>
+                                            <select name="import_mode" required
+                                                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                                <option value="append">Tambah Data (Append)</option>
+                                                <option value="replace">Ganti Data Lama (Replace)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex justify-end gap-2 mt-4">
+                                        <button type="submit"
+                                                class="inline-flex items-center px-4 py-2 text-sm font-medium text-white transition-all duration-200 bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl hover:from-blue-700 hover:to-blue-800">
+                                            <i class="mr-2 fas fa-file-import"></i>Import Data
+                                        </button>
+                                        <button type="button" @click="open = false"
+                                                class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 transition-all duration-200 bg-gray-100 rounded-xl hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">
+                                            <i class="mr-2 fas fa-times"></i>Batal
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
-                    </form>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Table Content -->
         <div class="p-6">
+            @if(session('import_errors'))
+                <div class="p-4 mb-6 bg-yellow-100 border-l-4 border-yellow-500 rounded-lg dark:bg-yellow-800/30 dark:border-yellow-600">
+                    <div class="flex items-center">
+                        <i class="mr-3 text-yellow-700 fas fa-exclamation-triangle dark:text-yellow-400"></i>
+                        <div>
+                            <p class="font-medium text-yellow-700 dark:text-yellow-400">Import Selesai dengan Beberapa Error</p>
+                            <ul class="mt-2 text-sm text-yellow-600 dark:text-yellow-300">
+                                @foreach(session('import_errors') as $error)
+                                    <li class="py-1">{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             @if($products->count() > 0)
                 <div class="overflow-hidden border border-gray-200 rounded-xl dark:border-gray-700">
                     <div class="overflow-x-auto">

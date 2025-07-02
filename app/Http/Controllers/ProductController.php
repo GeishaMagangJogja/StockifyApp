@@ -4,6 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Services\ProductService;
 use Illuminate\Http\Request;
+use App\Exports\ProductsExport;
+use App\Exports\ProductsTemplateExport;
+use App\Imports\ProductsImport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ProductController extends Controller
 {
@@ -147,7 +151,7 @@ class ProductController extends Controller
                 'category_id' => 'sometimes|exists:categories,id',
                 'supplier_id' => 'sometimes|exists:suppliers,id',
                 'name' => 'sometimes|string',
-                'sku' => 'required|string|max:100|unique:products,sku,' . $product->id,
+                'sku' => 'required|string|max:100|unique:products,sku,',
                 'description' => 'nullable|string',
                 'purchase_price' => 'sometimes|numeric',
                 'selling_price' => 'sometimes|numeric',
@@ -247,4 +251,56 @@ class ProductController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Export products to Excel
+     */
+    public function export(Request $request)
+    {
+        $fileName = 'products-export-' . date('Ymd-His') . '.xlsx';
+        return Excel::download(new ProductsExport($request), $fileName);
+    }
+
+    /**
+     * Export template for import
+     */
+    public function exportTemplate()
+    {
+        $fileName = 'products-template-' . date('Ymd-His') . '.xlsx';
+        return Excel::download(new ProductsTemplateExport(), $fileName);
+    }
+
+    /**
+     * Import products from Excel
+     */
+   public function import(Request $request)
+{
+    $request->validate([
+        'file' => 'required|file|mimes:xlsx,xls|max:5120', // 5MB max
+    ]);
+
+    try {
+        $import = new ProductsImport();
+        Excel::import($import, $request->file('file'));
+
+        $rowCount = $import->getRowCount();
+        $errors = $import->getErrors();
+
+        if (!empty($errors)) {
+            return redirect()
+                ->route('admin.products.index')
+                ->with('import_errors', $errors)
+                ->with('success', "Berhasil mengimpor {$rowCount} produk, dengan beberapa error.");
+        }
+
+        return redirect()
+            ->route('admin.products.index')
+            ->with('success', "Berhasil mengimpor {$rowCount} produk.");
+
+    } catch (\Exception $e) {
+        return redirect()
+            ->route('admin.products.index')
+            ->with('error', 'Gagal mengimpor: ' . $e->getMessage());
+    }
+}
 }
