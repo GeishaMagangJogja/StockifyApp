@@ -140,14 +140,6 @@
                         <p class="mt-4 text-gray-600 dark:text-gray-300">
                             Kelola produk dengan mudah, termasuk stok, kategori, dan detail lainnya dalam satu platform terpusat.
                         </p>
-                        <div class="mt-6">
-                            <a href="#" class="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300">
-                                Pelajari lebih lanjut
-                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                                </svg>
-                            </a>
-                        </div>
                     </div>
                 </div>
 
@@ -162,14 +154,6 @@
                         <p class="mt-4 text-gray-600 dark:text-gray-300">
                             Pantau semua aktivitas inventaris dengan laporan dan analisis yang selalu diperbarui secara real-time.
                         </p>
-                        <div class="mt-6">
-                            <a href="#" class="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300">
-                                Pelajari lebih lanjut
-                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                                </svg>
-                            </a>
-                        </div>
                     </div>
                 </div>
 
@@ -184,14 +168,6 @@
                         <p class="mt-4 text-gray-600 dark:text-gray-300">
                             Data Anda aman dengan sistem keamanan berlapis, enkripsi canggih, dan backup otomatis.
                         </p>
-                        <div class="mt-6">
-                            <a href="#" class="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300">
-                                Pelajari lebih lanjut
-                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                                </svg>
-                            </a>
-                        </div>
                     </div>
                 </div>
 
