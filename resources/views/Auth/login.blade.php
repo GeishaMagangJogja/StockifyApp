@@ -1,7 +1,6 @@
 @extends('layouts.auth')
 
-@section('title', 'Login - ' . config('app.name'))
-@section('page-title', 'Masuk ke ' . config('app.name'))
+<title>{{ config('app.name', 'Stockify') }} - Login</title>
 @section('page-description', 'Silakan masuk dengan kredensial Anda untuk mengakses dashboard')
 
 @section('content')

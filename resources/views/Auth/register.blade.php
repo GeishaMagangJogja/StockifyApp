@@ -1,7 +1,6 @@
 @extends('layouts.auth')
 
-@section('title', 'Daftar - ' . config('app.name'))
-@section('page-title', 'Buat Akun ' . config('app.name'))
+<title>{{ config('app.name', 'Stockify') }} - Register</title>
 @section('page-description', 'Daftar untuk bergabung dengan tim ' . config('app.name'))
 
 @section('content')
