@@ -8,7 +8,6 @@ use App\Models\Product;
 use App\Models\Category;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
-use App\Exports\ProductsExport;
 use App\Models\ProductAttribute;
 use App\Models\StockTransaction;
 use Illuminate\Support\Facades\DB;
@@ -206,18 +205,18 @@ public function userDestroy(User $user)
 }
 
     // Products Management
-   public function productList(Request $request)
+  public function productList(Request $request)
 {
     $query = Product::query()
         ->with(['category', 'supplier'])
-        ->withCount('stockTransactions')
-        ->select('products.*');
+        ->withCount('stockTransactions');
 
     // Calculate current stock from transactions
-    $query->addSelect([
-        'current_stock' => StockTransaction::selectRaw('COALESCE(SUM(CASE WHEN type = "Masuk" THEN quantity ELSE -quantity END), 0)')
-            ->whereColumn('product_id', 'products.id')
-    ]);
+    $query->select('products.*')
+        ->addSelect([
+            'current_stock' => StockTransaction::selectRaw('COALESCE(SUM(CASE WHEN type = "Masuk" THEN quantity ELSE -quantity END), 0)')
+                ->whereColumn('product_id', 'products.id')
+        ]);
 
     // Search filter
     if ($request->filled('search')) {
@@ -237,31 +236,25 @@ public function userDestroy(User $user)
     // Stock status filter
     if ($request->filled('stock_status')) {
         $status = $request->input('stock_status');
-
-        // Use subquery to filter based on calculated current_stock
         $query->where(function($q) use ($status) {
             switch ($status) {
                 case 'out_of_stock':
-                    $q->where(function($sub) {
-                        $sub->whereRaw('(SELECT COALESCE(SUM(CASE WHEN type = "Masuk" THEN quantity ELSE -quantity END), 0)
-                                       FROM stock_transactions
-                                       WHERE product_id = products.id) <= 0');
-                    });
+                    $q->whereRaw('(SELECT COALESCE(SUM(CASE WHEN type = "Masuk" THEN quantity ELSE -quantity END), 0)
+                       FROM stock_transactions
+                       WHERE product_id = products.id) <= 0');
                     break;
                 case 'low_stock':
-                    $q->where(function($sub) {
-                        $sub->whereRaw('(SELECT COALESCE(SUM(CASE WHEN type = "Masuk" THEN quantity ELSE -quantity END), 0)
-                                       FROM stock_transactions
-                                       WHERE product_id = products.id) > 0')
-                           ->whereRaw('(SELECT COALESCE(SUM(CASE WHEN type = "Masuk" THEN quantity ELSE -quantity END), 0)
-                                       FROM stock_transactions
-                                       WHERE product_id = products.id) <= products.min_stock');
-                    });
+                    $q->whereRaw('(SELECT COALESCE(SUM(CASE WHEN type = "Masuk" THEN quantity ELSE -quantity END), 0)
+                       FROM stock_transactions
+                       WHERE product_id = products.id) > 0')
+                       ->whereRaw('(SELECT COALESCE(SUM(CASE WHEN type = "Masuk" THEN quantity ELSE -quantity END), 0)
+                       FROM stock_transactions
+                       WHERE product_id = products.id) <= products.min_stock');
                     break;
                 case 'in_stock':
                     $q->whereRaw('(SELECT COALESCE(SUM(CASE WHEN type = "Masuk" THEN quantity ELSE -quantity END), 0)
-                                 FROM stock_transactions
-                                 WHERE product_id = products.id) > products.min_stock');
+                       FROM stock_transactions
+                       WHERE product_id = products.id) > products.min_stock');
                     break;
             }
         });
@@ -289,7 +282,15 @@ public function userDestroy(User $user)
         $query->orderBy($sortColumn, $sortDirection);
     }
 
+    // Paginate with query string
     $products = $query->paginate(10)->withQueryString();
+    dd($request->all(), $products->withQueryString());
+
+    // Ensure calculated current_stock is available in the view
+    $products->each(function($product) {
+        $product->setAttribute('current_stock', $product->current_stock);
+    });
+
     $categories = Category::orderBy('name')->get();
 
     return view('pages.admin.products.index', compact('products', 'categories'));
