@@ -88,4 +88,14 @@ public function getCurrentStockAttribute()
         ->selectRaw('SUM(CASE WHEN type = "Masuk" THEN quantity ELSE -quantity END) as stock')
         ->value('stock') ?? 0;
 }
+// Di Model Product
+public function getFormattedPurchasePriceAttribute()
+{
+    return 'Rp' . number_format($this->purchase_price, 0, ',', '.');
+}
+
+public function getFormattedSellingPriceAttribute()
+{
+    return 'Rp' . number_format($this->selling_price, 0, ',', '.');
+}
 }

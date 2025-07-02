@@ -208,7 +208,12 @@
                                     </th>
                                     <th scope="col" class="px-6 py-4 text-left">
                                         <span class="text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-300">
-                                            <i class="mr-2 fas fa-money-bill-wave"></i>Harga
+                                            <i class="mr-2 fas fa-money-bill-wave"></i>Harga Beli
+                                        </span>
+                                    </th>
+                                    <th scope="col" class="px-6 py-4 text-left">
+                                        <span class="text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-300">
+                                            <i class="mr-2 fas fa-money-bill-wave"></i>Harga Jual
                                         </span>
                                     </th>
                                     <th scope="col" class="px-6 py-4 text-left">
@@ -262,13 +267,11 @@
                                                 {{ $product->supplier->name ?? '-' }}
                                             </div>
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm font-semibold text-gray-900 dark:text-white">
-                                                Rp {{ number_format($product->selling_price, 0, ',', '.') }}
-                                            </div>
-                                            <div class="text-xs text-gray-500 dark:text-gray-400">
-                                                Beli: Rp {{ number_format($product->purchase_price, 0, ',', '.') }}
-                                            </div>
+                                        <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                            {{ $product->formatted_purchase_price }}
+                                        </td>
+                                        <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                            {{ $product->formatted_selling_price }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <div class="text-sm font-semibold text-gray-900 dark:text-white">

@@ -393,8 +393,8 @@ public function userDestroy(User $user)
         ]);
 
         try {
-            $validatedData['purchase_price'] = str_replace('.', '', $validatedData['purchase_price']);
-            $validatedData['selling_price'] = str_replace('.', '', $validatedData['selling_price']);
+            $validatedData['purchase_price'] = (int) $validatedData['purchase_price'];
+            $validatedData['selling_price'] = (int) $validatedData['selling_price'];
 
             if ($request->hasFile('image')) {
                 if ($product->image) {
