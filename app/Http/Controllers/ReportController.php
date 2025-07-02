@@ -165,29 +165,4 @@ class ReportController extends Controller
 
         return redirect()->back()->with('error', 'Format ekspor tidak didukung.');
     }
-    public function filterTransactions(Request $request)
-    {
-    $query = Transaction::query();
-    
-    if ($request->search) {
-        $query->whereHas('product', fn($q) => 
-            $q->where('name', 'like', "%{$request->search}%")
-              ->orWhere('sku', 'like', "%{$request->search}%")
-        );
-    }
-    
-    if ($request->status) {
-        $query->where('status', $request->status);
-    }
-    
-    if ($request->start_date) {
-        $query->whereDate('date', '>=', $request->start_date);
-    }
-    
-    if ($request->end_date) {
-        $query->whereDate('date', '<=', $request->end_date);
-    }
-    
-    return response()->json($query->with(['product', 'supplier'])->paginate(10));
-    }
 }
