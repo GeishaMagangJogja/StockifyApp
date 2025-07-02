@@ -45,7 +45,7 @@
                 <!-- Status Badge -->
                 <span class="px-3 py-1 text-sm font-medium rounded-full
                     @if($product->current_stock <= 0) bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300
-                    @elseif($product->current_stock <= $product->minimum_stock) bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300
+                    @elseif($product->current_stock <= $product->min_stock) bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300
                     @else bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300 @endif">
                     Stok: {{ $product->current_stock }} {{ $product->unit }}
                 </span>
@@ -202,33 +202,53 @@
                             Harga & Stok
                         </h3>
                         <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-                          <!-- Harga Beli -->
-<div>
-    <label for="purchase_price" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-        Harga Beli <span class="text-red-500">*</span>
-    </label>
-    <input type="hidden" id="purchase_price_raw" name="purchase_price" value="{{ old('purchase_price', $product->purchase_price) }}">
-    <input type="text" id="purchase_price_display" value="{{ number_format(old('purchase_price', $product->purchase_price), 0, ',', '.') }}" required
-           class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full p-3 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 transition-all @error('purchase_price') border-red-500 dark:border-red-500 @enderror"
-           placeholder="0">
-    @error('purchase_price')
-        <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-    @enderror
-</div>
+                            <!-- Purchase Price -->
+                            <div>
+                                <label for="purchase_price" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                    Harga Beli <span class="text-red-500">*</span>
+                                </label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                        <span class="font-medium text-gray-500 dark:text-gray-400">Rp</span>
+                                    </div>
+                                    <input type="hidden" id="purchase_price_raw" name="purchase_price" value="{{ old('purchase_price', $product->purchase_price) }}">
+                                    <input type="text" id="purchase_price_display" value="{{ number_format(old('purchase_price', $product->purchase_price), 0, ',', '.') }}" required
+                                           class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full pl-12 p-3 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 transition-all @error('purchase_price') border-red-500 dark:border-red-500 @enderror"
+                                           placeholder="0">
+                                </div>
+                                @error('purchase_price')
+                                    <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                @enderror
+                            </div>
 
-<!-- Harga Jual -->
-<div>
-    <label for="selling_price" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-        Harga Jual <span class="text-red-500">*</span>
-    </label>
-    <input type="hidden" id="selling_price_raw" name="selling_price" value="{{ old('selling_price', $product->selling_price) }}">
-    <input type="text" id="selling_price_display" value="{{ number_format(old('selling_price', $product->selling_price), 0, ',', '.') }}" required
-           class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full p-3 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 transition-all @error('selling_price') border-red-500 dark:border-red-500 @enderror"
-           placeholder="0">
-    @error('selling_price')
-        <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-    @enderror
-</div>
+                            <!-- Selling Price -->
+                            <div>
+                                <label for="selling_price" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                    Harga Jual <span class="text-red-500">*</span>
+                                </label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                        <span class="font-medium text-gray-500 dark:text-gray-400">Rp</span>
+                                    </div>
+                                    <input type="hidden" id="selling_price_raw" name="selling_price" value="{{ old('selling_price', $product->selling_price) }}">
+                                    <input type="text" id="selling_price_display" value="{{ number_format(old('selling_price', $product->selling_price), 0, ',', '.') }}" required
+                                           class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full pl-12 p-3 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 transition-all @error('selling_price') border-red-500 dark:border-red-500 @enderror"
+                                           placeholder="0">
+                                </div>
+                                @error('selling_price')
+                                    <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                @enderror
+                                <!-- Profit Margin Display -->
+                                <div id="profitMargin" class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                                    <span class="font-medium">Margin: </span>
+                                    <span id="marginAmount" class="text-green-600 dark:text-green-400">
+                                        Rp{{ number_format($product->selling_price - $product->purchase_price, 0, ',', '.') }}
+                                    </span>
+                                    <span class="text-gray-500">(<span id="marginPercent">
+                                        {{ $product->purchase_price > 0 ? number_format((($product->selling_price - $product->purchase_price) / $product->purchase_price) * 100, 2) : '0' }}
+                                    </span>%)</span>
+                                </div>
+                            </div>
 
                             <!-- Minimum Stock -->
                             <div>
@@ -243,8 +263,6 @@
                                 @enderror
                                 <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Sistem akan memberikan peringatan jika stok mencapai batas ini</p>
                             </div>
-
-
                         </div>
                     </div>
 
@@ -282,11 +300,10 @@
                             <div class="mb-4">
                                 <div class="relative group">
                                     <img id="imagePreview" class="object-cover w-full h-48 transition-all border-2 border-gray-300 border-dashed rounded-lg dark:border-gray-600 group-hover:border-blue-400"
-                                    src="{{ $product->image ? asset('storage/' . $product->image) : 'https://via.placeholder.com/300x200?text=No+Image' }}"
-                                    alt="Preview gambar">
-                                    <button type="button" id="removeImageBtn"
-                                            class="absolute flex items-center justify-center p-2 text-white transition-colors bg-red-500 rounded-full shadow-lg -top-2 -right-2 hover:bg-red-600"
-                                            style="{{ !$product->image || str_contains($product->image, 'placeholder') ? 'display: none;' : '' }}">
+                                         src="{{ $product->image ? asset('storage/' . $product->image) : 'https://via.placeholder.com/300x200?text=No+Image' }}"
+                                         alt="Preview gambar">
+                                    <button type="button" id="removeImageBtn" class="absolute p-2 text-white transition-colors bg-red-500 rounded-full shadow-lg -top-2 -right-2 hover:bg-red-600"
+                                            style="{{ !$product->image ? 'display: none;' : '' }}">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                                         </svg>
@@ -417,6 +434,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 let value = this.value.replace(/[^0-9]/g, '');
                 purchasePriceRaw.value = value;
                 this.value = new Intl.NumberFormat('id-ID').format(value);
+                calculateProfitMargin();
             });
 
             // Set initial value
@@ -430,6 +448,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 let value = this.value.replace(/[^0-9]/g, '');
                 sellingPriceRaw.value = value;
                 this.value = new Intl.NumberFormat('id-ID').format(value);
+                calculateProfitMargin();
             });
 
             // Set initial value
@@ -438,6 +457,24 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     };
+
+    // Calculate profit margin
+    function calculateProfitMargin() {
+        const purchase = parseInt(document.getElementById('purchase_price_raw').value) || 0;
+        const selling = parseInt(document.getElementById('selling_price_raw').value) || 0;
+        const profitMargin = document.getElementById('profitMargin');
+
+        if (purchase > 0 && selling > 0) {
+            const margin = selling - purchase;
+            const percent = ((margin / purchase) * 100).toFixed(2);
+
+            document.getElementById('marginAmount').textContent = 'Rp' + new Intl.NumberFormat('id-ID').format(margin);
+            document.getElementById('marginPercent').textContent = percent;
+            profitMargin.classList.remove('hidden');
+        } else {
+            profitMargin.classList.add('hidden');
+        }
+    }
 
     // Handle image preview and removal
     const handleImageUpload = () => {
@@ -472,9 +509,20 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
+    // Delete product confirmation
+    const deleteProductBtn = document.getElementById('deleteProductBtn');
+    if (deleteProductBtn) {
+        deleteProductBtn.addEventListener('click', function() {
+            if (confirm('Apakah Anda yakin ingin menghapus produk ini?')) {
+                document.getElementById('deleteProductForm').submit();
+            }
+        });
+    }
+
     // Initialize all functions
     formatCurrencyInputs();
     handleImageUpload();
+    calculateProfitMargin();
 });
 </script>
 @endpush
