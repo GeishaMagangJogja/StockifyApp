@@ -293,9 +293,10 @@ class ManagerDashboardController extends Controller
         // Apply search filter (only for the product list)
         if ($request->filled('search')) {
             $search = $request->search;
-            $productsQuery->where(function($q) use ($search) {
+            $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                ->orWhere('sku', 'like', "%{$search}%");
+                ->orWhere('email', 'like', "%{$search}%")
+                ->orWhere('contact_person', 'like', "%{$search}%");
             });
         }
 
@@ -306,24 +307,9 @@ class ManagerDashboardController extends Controller
             $productsQuery->where('category_id', $categoryId);
         }
 
-        // --- 4. EXECUTE QUERIES AND GET DATA ---
-        // Execute the summary query to get the counts
-        $summaryResult = $summaryQuery->first();
-        $stockSummary = [
-            'safe' => $summaryResult->safe_count ?? 0,
-            'low' => $summaryResult->low_count ?? 0,
-            'out' => $summaryResult->out_count ?? 0,
-        ];
-
-        // Execute the paginated query for the table
-        $products = $productsQuery->paginate(20);
-
-        // Get all categories for the filter dropdown
-        $categories = Category::orderBy('name')->get();
-
-        // --- 5. RETURN VIEW WITH ALL DATA ---
-        return view('pages.manajergudang.reports.stock', compact('products', 'categories', 'stockSummary'));
-    }
+        $suppliers = $query->latest()->paginate(15);
+        return view('pages.manajergudang.suppliers.index', compact('suppliers'));
+}
 
     public function reportTransactions(Request $request)
     {
