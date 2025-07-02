@@ -13,7 +13,8 @@
         "laravel/framework": "^10.0",
         "laravel/sanctum": "^3.3",
         "laravel/tinker": "^2.8",
-        "maatwebsite/excel": "^1.1",
+        "maatwebsite/excel": "^3.1",
+        "phpoffice/phpspreadsheet": "^1.29",
         "yaza/laravel-repository-service": "4.0"
     },
     "require-dev": {
@@ -35,7 +36,7 @@
         "Database\\Seeders\\": "database/seeders/"
     },
     "files": [
-        "app/Helper/settings.php" 
+        "app/Helper/settings.php"
     ]
     },
     "autoload-dev": {
