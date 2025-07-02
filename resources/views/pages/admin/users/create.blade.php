@@ -85,16 +85,30 @@
                         <input type="password" id="password_confirmation" name="password_confirmation" required
                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                     </div>
-                </div>
 
-                {{-- Role Description --}}
-                <div class="mt-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                    <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Deskripsi Role:</h3>
-                    <ul class="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-                        <li><strong>Admin:</strong> Akses penuh ke semua fitur sistem</li>
-                        <li><strong>Manajer Gudang:</strong> Mengelola stok, transaksi, dan laporan</li>
-                        <li><strong>Staff Gudang:</strong> Melakukan operasi stok dasar dan tugas yang diberikan</li>
-                    </ul>
+                    {{-- Role Description (BLOK YANG BARU) --}}
+                    <div class="col-span-1 md:col-span-2">
+                        <div class="p-6 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                            <h3 class="flex items-center text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                                <i class="fas fa-lightbulb text-blue-400 mr-3 text-xl"></i>
+                                <span>Deskripsi Role</span>
+                            </h3>
+                            <ul class="list-disc list-inside space-y-2 text-gray-700 dark:text-slate-300">
+                                <li>
+                                    <strong class="font-medium text-gray-800 dark:text-slate-100">Admin:</strong> 
+                                    Akses penuh ke semua fitur sistem.
+                                </li>
+                                <li>
+                                    <strong class="font-medium text-gray-800 dark:text-slate-100">Manajer Gudang:</strong> 
+                                    Mengelola stok, transaksi, dan laporan.
+                                </li>
+                                <li>
+                                    <strong class="font-medium text-gray-800 dark:text-slate-100">Staff Gudang:</strong> 
+                                    Melakukan operasi stok dasar dan tugas yang diberikan.
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
 
                 {{-- Submit Buttons --}}
