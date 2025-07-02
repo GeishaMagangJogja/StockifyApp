@@ -27,7 +27,8 @@ return [
     |
     */
 
-    'logo' => env('APP_LOGO', null), // <-- INI BARIS YANG SAYA TAMBAHKAN
+    'logo' => env('APP_LOGO', null), //
+    "appDescription" => env('APP_DESCRIPTION', 'Stockify - Your Stock Management Solution'),
 
     /*
     |--------------------------------------------------------------------------
