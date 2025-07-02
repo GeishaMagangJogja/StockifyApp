@@ -95,9 +95,9 @@ Route::middleware(['auth', 'role:Admin'])->prefix('admin')->name('admin.')->grou
     Route::delete('/products/{product}', [AdminDashboardController::class, 'destroy'])->name('products.destroy');
     Route::delete('/products/{product}/force', [AdminDashboardController::class, 'forceDestroy'])->name('products.force-destroy');
     Route::post('/products/generate-sku', [AdminDashboardController::class, 'generateSku'])->name('products.generate-sku');
-    Route::get('export', [ProductController::class, 'export'])->name('products.export');
-    Route::get('export-template', [ProductController::class, 'exportTemplate'])->name('products.export-template');
-    Route::post('import', [ProductController::class, 'import'])->name('products.import');
+    Route::get('export', [AdminDashboardController::class, 'export'])->name('products.export');
+    Route::get('export-template', [AdminDashboardController::class, 'exportTemplate'])->name('products.export-template');
+    Route::post('import', [AdminDashboardController::class, 'import'])->name('products.import');
 
     // Categories Management (alternative routes)
     Route::get('/categories', [AdminDashboardController::class, 'categoryList'])->name('categories.index');

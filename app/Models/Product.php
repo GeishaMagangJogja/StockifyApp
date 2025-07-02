@@ -20,7 +20,7 @@ class Product extends Model
         'purchase_price',
         'selling_price',
         'image',
-        'current_stock',
+        'current_stock',  // Pastikan ini ada untuk import
         'min_stock',
         'unit',
     ];
@@ -31,17 +31,21 @@ class Product extends Model
         'unit' => 'pcs',
     ];
 
-    protected $appends = ['stock_status'];
+    protected $appends = ['stock_status', 'formatted_purchase_price', 'formatted_selling_price'];
 
     // Relationships
     public function category()
     {
-        return $this->belongsTo(Category::class);
+        return $this->belongsTo(Category::class)->withDefault([
+            'name' => 'Tidak Berkategori'
+        ]);
     }
 
     public function supplier()
     {
-        return $this->belongsTo(Supplier::class);
+        return $this->belongsTo(Supplier::class)->withDefault([
+            'name' => 'Tidak Ada Supplier'
+        ]);
     }
 
     public function attributes()
@@ -58,44 +62,54 @@ class Product extends Model
     protected function stockStatus(): Attribute
     {
         return Attribute::make(
-            get: fn () => match (true) {
-                $this->current_stock <= 0 => 'out_of_stock',
-                $this->current_stock <= $this->min_stock => 'low_stock',
-                default => 'in_stock',
+            get: function () {
+                $currentStock = $this->current_stock;
+
+                if ($currentStock <= 0) {
+                    return 'out_of_stock';
+                }
+
+                if ($currentStock <= $this->min_stock) {
+                    return 'low_stock';
+                }
+
+                return 'in_stock';
             }
         );
     }
 
-    // Helper method for calculating available stock
-    public function availableStock()
+    protected function currentStock(): Attribute
     {
-        if (isset($this->attributes['stock_in_sum'])) {
-            return ($this->attributes['stock_in_sum'] ?? 0) - ($this->attributes['stock_out_sum'] ?? 0);
-        }
-
-        if ($this->relationLoaded('stockTransactions')) {
-            return $this->stockTransactions->where('type', 'Masuk')->sum('quantity') -
-                   $this->stockTransactions->where('type', 'Keluar')->sum('quantity');
-        }
-
-        return $this->stockTransactions()->where('type', 'Masuk')->sum('quantity') -
-               $this->stockTransactions()->where('type', 'Keluar')->sum('quantity');
+        return Attribute::make(
+        get: function ($value) {
+            // Selalu kembalikan value langsung dari database saat import
+            return $value;
+        },
+        set: fn ($value) => $value
+    );
     }
-    // Di Model Product
-public function getCurrentStockAttribute()
-{
-    return $this->stockTransactions()
-        ->selectRaw('SUM(CASE WHEN type = "Masuk" THEN quantity ELSE -quantity END) as stock')
-        ->value('stock') ?? 0;
-}
-// Di Model Product
-public function getFormattedPurchasePriceAttribute()
-{
-    return 'Rp' . number_format($this->purchase_price, 0, ',', '.');
-}
 
-public function getFormattedSellingPriceAttribute()
-{
-    return 'Rp' . number_format($this->selling_price, 0, ',', '.');
-}
+    protected function formattedPurchasePrice(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => 'Rp' . number_format($this->purchase_price, 0, ',', '.')
+        );
+    }
+
+    protected function formattedSellingPrice(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => 'Rp' . number_format($this->selling_price, 0, ',', '.')
+        );
+    }
+
+    // Helper methods
+    public function updateStockFromTransactions()
+    {
+        $this->current_stock = $this->stockTransactions()
+            ->selectRaw('SUM(CASE WHEN type = "Masuk" THEN quantity ELSE -quantity END) as stock')
+            ->value('stock') ?? 0;
+
+        $this->save();
+    }
 }

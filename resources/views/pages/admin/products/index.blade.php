@@ -142,87 +142,66 @@
                     </div>
 
                     <!-- Export/Import Buttons -->
-                    <div class="flex flex-wrap items-center gap-3 mt-4 lg:mt-0">
+                    <div class="flex flex-wrap items-center gap-3 mb-4">
                         <!-- Export Button -->
-                        <div x-data="{ open: false }" class="relative">
-                            <button @click="open = !open"
-                                    class="flex items-center px-4 py-3 text-sm font-medium text-gray-700 transition-all duration-200 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-600">
-                                <i class="mr-2 fas fa-file-export"></i>
-                                <span>Export</span>
-                                <i class="ml-2 fas fa-chevron-down"></i>
-                            </button>
+                        <a href="{{ route('admin.products.export', request()->query()) }}"
+                           class="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-600">
+                            <i class="mr-2 fas fa-file-export"></i>
+                            Export
+                        </a>
 
-                            <!-- Export Dropdown -->
-                            <div x-show="open" @click.away="open = false"
-                                 x-transition:enter="transition ease-out duration-100"
-                                 x-transition:enter-start="transform opacity-0 scale-95"
-                                 x-transition:enter-end="transform opacity-100 scale-100"
-                                 x-transition:leave="transition ease-in duration-75"
-                                 x-transition:leave-start="transform opacity-100 scale-100"
-                                 x-transition:leave-end="transform opacity-0 scale-95"
-                                 class="absolute right-0 z-10 w-48 mt-2 origin-top-right bg-white rounded-md shadow-lg dark:bg-gray-800 ring-1 ring-black ring-opacity-5">
-                                <div class="py-1">
-                                    <a href="{{ route('admin.products.export', request()->query()) }}"
-                                       class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">
-                                        <i class="mr-2 fas fa-file-excel"></i> Export Data Produk
-                                    </a>
-                                    <a href="{{ route('admin.products.export-template') }}"
-                                       class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">
-                                        <i class="mr-2 fas fa-file-download"></i> Template Import
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
+                        <!-- Download Template -->
+                        <a href="{{ route('admin.products.export-template') }}"
+                           class="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-600">
+                            <i class="mr-2 fas fa-file-download"></i>
+                            Template Import
+                        </a>
 
                         <!-- Import Button -->
-                        <div x-data="{ open: false }" class="relative">
-                            <button @click="open = !open"
-                                    class="flex items-center px-4 py-3 text-sm font-medium text-gray-700 transition-all duration-200 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-600">
-                                <i class="mr-2 fas fa-file-import"></i>
-                                <span>Import</span>
-                                <i class="ml-2 fas fa-chevron-down"></i>
-                            </button>
+                        <button onclick="document.getElementById('importModal').classList.remove('hidden')"
+                                class="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-600">
+                            <i class="mr-2 fas fa-file-import"></i>
+                            Import
+                        </button>
+                    </div>
 
-                            <!-- Import Dropdown (Form) -->
-                            <div x-show="open" @click.away="open = false"
-                                 x-transition:enter="transition ease-out duration-100"
-                                 x-transition:enter-start="transform opacity-0 scale-95"
-                                 x-transition:enter-end="transform opacity-100 scale-100"
-                                 x-transition:leave="transition ease-in duration-75"
-                                 x-transition:leave-start="transform opacity-100 scale-100"
-                                 x-transition:leave-end="transform opacity-0 scale-95"
-                                 class="absolute right-0 z-10 w-64 p-4 mt-2 origin-top-right bg-white rounded-md shadow-lg dark:bg-gray-800 ring-1 ring-black ring-opacity-5">
+                    <!-- Import Modal -->
+                    <div id="importModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+                        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+                            </div>
+
+                            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                            <div class="inline-block overflow-hidden text-left align-bottom transition-all transform bg-white rounded-lg shadow-xl sm:my-8 sm:align-middle sm:max-w-lg sm:w-full dark:bg-gray-800">
                                 <form action="{{ route('admin.products.import') }}" method="POST" enctype="multipart/form-data">
                                     @csrf
-                                    <div class="space-y-4">
-                                        <div>
+                                    <div class="px-4 pt-5 pb-4 bg-white sm:p-6 sm:pb-4 dark:bg-gray-800">
+                                        <h3 class="mb-4 text-lg font-medium text-gray-900 dark:text-white">
+                                            <i class="mr-2 fas fa-file-import"></i> Import Produk
+                                        </h3>
+
+                                        <div class="mb-4">
                                             <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
                                                 Pilih File Excel
                                             </label>
                                             <input type="file" name="file" accept=".xlsx,.xls" required
                                                    class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-gray-700 dark:file:text-gray-200">
-                                        </div>
-
-                                        <div>
-                                            <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-                                                Mode Import
-                                            </label>
-                                            <select name="import_mode" required
-                                                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                                                <option value="append">Tambah Data (Append)</option>
-                                                <option value="replace">Ganti Data Lama (Replace)</option>
-                                            </select>
+                                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                                Format file harus .xlsx atau .xls (Max: 5MB)
+                                            </p>
                                         </div>
                                     </div>
 
-                                    <div class="flex justify-end gap-2 mt-4">
+                                    <div class="px-4 py-3 bg-gray-50 sm:px-6 sm:flex sm:flex-row-reverse dark:bg-gray-700">
                                         <button type="submit"
-                                                class="inline-flex items-center px-4 py-2 text-sm font-medium text-white transition-all duration-200 bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl hover:from-blue-700 hover:to-blue-800">
-                                            <i class="mr-2 fas fa-file-import"></i>Import Data
+                                                class="inline-flex justify-center w-full px-4 py-2 text-base font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+                                            <i class="mr-2 fas fa-upload"></i> Upload & Import
                                         </button>
-                                        <button type="button" @click="open = false"
-                                                class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 transition-all duration-200 bg-gray-100 rounded-xl hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">
-                                            <i class="mr-2 fas fa-times"></i>Batal
+                                        <button type="button" onclick="document.getElementById('importModal').classList.add('hidden')"
+                                                class="inline-flex justify-center w-full px-4 py-2 mt-3 text-base font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm dark:bg-gray-600 dark:text-white dark:border-gray-500">
+                                            <i class="mr-2 fas fa-times"></i> Batal
                                         </button>
                                     </div>
                                 </form>

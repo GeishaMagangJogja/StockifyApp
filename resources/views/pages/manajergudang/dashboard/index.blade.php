@@ -3,139 +3,245 @@
 @section('title', 'Dashboard Manajer Gudang')
 
 @section('content')
-    <div class="flex flex-wrap items-center justify-between mb-6 gap-4">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Selamat Datang Kembali, {{ Auth::user()->name }}!</h1>
-            <p class="mt-1 text-gray-600 dark:text-gray-400">Berikut adalah ringkasan aktivitas gudang terkini.</p>
-        </div>
-        <div class="flex items-center space-x-2">
-            <a href="{{ route('manajergudang.stock.in') }}" class="px-4 py-2 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700 shadow-md">
-                <i class="fas fa-plus mr-1"></i> Catat Barang Masuk
-            </a>
-            <a href="{{ route('manajergudang.stock.out') }}" class="px-4 py-2 text-sm text-white bg-red-600 rounded-lg hover:bg-red-700 shadow-md">
-                <i class="fas fa-minus mr-1"></i> Catat Barang Keluar
-            </a>
-        </div>
-    </div>
-    {{-- Notifikasi --}}
-@if (session('success'))
-    <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)"
-         x-transition:leave="transition ease-in duration-300"
-         x-transition:leave-start="opacity-100"
-         x-transition:leave-end="opacity-0"
-         class="flex items-center justify-between p-4 mb-6 text-green-800 bg-green-100 border-l-4 border-green-500 rounded-r-lg dark:bg-green-900/30 dark:text-green-300 dark:border-green-600"
-         role="alert">
-        
-        <div class="flex items-center">
-            <i class="mr-2 fas fa-check-circle"></i>
-            <span class="font-medium">{{ session('success') }}</span>
-        </div>
-        
-        <button @click="show = false" class="text-green-700 hover:text-green-900 dark:text-green-300 dark:hover:text-green-100">
-            <span class="sr-only">Tutup</span>
-            <i class="fas fa-times"></i>
-        </button>
-    </div>
-@endif
+    <!-- Header Section with Glass Effect -->
+    <div class="relative mb-8 overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10 rounded-2xl backdrop-blur-sm"></div>
+        <div class="relative p-6">
+            <!-- Breadcrumb -->
+            <nav class="flex items-center mb-4 space-x-2 text-sm">
+                <span class="px-3 py-1 text-blue-600 bg-blue-100 rounded-lg dark:text-blue-400 dark:bg-blue-900/50">
+                    <i class="mr-2 fas fa-tachometer-alt"></i>Dashboard
+                </span>
+            </nav>
 
-@if (session('error'))
-    {{-- Anda juga bisa menerapkan gaya yang sama untuk notifikasi error --}}
-    <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 8000)"
-         x-transition:leave="transition ease-in duration-300"
-         x-transition:leave-start="opacity-100"
-         x-transition:leave-end="opacity-0"
-         class="flex items-center justify-between p-4 mb-6 text-red-800 bg-red-100 border-l-4 border-red-500 rounded-r-lg dark:bg-red-900/30 dark:text-red-300 dark:border-red-600"
-         role="alert">
-        
-        <div class="flex items-center">
-            <i class="mr-2 fas fa-exclamation-triangle"></i>
-            <span class="font-medium">{{ session('error') }}</span>
-        </div>
-        
-        <button @click="show = false" class="text-red-700 hover:text-red-900 dark:text-red-300 dark:hover:text-red-100">
-            <span class="sr-only">Tutup</span>
-            <i class="fas fa-times"></i>
-        </button>
-    </div>
-@endif
-
-    {{-- Baris Pertama: Kartu Statistik --}}
-    <div class="grid grid-cols-1 gap-6 mb-6 sm:grid-cols-2 lg:grid-cols-4">
-        <div class="p-6 bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-lg text-white"><div class="flex justify-between items-start"><div><p class="text-sm font-medium opacity-80">Total Produk</p><p class="text-3xl font-bold">{{ number_format($totalProducts) }}</p></div><i class="fas fa-box text-4xl opacity-50"></i></div></div>
-        <div class="p-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-lg text-white"><div class="flex justify-between items-start"><div><p class="text-sm font-medium opacity-80">Total Supplier</p><p class="text-3xl font-bold">{{ number_format($totalSuppliers) }}</p></div><i class="fas fa-truck text-4xl opacity-50"></i></div></div>
-        <div class="p-6 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg shadow-lg text-white"><div class="flex justify-between items-start"><div><p class="text-sm font-medium opacity-80">Masuk Hari Ini</p><p class="text-3xl font-bold">{{ number_format($incomingTodayCount) }}</p></div><i class="fas fa-arrow-circle-down text-4xl opacity-50"></i></div></div>
-        <div class="p-6 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow-lg text-white"><div class="flex justify-between items-start"><div><p class="text-sm font-medium opacity-80">Keluar Hari Ini</p><p class="text-3xl font-bold">{{ number_format($outgoingTodayCount) }}</p></div><i class="fas fa-arrow-circle-up text-4xl opacity-50"></i></div></div>
-    </div>
-
-    {{-- Grafik & Aktivitas --}}
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {{-- Kolom Kiri: Grafik dan Stok Rendah --}}
-        <div class="lg:col-span-2 space-y-6">
-            <div class="p-6 bg-white rounded-lg shadow dark:bg-slate-800">
-                <h5 class="mb-4 text-xl font-bold text-gray-900 dark:text-white">Aktivitas Transaksi (7 Hari Terakhir)</h5>
-                <div id="main-chart"></div>
+            <!-- Title Section -->
+            <div class="flex flex-col items-start justify-between space-y-4 lg:flex-row lg:items-center lg:space-y-0">
+                <div class="space-y-2">
+                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+                        <i class="mr-3 text-blue-600 fas fa-tachometer-alt dark:text-blue-400"></i>
+                        Selamat Datang, {{ Auth::user()->name }}!
+                    </h1>
+                    <p class="text-lg text-gray-600 dark:text-gray-400">
+                        Ringkasan aktivitas gudang hari ini
+                    </p>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <a href="{{ route('manajergudang.stock.in') }}"
+                       class="relative inline-flex items-center px-6 py-3 text-gray-700 transition-all duration-300 bg-white shadow group rounded-xl hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 hover:shadow-md">
+                        <i class="mr-2 fas fa-arrow-down"></i>
+                        <span>Barang Masuk</span>
+                    </a>
+                    <a href="{{ route('manajergudang.stock.out') }}"
+                       class="group relative inline-flex items-center px-6 py-3 text-white bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                        <div class="absolute inset-0 transition-opacity duration-300 opacity-0 bg-white/20 rounded-xl group-hover:opacity-100"></div>
+                        <i class="mr-2 fas fa-arrow-up"></i>
+                        <span class="font-medium">Barang Keluar</span>
+                    </a>
+                </div>
             </div>
-             <div class="p-6 bg-white rounded-lg shadow dark:bg-slate-800">
-                <h5 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Stok Akan Habis</h5>
-                <div class="space-y-3">
+        </div>
+    </div>
+
+    <!-- Notification -->
+    @if(session('success'))
+    <div class="p-4 mb-6 text-green-800 bg-green-100 rounded-xl dark:bg-green-900/50 dark:text-green-300">
+        <i class="mr-2 fas fa-check-circle"></i> {{ session('success') }}
+    </div>
+    @endif
+    @if(session('error'))
+    <div class="p-4 mb-6 text-red-800 bg-red-100 rounded-xl dark:bg-red-900/50 dark:text-red-300">
+        <i class="mr-2 fas fa-exclamation-circle"></i> {{ session('error') }}
+    </div>
+    @endif
+
+    <!-- Enhanced Statistics Cards -->
+    <div class="grid grid-cols-1 gap-6 mb-8 sm:grid-cols-2 lg:grid-cols-4">
+        <!-- Products Card -->
+        <div class="relative overflow-hidden transition-all duration-300 transform bg-white shadow-lg group rounded-2xl hover:shadow-xl hover:-translate-y-1 dark:bg-gray-800">
+            <div class="absolute inset-0 bg-gradient-to-br from-green-500/5 to-green-600/10"></div>
+            <div class="relative p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center justify-center w-12 h-12 shadow-lg bg-gradient-to-br from-green-500 to-green-600 rounded-xl">
+                        <i class="text-xl text-white fas fa-box"></i>
+                    </div>
+                    <div class="px-3 py-1 text-xs font-medium text-green-600 bg-green-100 rounded-full dark:text-green-400 dark:bg-green-900/50">
+                        Produk
+                    </div>
+                </div>
+                <div class="space-y-1">
+                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Produk</p>
+                    <p class="text-3xl font-bold text-gray-900 dark:text-white">{{ number_format($totalProducts ?? 0) }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Suppliers Card -->
+        <div class="relative overflow-hidden transition-all duration-300 transform bg-white shadow-lg group rounded-2xl hover:shadow-xl hover:-translate-y-1 dark:bg-gray-800">
+            <div class="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-blue-600/10"></div>
+            <div class="relative p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center justify-center w-12 h-12 shadow-lg bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl">
+                        <i class="text-xl text-white fas fa-truck"></i>
+                    </div>
+                    <div class="px-3 py-1 text-xs font-medium text-blue-600 bg-blue-100 rounded-full dark:text-blue-400 dark:bg-blue-900/50">
+                        Supplier
+                    </div>
+                </div>
+                <div class="space-y-1">
+                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Supplier</p>
+                    <p class="text-3xl font-bold text-gray-900 dark:text-white">{{ number_format($totalSuppliers ?? 0) }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Incoming Today Card -->
+        <div class="relative overflow-hidden transition-all duration-300 transform bg-white shadow-lg group rounded-2xl hover:shadow-xl hover:-translate-y-1 dark:bg-gray-800">
+            <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-indigo-600/10"></div>
+            <div class="relative p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center justify-center w-12 h-12 shadow-lg bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl">
+                        <i class="text-xl text-white fas fa-arrow-down"></i>
+                    </div>
+                    <div class="px-3 py-1 text-xs font-medium text-indigo-600 bg-indigo-100 rounded-full dark:text-indigo-400 dark:bg-indigo-900/50">
+                        Masuk
+                    </div>
+                </div>
+                <div class="space-y-1">
+                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Hari Ini</p>
+                    <p class="text-3xl font-bold text-gray-900 dark:text-white">{{ number_format($incomingTodayCount ?? 0) }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Outgoing Today Card -->
+        <div class="relative overflow-hidden transition-all duration-300 transform bg-white shadow-lg group rounded-2xl hover:shadow-xl hover:-translate-y-1 dark:bg-gray-800">
+            <div class="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-purple-600/10"></div>
+            <div class="relative p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center justify-center w-12 h-12 shadow-lg bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl">
+                        <i class="text-xl text-white fas fa-arrow-up"></i>
+                    </div>
+                    <div class="px-3 py-1 text-xs font-medium text-purple-600 bg-purple-100 rounded-full dark:text-purple-400 dark:bg-purple-900/50">
+                        Keluar
+                    </div>
+                </div>
+                <div class="space-y-1">
+                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Hari Ini</p>
+                    <p class="text-3xl font-bold text-gray-900 dark:text-white">{{ number_format($outgoingTodayCount ?? 0) }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <!-- Left Column - Charts and Low Stock -->
+        <div class="space-y-6 lg:col-span-2">
+            <!-- Chart Card -->
+            <div class="overflow-hidden bg-white shadow-xl rounded-2xl dark:bg-gray-800">
+                <div class="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800">
+                    <div class="p-6">
+                        <h2 class="text-xl font-bold text-gray-900 dark:text-white">
+                            <i class="mr-2 text-blue-600 fas fa-chart-line dark:text-blue-400"></i>
+                            Aktivitas Transaksi (7 Hari Terakhir)
+                        </h2>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div id="main-chart"></div>
+                </div>
+            </div>
+
+            <!-- Low Stock Card -->
+            <div class="overflow-hidden bg-white shadow-xl rounded-2xl dark:bg-gray-800">
+                <div class="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800">
+                    <div class="p-6">
+                        <h2 class="text-xl font-bold text-gray-900 dark:text-white">
+                            <i class="mr-2 text-red-600 fas fa-exclamation-triangle dark:text-red-400"></i>
+                            Stok Akan Habis
+                        </h2>
+                    </div>
+                </div>
+                <div class="p-6">
                     @forelse ($lowStockProducts as $product)
-                        <div class="flex justify-between items-center">
+                        <div class="flex items-center justify-between py-3 border-b border-gray-200 last:border-0 dark:border-gray-700">
                             <div>
                                 <p class="font-medium text-gray-900 dark:text-white">{{ $product->name }}</p>
                                 <p class="text-xs text-gray-500 dark:text-gray-400">Min: {{ $product->min_stock }} {{ $product->unit }}</p>
                             </div>
-                            <span class="text-base font-bold text-red-500">{{ $product->current_stock }}</span>
+                            <span class="text-base font-bold text-red-600 dark:text-red-400">{{ $product->current_stock }}</span>
                         </div>
                     @empty
-                        <p class="text-sm text-center text-gray-500 dark:text-gray-400 py-4">Semua stok dalam batas aman.</p>
+                        <div class="py-8 text-center">
+                            <div class="mx-auto mb-4 text-5xl text-green-500">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <p class="text-gray-500 dark:text-gray-400">Semua stok dalam batas aman</p>
+                        </div>
                     @endforelse
                 </div>
             </div>
         </div>
 
-        {{-- Kolom Kanan: Aktivitas Terbaru --}}
+        <!-- Right Column - Recent Activities -->
         <div class="space-y-6">
-            <div class="p-6 bg-white rounded-lg shadow dark:bg-slate-800">
-                <h5 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Transaksi Terbaru</h5>
-                <div class="space-y-4">
-                    @forelse ($recentTransactions as $transaction)
-                    <div class="flex items-center space-x-4">
-                        <div class="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full {{ $transaction->type == 'Masuk' ? 'bg-green-100 dark:bg-green-500/20' : 'bg-red-100 dark:bg-red-500/20' }}">
-                            <i class="fas {{ $transaction->type == 'Masuk' ? 'fa-arrow-down text-green-500' : 'fa-arrow-up text-red-500' }}"></i>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <p class="text-sm font-medium text-gray-900 truncate dark:text-white">{{ $transaction->product->name ?? 'N/A' }}</p>
-                            <p class="text-xs text-gray-500 dark:text-gray-400">
-                                {{ $transaction->date->format('d M Y') }}
-                                @if($transaction->notes)
-                                    <span class="italic">- "{{ Str::limit($transaction->notes, 20) }}"</span>
-                                @endif
-                            </p>
-                        </div>
-                        <div class="text-sm font-semibold {{ $transaction->type == 'Masuk' ? 'text-green-600' : 'text-red-600' }}">
-                            {{ $transaction->type == 'Masuk' ? '+' : '-' }}{{ $transaction->quantity }}
-                        </div>
+            <!-- Recent Transactions Card -->
+            <div class="overflow-hidden bg-white shadow-xl rounded-2xl dark:bg-gray-800">
+                <div class="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800">
+                    <div class="p-6">
+                        <h2 class="text-xl font-bold text-gray-900 dark:text-white">
+                            <i class="mr-2 text-blue-600 fas fa-exchange-alt dark:text-blue-400"></i>
+                            Transaksi Terbaru
+                        </h2>
                     </div>
+                </div>
+                <div class="p-6">
+                    @forelse ($recentTransactions as $transaction)
+                        <div class="flex items-center py-3 space-x-4 border-b border-gray-200 last:border-0 dark:border-gray-700">
+                            <div class="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full {{ $transaction->type == 'Masuk' ? 'bg-green-100 dark:bg-green-900/20' : 'bg-red-100 dark:bg-red-900/20' }}">
+                                <i class="{{ $transaction->type == 'Masuk' ? 'text-green-600 dark:text-green-400 fas fa-arrow-down' : 'text-red-600 dark:text-red-400 fas fa-arrow-up' }}"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-medium text-gray-900 truncate dark:text-white">{{ $transaction->product->name ?? 'Produk Dihapus' }}</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ $transaction->date->format('d M Y') }}</p>
+                            </div>
+                            <div class="text-sm font-semibold {{ $transaction->type == 'Masuk' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
+                                {{ $transaction->type == 'Masuk' ? '+' : '-' }}{{ $transaction->quantity }}
+                            </div>
+                        </div>
                     @empty
-                    <p class="text-sm text-center text-gray-500 dark:text-gray-400 py-4">Belum ada transaksi.</p>
+                        <div class="py-8 text-center">
+                            <i class="mx-auto mb-4 text-5xl text-gray-400 fas fa-exchange-alt"></i>
+                            <p class="text-gray-500 dark:text-gray-400">Belum ada transaksi</p>
+                        </div>
                     @endforelse
                 </div>
             </div>
 
-            {{-- KARTU BARU: SUPPLIER TERBARU --}}
-            <div class="p-6 bg-white rounded-lg shadow dark:bg-slate-800">
-                <h5 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Supplier Terbaru</h5>
-                <div class="space-y-4">
-                    @forelse ($recentSuppliers as $supplier)
-                    <div class="flex items-center space-x-4">
-                        <img class="h-10 w-10 rounded-full object-cover" src="https://ui-avatars.com/api/?name={{ urlencode($supplier->name) }}&background=1e293b&color=fff" alt="{{ $supplier->name }}">
-                        <div class="flex-1 min-w-0">
-                            <p class="text-sm font-medium text-gray-900 truncate dark:text-white">{{ $supplier->name }}</p>
-                            <p class="text-xs text-gray-500 dark:text-gray-400">{{ $supplier->email }}</p>
-                        </div>
+            <!-- Recent Suppliers Card -->
+            <div class="overflow-hidden bg-white shadow-xl rounded-2xl dark:bg-gray-800">
+                <div class="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800">
+                    <div class="p-6">
+                        <h2 class="text-xl font-bold text-gray-900 dark:text-white">
+                            <i class="mr-2 text-blue-600 fas fa-truck dark:text-blue-400"></i>
+                            Supplier Terbaru
+                        </h2>
                     </div>
+                </div>
+                <div class="p-6">
+                    @forelse ($recentSuppliers as $supplier)
+                        <div class="flex items-center py-3 space-x-4 border-b border-gray-200 last:border-0 dark:border-gray-700">
+                            <img class="object-cover w-10 h-10 rounded-full" src="https://ui-avatars.com/api/?name={{ urlencode($supplier->name) }}&background=1e293b&color=fff" alt="{{ $supplier->name }}">
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-medium text-gray-900 truncate dark:text-white">{{ $supplier->name }}</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ $supplier->email }}</p>
+                            </div>
+                        </div>
                     @empty
-                    <p class="text-sm text-center text-gray-500 dark:text-gray-400 py-4">Belum ada supplier.</p>
+                        <div class="py-8 text-center">
+                            <i class="mx-auto mb-4 text-5xl text-gray-400 fas fa-truck"></i>
+                            <p class="text-gray-500 dark:text-gray-400">Tidak ada supplier baru</p>
+                        </div>
                     @endforelse
                 </div>
             </div>
@@ -144,21 +250,64 @@
 @endsection
 
 @push('scripts')
-    {{-- Memuat library ApexCharts dari CDN --}}
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const chartData = {!! json_encode($chartData) !!};
             const options = {
-                series: [{ name: 'Barang Masuk', data: chartData.incoming, color: '#22c55e' }, { name: 'Barang Keluar', data: chartData.outgoing, color: '#ef4444' }],
-                chart: { type: 'area', height: 350, toolbar: { show: false }, background: 'transparent' },
+                series: [
+                    {
+                        name: 'Barang Masuk',
+                        data: chartData.incoming,
+                        color: '#22c55e'
+                    },
+                    {
+                        name: 'Barang Keluar',
+                        data: chartData.outgoing,
+                        color: '#ef4444'
+                    }
+                ],
+                chart: {
+                    type: 'area',
+                    height: 350,
+                    toolbar: { show: false },
+                    background: 'transparent',
+                    foreColor: document.documentElement.classList.contains('dark') ? '#E5E7EB' : '#374151'
+                },
                 dataLabels: { enabled: false },
                 stroke: { curve: 'smooth', width: 2 },
-                xaxis: { categories: chartData.categories, labels: { style: { colors: '#6B7280' } }, axisBorder: { show: false }, axisTicks: { show: false } },
-                yaxis: { labels: { style: { colors: '#6B7280' } } },
-                grid: { borderColor: '#e7e7e720' },
-                tooltip: { y: { formatter: (val) => `${val} unit` }, theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light' },
-                legend: { labels: { colors: '#6B7280' } }
+                xaxis: {
+                    categories: chartData.categories,
+                    labels: {
+                        style: {
+                            colors: document.documentElement.classList.contains('dark') ? '#9CA3AF' : '#6B7280'
+                        }
+                    },
+                    axisBorder: { show: false },
+                    axisTicks: { show: false }
+                },
+                yaxis: {
+                    labels: {
+                        style: {
+                            colors: document.documentElement.classList.contains('dark') ? '#9CA3AF' : '#6B7280'
+                        }
+                    }
+                },
+                grid: {
+                    borderColor: document.documentElement.classList.contains('dark') ? '#4B5563' : '#E5E7EB',
+                    strokeDashArray: 4
+                },
+                tooltip: {
+                    y: { formatter: (val) => `${val} unit` },
+                    theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light'
+                },
+                legend: {
+                    position: 'top',
+                    horizontalAlign: 'right',
+                    labels: {
+                        colors: document.documentElement.classList.contains('dark') ? '#E5E7EB' : '#374151'
+                    }
+                }
             };
             const chart = new ApexCharts(document.querySelector("#main-chart"), options);
             chart.render();

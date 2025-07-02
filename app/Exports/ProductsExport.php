@@ -25,7 +25,6 @@ class ProductsExport implements FromQuery, WithHeadings, WithMapping, ShouldAuto
             ->with(['category', 'supplier'])
             ->orderBy('name');
 
-        // Apply filters from request if needed
         if ($this->request->filled('search')) {
             $query->where('name', 'like', '%'.$this->request->search.'%');
         }
@@ -36,7 +35,6 @@ class ProductsExport implements FromQuery, WithHeadings, WithMapping, ShouldAuto
     public function headings(): array
     {
         return [
-            'ID',
             'SKU',
             'Nama Produk',
             'Kategori',
@@ -46,17 +44,13 @@ class ProductsExport implements FromQuery, WithHeadings, WithMapping, ShouldAuto
             'Harga Jual',
             'Stok Saat Ini',
             'Stok Minimum',
-            'Satuan',
-            'Status Stok',
-            'Dibuat Pada',
-            'Diperbarui Pada'
+            'Satuan'
         ];
     }
 
     public function map($product): array
     {
         return [
-            $product->id,
             $product->sku,
             $product->name,
             $product->category->name ?? '',
@@ -66,17 +60,13 @@ class ProductsExport implements FromQuery, WithHeadings, WithMapping, ShouldAuto
             $product->selling_price,
             $product->current_stock,
             $product->min_stock,
-            $product->unit,
-            $product->stock_status,
-            $product->created_at,
-            $product->updated_at
+            $product->unit
         ];
     }
 
     public function styles(Worksheet $sheet)
     {
         return [
-            // Style the first row as bold text
             1 => ['font' => ['bold' => true]],
         ];
     }

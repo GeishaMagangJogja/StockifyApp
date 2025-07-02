@@ -8,13 +8,17 @@ use App\Models\Product;
 use App\Models\Category;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
+use App\Exports\ProductsExport;
+use App\Imports\ProductsImport;
 use App\Models\ProductAttribute;
 use App\Models\StockTransaction;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Schema;
+use App\Exports\ProductsTemplateExport;
 use Illuminate\Support\Facades\Storage;
 
 class AdminDashboardController extends Controller
@@ -906,4 +910,47 @@ public function userDestroy(User $user)
         $user->save();
         return back()->with('success', 'Profil berhasil diperbarui.');
     }
+    public function export(Request $request)
+{
+    $fileName = 'products-export-' . date('Ymd-His') . '.xlsx';
+    return Excel::download(new ProductsExport($request), $fileName);
+}
+
+public function exportTemplate()
+{
+    $fileName = 'products-template-' . date('Ymd-His') . '.xlsx';
+    return Excel::download(new ProductsTemplateExport(), $fileName);
+}
+
+public function import(Request $request)
+{
+    $request->validate([
+        'file' => 'required|file|mimes:xlsx,xls|max:5120',
+    ]);
+
+    try {
+        $import = new ProductsImport();
+        Excel::import($import, $request->file('file'));
+
+        $rowCount = $import->getRowCount();
+        $errors = $import->getErrors();
+
+        $message = "Berhasil mengimpor {$rowCount} produk.";
+        if (!empty($errors)) {
+            return redirect()
+                ->route('admin.products.index')
+                ->with('import_errors', $errors)
+                ->with('success', $message);
+        }
+
+        return redirect()
+            ->route('admin.products.index')
+            ->with('success', $message);
+
+    } catch (\Exception $e) {
+        return redirect()
+            ->route('admin.products.index')
+            ->with('error', 'Gagal mengimpor: ' . $e->getMessage());
+    }
+}
 }

@@ -9,6 +9,7 @@ use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
 class ProductsImport implements ToCollection, WithHeadingRow, WithValidation
@@ -26,6 +27,9 @@ class ProductsImport implements ToCollection, WithHeadingRow, WithValidation
                 }
 
                 ++$this->rows;
+
+                // Format data
+                $row = array_map('trim', $row);
 
                 // Cari atau buat kategori
                 $category = Category::firstOrCreate([
@@ -67,7 +71,7 @@ class ProductsImport implements ToCollection, WithHeadingRow, WithValidation
                 );
 
             } catch (\Exception $e) {
-                $this->errors[] = "Baris {$this->rows}: " . $e->getMessage();
+                $this->errors[] = "Baris {$this->rows} (SKU: {$row['sku']}): " . $e->getMessage();
                 continue;
             }
         }
