@@ -282,18 +282,37 @@ public function userDestroy(User $user)
         $query->orderBy($sortColumn, $sortDirection);
     }
 
-    // Paginate with query string
-    $products = $query->paginate(10)->withQueryString();
-    dd($request->all(), $products->withQueryString());
+    $products = $query->paginate(15);
 
-    // Ensure calculated current_stock is available in the view
-    $products->each(function($product) {
-        $product->setAttribute('current_stock', $product->current_stock);
-    });
+    $categories = Category::orderBy('name')->get(); // Tambahkan baris ini
 
-    $categories = Category::orderBy('name')->get();
+    $stockStats = [
+        'in_stock' => DB::table('products')
+            ->selectRaw('COUNT(*) as count')
+            ->whereRaw('(SELECT COALESCE(SUM(CASE WHEN type = "Masuk" THEN quantity ELSE -quantity END), 0)
+                       FROM stock_transactions
+                       WHERE product_id = products.id) > min_stock')
+            ->first()->count,
 
-    return view('pages.admin.products.index', compact('products', 'categories'));
+        'low_stock' => DB::table('products')
+            ->selectRaw('COUNT(*) as count')
+            ->whereRaw('(SELECT COALESCE(SUM(CASE WHEN type = "Masuk" THEN quantity ELSE -quantity END), 0)
+                       FROM stock_transactions
+                       WHERE product_id = products.id) > 0')
+            ->whereRaw('(SELECT COALESCE(SUM(CASE WHEN type = "Masuk" THEN quantity ELSE -quantity END), 0)
+                       FROM stock_transactions
+                       WHERE product_id = products.id) <= min_stock')
+            ->first()->count,
+
+        'out_of_stock' => DB::table('products')
+            ->selectRaw('COUNT(*) as count')
+            ->whereRaw('(SELECT COALESCE(SUM(CASE WHEN type = "Masuk" THEN quantity ELSE -quantity END), 0)
+                       FROM stock_transactions
+                       WHERE product_id = products.id) <= 0')
+            ->first()->count,
+    ];
+
+    return view('pages.admin.products.index', compact('products', 'categories', 'stockStats'));
 }
 
     public function productCreate()

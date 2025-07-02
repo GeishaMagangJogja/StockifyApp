@@ -76,7 +76,7 @@
                 <div class="space-y-1">
                     <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Produk Tersedia</p>
                     <p class="text-3xl font-bold text-gray-900 dark:text-white">
-                        {{ $products->where('current_stock', '>', 0)->where('current_stock', '>', DB::raw('min_stock'))->count() }}
+                        {{ $stockStats['in_stock'] }}
                     </p>
                 </div>
             </div>
@@ -97,7 +97,7 @@
                 <div class="space-y-1">
                     <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Stok Rendah</p>
                     <p class="text-3xl font-bold text-gray-900 dark:text-white">
-                        {{ $products->where('current_stock', '>', 0)->where('current_stock', '<=', DB::raw('min_stock'))->count() }}
+                        {{ $stockStats['low_stock'] }}
                     </p>
                 </div>
             </div>
@@ -118,7 +118,7 @@
                 <div class="space-y-1">
                     <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Stok Habis</p>
                     <p class="text-3xl font-bold text-gray-900 dark:text-white">
-                        {{ $products->where('current_stock', '<=', 0)->count() }}
+                        {{ $stockStats['out_of_stock'] }}
                     </p>
                 </div>
             </div>
@@ -279,11 +279,16 @@
                                             </div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                            @if($product->current_stock <= 0)
+                                            @php
+                                                $currentStock = $product->current_stock;
+                                                $minStock = $product->min_stock;
+                                            @endphp
+
+                                            @if($currentStock <= 0)
                                                 <span class="inline-flex px-2 py-1 text-xs font-semibold leading-5 text-red-800 bg-red-100 rounded-full dark:bg-red-900/50 dark:text-red-300">
                                                     <i class="mr-1 fas fa-times-circle"></i> Habis
                                                 </span>
-                                            @elseif($product->current_stock <= $product->min_stock)
+                                            @elseif($currentStock <= $minStock)
                                                 <span class="inline-flex px-2 py-1 text-xs font-semibold leading-5 rounded-full text-amber-800 bg-amber-100 dark:bg-amber-900/50 dark:text-amber-300">
                                                     <i class="mr-1 fas fa-exclamation-triangle"></i> Rendah
                                                 </span>
