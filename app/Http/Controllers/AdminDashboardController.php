@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\Category;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
+use App\Imports\ProductImport;
 use App\Exports\ProductsExport;
 use App\Imports\ProductsImport;
 use App\Models\ProductAttribute;
@@ -910,47 +911,34 @@ public function userDestroy(User $user)
         $user->save();
         return back()->with('success', 'Profil berhasil diperbarui.');
     }
-    public function export(Request $request)
+    // Export products
+public function export(Request $request)
 {
     $fileName = 'products-export-' . date('Ymd-His') . '.xlsx';
     return Excel::download(new ProductsExport($request), $fileName);
 }
 
+// Export template
 public function exportTemplate()
 {
     $fileName = 'products-template-' . date('Ymd-His') . '.xlsx';
     return Excel::download(new ProductsTemplateExport(), $fileName);
 }
 
+// Import products
 public function import(Request $request)
 {
     $request->validate([
-        'file' => 'required|file|mimes:xlsx,xls|max:5120',
+        'file' => 'required|file|mimes:xlsx,xls,csv'
     ]);
 
     try {
-        $import = new ProductsImport();
-        Excel::import($import, $request->file('file'));
-
-        $rowCount = $import->getRowCount();
-        $errors = $import->getErrors();
-
-        $message = "Berhasil mengimpor {$rowCount} produk.";
-        if (!empty($errors)) {
-            return redirect()
-                ->route('admin.products.index')
-                ->with('import_errors', $errors)
-                ->with('success', $message);
-        }
-
-        return redirect()
-            ->route('admin.products.index')
-            ->with('success', $message);
-
+        Excel::import(new ProductImport, $request->file('file'));
+        return redirect()->route('admin.products.index')->with('success', 'Import produk berhasil!');
     } catch (\Exception $e) {
-        return redirect()
-            ->route('admin.products.index')
-            ->with('error', 'Gagal mengimpor: ' . $e->getMessage());
+        return redirect()->back()->with('error', 'Gagal import produk: ' . $e->getMessage());
     }
 }
 }
+
+
