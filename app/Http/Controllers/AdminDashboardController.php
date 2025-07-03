@@ -909,10 +909,10 @@ public function userDestroy(User $user)
             if ($user->profile_photo_path) {
                 Storage::disk('public')->delete($user->profile_photo_path);
             }
-            
+
             // Simpan foto baru ke 'storage/app/public/profile-photos'
             $path = $request->file('photo')->store('profile-photos', 'public');
-            
+
             // Simpan path foto baru ke database
             $user->profile_photo_path = $path;
         }
@@ -930,11 +930,10 @@ public function userDestroy(User $user)
 
         // 5. Simpan semua perubahan ke database
         $user->save();
-        
+
         // 6. Redirect kembali dengan pesan sukses
         return back()->with('success', 'Profil berhasil diperbarui.');
     }
-<<<<<<< HEAD
     // Export products
 public function export(Request $request)
 {
@@ -963,8 +962,6 @@ public function import(Request $request)
         return redirect()->back()->with('error', 'Gagal import produk: ' . $e->getMessage());
     }
 }
-=======
->>>>>>> 202bae7940fa7feba8c63c88774a77eb80f016b7
 }
 
 
