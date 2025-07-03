@@ -157,22 +157,21 @@
                 }">
                 
                 <div class="flex flex-col flex-1 h-full px-3 pb-4 overflow-y-auto custom-scrollbar">
-                   <!-- User Info (Sudah Diperbaiki) -->
-<div class="px-3 py-4" :class="{ 'lg:px-1': sidebarCollapsed }">
-    <div class="flex items-center">
-        <div class="flex-shrink-0">
-            <!-- PERUBAHAN: Menghapus class 'ring-2' dan 'ring-blue-400' -->
-            <img class="object-cover w-11 h-11 rounded-full" 
-                 src="{{ Auth::user()->profile_photo_path ? asset('storage/' . Auth::user()->profile_photo_path) : 'https://ui-avatars.com/api/?name='.urlencode(Auth::user()->name).'&background=3b82f6&color=fff' }}" 
-                 alt="{{ Auth::user()->name }}">
-        </div>
-        {{-- [MODIFIKASI] Sembunyikan teks saat sidebar di-collapse --}}
-        <div class="ml-4 transition-opacity" :class="{ 'lg:opacity-0 lg:invisible': sidebarCollapsed }">
-            <p class="text-base font-semibold text-gray-800 dark:text-white">{{ auth()->user()->name }}</p>
-            <p class="text-sm text-gray-500 dark:text-gray-400">{{ auth()->user()->role }}</p>
-        </div>
-    </div>
-</div>
+                    <!-- User Info -->
+                    <div class="px-3 py-4" :class="{ 'lg:px-1': sidebarCollapsed }">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <img class="object-cover w-11 h-11 rounded-full ring-2 ring-blue-400" 
+                                     src="{{ Auth::user()->profile_photo_path ? asset('storage/' . Auth::user()->profile_photo_path) : 'https://ui-avatars.com/api/?name='.urlencode(Auth::user()->name).'&background=3b82f6&color=fff' }}" 
+                                     alt="{{ Auth::user()->name }}">
+                            </div>
+                            {{-- [MODIFIKASI] Sembunyikan teks saat sidebar di-collapse --}}
+                            <div class="ml-4 transition-opacity" :class="{ 'lg:opacity-0 lg:invisible': sidebarCollapsed }">
+                                <p class="text-base font-semibold text-gray-800 dark:text-white">{{ auth()->user()->name }}</p>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">{{ auth()->user()->role }}</p>
+                            </div>
+                        </div>
+                    </div>
     
                     <!-- Navigation -->
                     {{-- [MODIFIKASI] Padding disesuaikan saat collapse --}}
