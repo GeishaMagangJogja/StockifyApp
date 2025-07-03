@@ -71,31 +71,29 @@ class ManagerDashboardController extends Controller
 }
 
 
-    // ... (productList dan productShow tidak perlu diubah) ...
     public function productList(Request $request)
     {
         $query = Product::with('category');
 
-        // Salin query efisien dari AdminDashboardController
-        $query->addSelect(['*',
-            'stock_in_sum' => StockTransaction::select(DB::raw('COALESCE(sum(quantity), 0)'))
-                ->whereColumn('product_id', 'products.id')
-                ->where('type', 'Masuk'),
-            'stock_out_sum' => StockTransaction::select(DB::raw('COALESCE(sum(quantity), 0)'))
-                ->whereColumn('product_id', 'products.id')
-                ->where('type', 'Keluar')
-        ]);
-
-        if ($request->has('search') && $request->filled('search')) {
+        if ($request->filled('search')) {
             $search = $request->get('search');
             $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('sku', 'like', "%{$search}%");
+                ->orWhere('sku', 'like', "%{$search}%");
             });
         }
 
         $products = $query->latest()->paginate(15);
-        return view('pages.manajergudang.products.index', compact('products'));
+        
+        // [BARU] Hitung statistik untuk kartu
+        $stockStats = [
+            'total' => Product::count(),
+            'safe' => Product::whereColumn('current_stock', '>', 'min_stock')->count(),
+            'low' => Product::where('current_stock', '>', 0)->whereColumn('current_stock', '<=', 'min_stock')->count(),
+            'out_of_stock' => Product::where('current_stock', '<=', 0)->count(),
+        ];
+
+        return view('pages.manajergudang.products.index', compact('products', 'stockStats'));
     }
 
     public function productShow(Product $product)
@@ -290,6 +288,7 @@ class ManagerDashboardController extends Controller
             'total_products_from_suppliers' => Product::whereHas('supplier')->count(),
         ];
 
+        // [MODIFIKASI] Kirim data $stats ke view
         return view('pages.manajergudang.suppliers.index', compact('suppliers', 'stats'));
     }
 
@@ -302,74 +301,50 @@ class ManagerDashboardController extends Controller
 
     public function reportStock(Request $request)
     {
-        // --- 1. EFFICIENT QUERY FOR SUMMARY AND FILTERING ---
-        // Start with a base query to get status counts
-        $summaryQuery = Product::query()
-            ->selectRaw("
-                SUM(CASE WHEN current_stock > min_stock THEN 1 ELSE 0 END) as safe_count,
-                SUM(CASE WHEN current_stock <= min_stock AND current_stock > 0 THEN 1 ELSE 0 END) as low_count,
-                SUM(CASE WHEN current_stock <= 0 THEN 1 ELSE 0 END) as out_count
-            ");
-
-        // --- 2. QUERY FOR THE PAGINATED PRODUCT LIST ---
-        // Start a separate query for the table data
-        $productsQuery = Product::with('category');
-
-        // --- 3. APPLY FILTERS TO BOTH QUERIES ---
-        // Apply search filter (only for the product list)
+        $query = Product::with('category');
         if ($request->filled('search')) {
             $search = $request->search;
-            $productsQuery->where(function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                ->orWhere('sku', 'like', "%{$search}%");
+            $query->where(fn($q) => $q->where('name', 'like', "%{$search}%")->orWhere('sku', 'like', "%{$search}%"));
+        }
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->category_id);
+        }
+        if ($request->filled('stock_status')) {
+            $status = $request->stock_status;
+            $query->where(function($q) use ($status) {
+                if ($status == 'safe') $q->whereColumn('current_stock', '>', 'min_stock');
+                if ($status == 'low') $q->where('current_stock', '>', 0)->whereColumn('current_stock', '<=', 'min_stock');
+                if ($status == 'out') $q->where('current_stock', '<=', 0);
             });
         }
-
-        // Apply category filter (to both the summary and the list)
-        if ($request->filled('category_id')) {
-            $categoryId = $request->category_id;
-            $summaryQuery->where('category_id', $categoryId);
-            $productsQuery->where('category_id', $categoryId);
-        }
-
-        // --- 4. EXECUTE QUERIES AND GET DATA ---
-        // Execute the summary query to get the counts
-        $summaryResult = $summaryQuery->first();
-        $stockSummary = [
-            'safe' => $summaryResult->safe_count ?? 0,
-            'low' => $summaryResult->low_count ?? 0,
-            'out' => $summaryResult->out_count ?? 0,
-        ];
-
-        // Execute the paginated query for the table
-        $products = $productsQuery->paginate(20);
-
-        // Get all categories for the filter dropdown
+        $products = $query->paginate(15);
         $categories = Category::orderBy('name')->get();
-
-        // --- 5. RETURN VIEW WITH ALL DATA ---
+        $stockSummary = [
+            'safe' => Product::whereColumn('current_stock', '>', 'min_stock')->count(),
+            'low' => Product::where('current_stock', '>', 0)->whereColumn('current_stock', '<=', 'min_stock')->count(),
+            'out' => Product::where('current_stock', '<=', 0)->count(),
+            'total' => $products->total()
+        ];
         return view('pages.manajergudang.reports.stock', compact('products', 'categories', 'stockSummary'));
     }
 
     public function reportTransactions(Request $request)
     {
         $query = StockTransaction::with(['product', 'user', 'supplier'])->latest('date');
-
-        // Filter berdasarkan tipe transaksi
-        if ($request->has('type') && $request->filled('type')) {
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->whereHas('product', fn($q) => $q->where('name', 'like', "%{$search}%"));
+        }
+        if ($request->filled('type')) {
             $query->where('type', $request->type);
         }
-
-        // Filter berdasarkan rentang tanggal
-        if ($request->has('start_date') && $request->filled('start_date')) {
+        if ($request->filled('start_date')) {
             $query->whereDate('date', '>=', $request->start_date);
         }
-        if ($request->has('end_date') && $request->filled('end_date')) {
+        if ($request->filled('end_date')) {
             $query->whereDate('date', '<=', $request->end_date);
         }
-
-        $transactions = $query->paginate(20);
-
+        $transactions = $query->paginate(15);
         return view('pages.manajergudang.reports.transactions', compact('transactions'));
     }
 

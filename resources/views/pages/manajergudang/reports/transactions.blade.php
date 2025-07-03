@@ -3,106 +3,66 @@
 @section('title', 'Laporan Transaksi')
 
 @section('content')
-<div class="container px-4 mx-auto sm:px-8">
-    <div class="py-8">
-        {{-- Header Halaman --}}
-        <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
-            <div>
-                <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Laporan Riwayat Transaksi</h1>
-                <p class="mt-1 text-gray-600 dark:text-gray-400">Lacak semua pergerakan barang di gudang.</p>
+<div class="p-4 sm:p-8">
+    {{-- Header --}}
+    <div class="relative p-6 mb-8 overflow-hidden bg-gradient-to-r from-indigo-600/10 to-pink-600/10 rounded-2xl">
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white"><i class="mr-3 text-indigo-500 fas fa-exchange-alt"></i>Laporan Riwayat Transaksi</h1>
+        <p class="mt-2 text-gray-600 dark:text-gray-400">Lacak semua pergerakan barang yang masuk dan keluar dari gudang.</p>
+    </div>
+
+    {{-- Filter Panel --}}
+    <div class="p-6 mb-6 bg-white rounded-xl shadow-lg dark:bg-slate-800">
+        <form action="{{ route('manajergudang.reports.transactions') }}" method="GET">
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama produk..." class="w-full px-4 py-2 border rounded-lg lg:col-span-2 dark:bg-slate-700 dark:border-gray-600">
+                <select name="type" class="w-full px-4 py-2 border rounded-lg dark:bg-slate-700 dark:border-gray-600"><option value="">Semua Tipe</option><option value="Masuk" {{ request('type') == 'Masuk' ? 'selected' : '' }}>Masuk</option><option value="Keluar" {{ request('type') == 'Keluar' ? 'selected' : '' }}>Keluar</option></select>
+                <input type="date" name="start_date" value="{{ request('start_date') }}" class="w-full px-4 py-2 border rounded-lg dark:bg-slate-700 dark:border-gray-600">
+                <input type="date" name="end_date" value="{{ request('end_date') }}" class="w-full px-4 py-2 border rounded-lg dark:bg-slate-700 dark:border-gray-600">
             </div>
-        </div>
+            <div class="flex items-center justify-end gap-2 pt-4 mt-4 border-t dark:border-slate-700">
+                <a href="{{ route('manajergudang.reports.transactions') }}" class="px-4 py-2 text-gray-600 bg-gray-200 rounded-lg hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-300">Reset</a>
+                <button type="submit" class="flex items-center justify-center px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700"><i class="mr-2 fas fa-filter"></i>Filter</button>
+            </div>
+        </form>
+    </div>
 
-        {{-- Panel Filter --}}
-        <div class="p-4 mb-6 bg-white rounded-lg shadow dark:bg-slate-800">
-            <form action="{{ route('manajergudang.reports.transactions') }}" method="GET">
-                <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
-                    {{-- Filter Tipe --}}
-                    <div class="lg:col-span-1">
-                        <select name="type" id="type" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-blue-500">
-                            <option value="">Semua Tipe</option>
-                            <option value="Masuk" {{ request('type') == 'Masuk' ? 'selected' : '' }}>Barang Masuk</option>
-                            <option value="Keluar" {{ request('type') == 'Keluar' ? 'selected' : '' }}>Barang Keluar</option>
-                        </select>
-                    </div>
-                    {{-- Filter Tanggal Mulai --}}
-                    <div class="lg:col-span-1">
-                        <input type="date" name="start_date" id="start_date" value="{{ request('start_date') }}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-gray-600 dark:text-white" title="Dari Tanggal">
-                    </div>
-                    {{-- Filter Tanggal Akhir --}}
-                    <div class="lg:col-span-1">
-                        <input type="date" name="end_date" id="end_date" value="{{ request('end_date') }}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-gray-600 dark:text-white" title="Sampai Tanggal">
-                    </div>
-                    {{-- Tombol Aksi Filter --}}
-                    <div class="flex items-center justify-end gap-2 lg:col-span-2">
-                        <button type="submit" class="flex items-center justify-center w-full px-4 py-2 text-white bg-blue-600 rounded-lg sm:w-auto hover:bg-blue-700">
-                            <i class="mr-2 fas fa-filter"></i>Filter
-                        </button>
-                        <a href="{{ route('manajergudang.reports.transactions') }}" class="flex items-center justify-center w-full px-4 py-2 text-gray-600 bg-gray-200 rounded-lg sm:w-auto hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-300">Reset</a>
-                    </div>
-                </div>
-            </form>
-        </div>
-
-        {{-- Tabel Laporan Transaksi --}}
-        <div class="overflow-hidden bg-white rounded-lg shadow dark:bg-slate-800">
-            <div class="overflow-x-auto">
-                <table class="w-full table-auto">
-                    <thead class="bg-gray-50 dark:bg-slate-700">
-                        <tr>
-                            <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-300">Detail Produk</th>
-                            <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-300">Detail Transaksi</th>
-                            <th class="px-6 py-3 text-xs font-medium text-center text-gray-500 uppercase dark:text-gray-300">Jumlah</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y dark:bg-slate-800 dark:divide-slate-700">
-                        @forelse ($transactions as $transaction)
+    {{-- Table --}}
+    <div class="overflow-hidden bg-white rounded-xl shadow-lg dark:bg-slate-800">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50 dark:bg-slate-700/50"><tr><th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-300">Detail</th><th class="px-6 py-3 text-xs font-medium tracking-wider text-right text-gray-500 uppercase dark:text-gray-300">Jumlah</th></tr></thead>
+                <tbody class="divide-y dark:divide-slate-700">
+                    @forelse ($transactions as $transaction)
                         <tr class="hover:bg-gray-50 dark:hover:bg-slate-700/50">
-                            {{-- Kolom Detail Produk --}}
                             <td class="px-6 py-4">
-                                <div class="flex items-center">
-                                    <img class="object-cover w-10 h-10 mr-4 rounded-lg" src="{{ $transaction->product->image ? asset('storage/' . $transaction->product->image) : 'https://ui-avatars.com/api/?name='.urlencode($transaction->product->name ?? 'P').'&background=random' }}" alt="{{ $transaction->product->name ?? 'Produk' }}">
+                                <div class="flex items-center space-x-4">
+                                    <div class="flex items-center justify-center flex-shrink-0 w-12 h-12 rounded-full {{ $transaction->type == 'Masuk' ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30' }}">
+                                        <i class="text-xl {{ $transaction->type == 'Masuk' ? 'text-green-500 fas fa-arrow-down' : 'text-red-500 fas fa-arrow-up' }}"></i>
+                                    </div>
                                     <div>
-                                        <p class="font-medium text-gray-900 dark:text-white">{{ $transaction->product->name ?? 'Produk Telah Dihapus' }}</p>
-                                        <p class="text-xs text-gray-500 dark:text-gray-400">Supplier: {{ $transaction->supplier->name ?? '-' }}</p>
+                                        <p class="font-semibold text-gray-900 dark:text-white">{{ $transaction->product->name ?? 'Produk Dihapus' }}</p>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">
+                                            <span>{{ $transaction->date->format('d M Y, H:i') }}</span>
+                                            <span class="mx-1">•</span>
+                                            <span>oleh {{ $transaction->user->name ?? 'Sistem' }}</span>
+                                        </p>
+                                        @if($transaction->notes)<p class="mt-1 text-xs italic text-gray-400 dark:text-gray-500">"{{ $transaction->notes }}"</p>@endif
                                     </div>
                                 </div>
                             </td>
-                            {{-- Kolom Detail Transaksi --}}
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div>
-                                    @if($transaction->type == 'Masuk')
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Barang Masuk</span>
-                                    @else
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Barang Keluar</span>
-                                    @endif
-                                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ \Carbon\Carbon::parse($transaction->date)->format('d M Y') }} oleh {{ $transaction->user->name ?? 'Sistem' }}</p>
-                                </div>
-                            </td>
-                            {{-- Kolom Jumlah --}}
-                            <td class="px-6 py-4 text-center">
-                                <span class="text-lg font-bold {{ $transaction->type == 'Masuk' ? 'text-green-600' : 'text-red-600' }}">
+                            <td class="px-6 py-4 text-right">
+                                <span class="text-xl font-bold {{ $transaction->type == 'Masuk' ? 'text-green-600' : 'text-red-600' }}">
                                     {{ $transaction->type == 'Masuk' ? '+' : '-' }} {{ number_format($transaction->quantity) }}
                                 </span>
                             </td>
                         </tr>
-                        @empty
-                        <tr>
-                            <td colspan="3" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
-                                <div class="flex flex-col items-center">
-                                    <i class="mb-3 text-4xl fas fa-exchange-alt"></i>
-                                    <p>Tidak ada transaksi yang cocok dengan filter.</p>
-                                </div>
-                            </td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-            @if($transactions->hasPages())
-            <div class="p-4 border-t dark:border-slate-700">{{ $transactions->appends(request()->query())->links() }}</div>
-            @endif
+                    @empty
+                        <tr><td colspan="2" class="px-6 py-16 text-center text-gray-400"><div class="flex flex-col items-center"><i class="mb-4 text-5xl fas fa-exchange-alt opacity-50"></i><p class="text-lg">Tidak ada transaksi ditemukan.</p></div></td></tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
+        @if($transactions->hasPages())<div class="p-4 border-t dark:border-slate-700">{{ $transactions->appends(request()->query())->links() }}</div>@endif
     </div>
 </div>
 @endsection
