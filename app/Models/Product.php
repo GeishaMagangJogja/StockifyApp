@@ -20,7 +20,7 @@ class Product extends Model
         'purchase_price',
         'selling_price',
         'image',
-        'current_stock',  // Pastikan ini ada untuk import
+        'current_stock',
         'min_stock',
         'unit',
     ];

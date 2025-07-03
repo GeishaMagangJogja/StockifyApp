@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\Category;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
+use App\Imports\ProductImport;
 use App\Exports\ProductsExport;
 use App\Imports\ProductsImport;
 use App\Models\ProductAttribute;
@@ -890,67 +891,77 @@ public function userDestroy(User $user)
     {
         $user = Auth::user();
 
+        // 1. Validasi input, termasuk foto
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,'.$user->id,
-            'current_password' => 'nullable|required_with:new_password',
-            'new_password' => 'nullable|min:8|confirmed',
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Validasi untuk foto
+            'current_password' => 'nullable|required_with:new_password|string',
         ]);
 
+        // 2. Update data dasar (nama dan email)
         $user->name = $request->name;
         $user->email = $request->email;
 
-        if ($request->filled('new_password')) {
-            if (!Hash::check($request->current_password, $user->password)) {
-                return back()->withErrors(['current_password' => 'Password saat ini tidak cocok.']);
+        // 3. Logika untuk mengunggah dan menyimpan foto profil
+        if ($request->hasFile('photo')) {
+            // Hapus foto lama jika ada untuk menghemat ruang penyimpanan
+            if ($user->profile_photo_path) {
+                Storage::disk('public')->delete($user->profile_photo_path);
             }
+
+            // Simpan foto baru ke 'storage/app/public/profile-photos'
+            $path = $request->file('photo')->store('profile-photos', 'public');
+
+            // Simpan path foto baru ke database
+            $user->profile_photo_path = $path;
+        }
+
+        // 4. Logika untuk memperbarui password (jika diisi)
+        if ($request->filled('new_password')) {
+            // Verifikasi password saat ini
+            if (!Hash::check($request->current_password, $user->password)) {
+                // Kembalikan dengan pesan error spesifik untuk field password
+                return back()->withErrors(['current_password' => 'Password saat ini yang Anda masukkan salah.'])->withInput();
+            }
+            // Update password baru
             $user->password = Hash::make($request->new_password);
         }
 
+        // 5. Simpan semua perubahan ke database
         $user->save();
+
+        // 6. Redirect kembali dengan pesan sukses
         return back()->with('success', 'Profil berhasil diperbarui.');
     }
-    public function export(Request $request)
+    // Export products
+public function export(Request $request)
 {
     $fileName = 'products-export-' . date('Ymd-His') . '.xlsx';
     return Excel::download(new ProductsExport($request), $fileName);
 }
 
+// Export template
 public function exportTemplate()
 {
     $fileName = 'products-template-' . date('Ymd-His') . '.xlsx';
     return Excel::download(new ProductsTemplateExport(), $fileName);
 }
 
+// Import products
 public function import(Request $request)
 {
     $request->validate([
-        'file' => 'required|file|mimes:xlsx,xls|max:5120',
+        'file' => 'required|file|mimes:xlsx,xls,csv'
     ]);
 
     try {
-        $import = new ProductsImport();
-        Excel::import($import, $request->file('file'));
-
-        $rowCount = $import->getRowCount();
-        $errors = $import->getErrors();
-
-        $message = "Berhasil mengimpor {$rowCount} produk.";
-        if (!empty($errors)) {
-            return redirect()
-                ->route('admin.products.index')
-                ->with('import_errors', $errors)
-                ->with('success', $message);
-        }
-
-        return redirect()
-            ->route('admin.products.index')
-            ->with('success', $message);
-
+        Excel::import(new ProductImport, $request->file('file'));
+        return redirect()->route('admin.products.index')->with('success', 'Import produk berhasil!');
     } catch (\Exception $e) {
-        return redirect()
-            ->route('admin.products.index')
-            ->with('error', 'Gagal mengimpor: ' . $e->getMessage());
+        return redirect()->back()->with('error', 'Gagal import produk: ' . $e->getMessage());
     }
 }
 }
+
+
