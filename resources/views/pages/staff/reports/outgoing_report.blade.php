@@ -56,17 +56,9 @@
                         <!-- Export Dropdown -->
                         <div id="export-menu" class="absolute right-0 z-10 hidden w-48 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg dark:bg-gray-800 dark:border-gray-700">
                             <div class="py-2">
-                                <a href="#" onclick="exportToPDF()" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">
-                                    <i class="mr-3 text-red-500 fas fa-file-pdf"></i>
-                                    Export ke PDF
-                                </a>
                                 <a href="#" onclick="exportToExcel()" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">
                                     <i class="mr-3 text-green-500 fas fa-file-excel"></i>
                                     Export ke Excel
-                                </a>
-                                <a href="#" onclick="printReport()" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">
-                                    <i class="mr-3 text-blue-500 fas fa-print"></i>
-                                    Cetak Laporan
                                 </a>
                             </div>
                         </div>
@@ -399,83 +391,79 @@
 
 @push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Search functionality
-    const searchInput = document.getElementById('search-input');
-    const statusFilter = document.getElementById('status-filter');
-    const dateStart = document.getElementById('date-start');
-    const dateEnd = document.getElementById('date-end');
-
-    // Debounce function for search
-    function debounce(func, wait) {
-        let timeout;
-        return function executedFunction(...args) {
-            const later = () => {
-                clearTimeout(timeout);
-                func(...args);
-            };
-            clearTimeout(timeout);
-            timeout = setTimeout(later, wait);
-        };
-    }
-
-    // Filter functions
-    const debouncedFilter = debounce(filterTable, 300);
-    
-    if (searchInput) searchInput.addEventListener('input', debouncedFilter);
-    if (statusFilter) statusFilter.addEventListener('change', filterTable);
-    if (dateStart) dateStart.addEventListener('change', filterTable);
-    if (dateEnd) dateEnd.addEventListener('change', filterTable);
-
-    function filterTable() {
-        // This would typically make an AJAX request to filter data
-        // For now, we'll just show a loading state
-        showTableLoading(true);
-        
-        setTimeout(() => {
-            showTableLoading(false);
-            // Here you would update the table with filtered results
-        }, 1000);
-    }
-
-    function showTableLoading(show) {
-        const table = document.getElementById('data-table');
-        if (show) {
-            table.style.opacity = '0.5';
-            table.style.pointerEvents = 'none';
-        } else {
-            table.style.opacity = '1';
-            table.style.pointerEvents = 'auto';
-        }
-    }
-});
-
 // Export menu toggle
 function toggleExportMenu() {
+    console.log('toggleExportMenu() dipanggil.'); // Debugging log
     const menu = document.getElementById('export-menu');
-    menu.classList.toggle('hidden');
+    if (menu) {
+        menu.classList.toggle('hidden');
+    } else {
+        console.error('Elemen dengan ID "export-menu" tidak ditemukan!');
+    }
 }
 
 // Close export menu when clicking outside
 document.addEventListener('click', function(event) {
     const menu = document.getElementById('export-menu');
-    const button = event.target.closest('button');
-    
-    if (!button || !button.onclick || button.onclick.toString().indexOf('toggleExportMenu') === -1) {
+    // Pastikan menu dan tombolnya ada sebelum melanjutkan
+    if (!menu) return;
+
+    const button = event.target.closest('button[onclick="toggleExportMenu()"]');
+
+    if (!menu.classList.contains('hidden') && !button) {
+        console.log('Menutup menu karena klik di luar.'); // Debugging log
         menu.classList.add('hidden');
     }
 });
 
-// Export functions
-function exportToPDF() {
-    console.log('Exporting to PDF...');
-    // Implement PDF export logic
-    toggleExportMenu();
+// ===================================================================
+// == FUNGSI EXPORT YANG LEBIH BAIK UNTUK DEBUGGING ==
+// ===================================================================
+function exportToExcel() {
+    try {
+        console.log('Fungsi exportToExcel() dimulai...');
+
+        // Ambil nilai dari semua filter
+        const search = document.getElementById('search-input').value;
+        const status = document.getElementById('status-filter').value;
+        const dateStart = document.getElementById('date-start').value;
+        const dateEnd = document.getElementById('date-end').value;
+
+        console.log('Filter yang didapat:', { search, status, dateStart, dateEnd });
+
+        // Buat URLSearchParams untuk menampung parameter filter
+        const params = new URLSearchParams();
+        params.append('report_type', 'incoming_goods');
+        params.append('format', 'excel');
+
+        // Tambahkan filter jika ada nilainya
+        if (search) params.append('search', search);
+        if (status) params.append('status', status);
+        if (dateStart) params.append('date_start', dateStart);
+        if (dateEnd) params.append('date_end', dateEnd);
+
+        // Bangun URL lengkap dengan route dan parameter
+        const url = `{{ route('staff.reports.export') }}?${params.toString()}`;
+        
+        console.log('URL yang akan diakses:', url); // <-- INI SANGAT PENTING
+
+        // Arahkan browser ke URL untuk memulai download
+        window.location.href = url;
+
+        console.log('Proses download seharusnya sudah dimulai.');
+        
+        // Tutup menu dropdown setelah diklik
+        toggleExportMenu();
+
+    } catch (error) {
+        console.error('Terjadi kesalahan di dalam fungsi exportToExcel:', error);
+    }
 }
 
-function exportToExcel() {
-    console.log('Exporting to Excel...');
-    // Implement Excel export logic
+
+// Fungsi lainnya (biarkan seperti semula)
+function exportToPDF() {
+    console.log('Exporting to PDF...');
     toggleExportMenu();
 }
 
@@ -484,71 +472,15 @@ function printReport() {
     toggleExportMenu();
 }
 
-// Refresh data
 function refreshData() {
     const icon = document.getElementById('refresh-icon');
     icon.classList.add('fa-spin');
-    
     setTimeout(() => {
-        icon.classList.remove('fa-spin');
-        location.reload();
+        window.location.reload();
     }, 1000);
 }
 
-// Reset filters
-function resetFilters() {
-    document.getElementById('search-input').value = '';
-    document.getElementById('status-filter').value = '';
-    document.getElementById('date-start').value = '';
-    document.getElementById('date-end').value = '';
-    filterTable();
-}
+// ... Sisa fungsi Anda (resetFilters, dll) biarkan seperti semula ...
 
-// Table sorting
-function sortTable(columnIndex) {
-    // Implement table sorting logic
-    console.log('Sorting column:', columnIndex);
-}
-
-// Table view toggle
-function toggleTableView() {
-    const icon = document.getElementById('view-toggle-icon');
-    icon.classList.toggle('fa-th-list');
-    icon.classList.toggle('fa-th-large');
-}
-
-// Fullscreen toggle
-function toggleFullscreen() {
-    const container = document.getElementById('table-container');
-    const icon = document.getElementById('fullscreen-icon');
-    
-    if (!document.fullscreenElement) {
-        container.requestFullscreen();
-        icon.classList.remove('fa-expand');
-        icon.classList.add('fa-compress');
-    } else {
-        document.exitFullscreen();
-        icon.classList.remove('fa-compress');
-        icon.classList.add('fa-expand');
-    }
-}
-
-// Action functions
-function viewDetails(id) {
-    console.log('Viewing details for transaction:', id);
-    // Implement view details logic
-}
-
-function editTransaction(id) {
-    console.log('Editing transaction:', id);
-    // Implement edit logic
-}
-
-function deleteTransaction(id) {
-    if (confirm('Apakah Anda yakin ingin menghapus transaksi ini?')) {
-        console.log('Deleting transaction:', id);
-        // Implement delete logic
-    }
-}
 </script>
 @endpush

@@ -11,8 +11,9 @@ use App\Models\Supplier;
 use Illuminate\Http\Request;
 
 // DEPENDENSI UNTUK EXPORT
-use App\Exports\IncomingReportExport; // Pastikan class ini sudah dibuat
-use Maatwebsite\Excel\Facades\Excel; // Fasad untuk pustaka Excel
+use App\Exports\IncomingReportExport;
+use App\Exports\OutgoingReportExport; // <-- PERUBAHAN 1: Tambahkan ini
+use Maatwebsite\Excel\Facades\Excel;
 
 class ReportController extends Controller
 {
@@ -126,7 +127,7 @@ class ReportController extends Controller
     }
 
     // ===================================================================
-    // == METHOD BARU UNTUK EXPORT ADA DI SINI ==
+    // == METHOD EXPORT YANG SUDAH DIPERBARUI ==
     // ===================================================================
     
     /**
@@ -137,29 +138,23 @@ class ReportController extends Controller
      */
     public function export(Request $request)
     {
-        // Tentukan jenis laporan yang akan diekspor dari URL.
-        // Anda bisa menambahkan parameter 'report_type' di URL export Anda.
-        // Contoh: route('reports.export', ['report_type' => 'incoming_goods'])
-        // Untuk sekarang, kita asumsikan ini untuk 'Laporan Barang Masuk'.
-        
-        $reportType = $request->query('report_type', 'incoming_goods'); // Default ke barang masuk
+        $reportType = $request->query('report_type'); // Hapus default agar lebih eksplisit
         $format = $request->query('format', 'excel');
 
         if ($format === 'excel') {
-            // Logika untuk menentukan class export mana yang akan digunakan
-            // Ini membuat controller lebih fleksibel jika nanti ada export lain
             switch ($reportType) {
                 case 'incoming_goods':
                     $fileName = 'laporan-barang-masuk-' . now()->format('Y-m-d') . '.xlsx';
-                    // Panggil class Export yang sesuai
                     return Excel::download(new IncomingReportExport($request), $fileName);
-                
-                // case 'stock_report': // Contoh jika nanti ada export laporan stok
-                //     $fileName = 'laporan-stok-' . now()->format('Y-m-d') . '.xlsx';
-                //     return Excel::download(new StockReportExport($request), $fileName);
+
+                // <-- PERUBAHAN 2: Tambahkan case untuk outgoing_goods -->
+                case 'outgoing_goods':
+                    $fileName = 'laporan-barang-keluar-' . now()->format('Y-m-d') . '.xlsx';
+                    return Excel::download(new OutgoingReportExport($request), $fileName);
 
                 default:
-                    return redirect()->back()->with('error', 'Jenis laporan untuk ekspor tidak valid.');
+                    // Memberikan pesan error yang lebih jelas
+                    return redirect()->back()->with('error', "Jenis laporan '{$reportType}' untuk ekspor tidak valid.");
             }
         }
 
