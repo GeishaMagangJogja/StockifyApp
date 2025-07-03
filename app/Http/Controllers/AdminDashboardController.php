@@ -891,26 +891,50 @@ public function userDestroy(User $user)
     {
         $user = Auth::user();
 
+        // 1. Validasi input, termasuk foto
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,'.$user->id,
-            'current_password' => 'nullable|required_with:new_password',
-            'new_password' => 'nullable|min:8|confirmed',
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Validasi untuk foto
+            'current_password' => 'nullable|required_with:new_password|string',
         ]);
 
+        // 2. Update data dasar (nama dan email)
         $user->name = $request->name;
         $user->email = $request->email;
 
-        if ($request->filled('new_password')) {
-            if (!Hash::check($request->current_password, $user->password)) {
-                return back()->withErrors(['current_password' => 'Password saat ini tidak cocok.']);
+        // 3. Logika untuk mengunggah dan menyimpan foto profil
+        if ($request->hasFile('photo')) {
+            // Hapus foto lama jika ada untuk menghemat ruang penyimpanan
+            if ($user->profile_photo_path) {
+                Storage::disk('public')->delete($user->profile_photo_path);
             }
+            
+            // Simpan foto baru ke 'storage/app/public/profile-photos'
+            $path = $request->file('photo')->store('profile-photos', 'public');
+            
+            // Simpan path foto baru ke database
+            $user->profile_photo_path = $path;
+        }
+
+        // 4. Logika untuk memperbarui password (jika diisi)
+        if ($request->filled('new_password')) {
+            // Verifikasi password saat ini
+            if (!Hash::check($request->current_password, $user->password)) {
+                // Kembalikan dengan pesan error spesifik untuk field password
+                return back()->withErrors(['current_password' => 'Password saat ini yang Anda masukkan salah.'])->withInput();
+            }
+            // Update password baru
             $user->password = Hash::make($request->new_password);
         }
 
+        // 5. Simpan semua perubahan ke database
         $user->save();
+        
+        // 6. Redirect kembali dengan pesan sukses
         return back()->with('success', 'Profil berhasil diperbarui.');
     }
+<<<<<<< HEAD
     // Export products
 public function export(Request $request)
 {
@@ -939,6 +963,8 @@ public function import(Request $request)
         return redirect()->back()->with('error', 'Gagal import produk: ' . $e->getMessage());
     }
 }
+=======
+>>>>>>> 202bae7940fa7feba8c63c88774a77eb80f016b7
 }
 
 
