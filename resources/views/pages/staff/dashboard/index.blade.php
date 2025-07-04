@@ -16,8 +16,8 @@
                     </p>
                 </div>
                 <div class="text-right">
-                    <div class="text-sm text-gray-500 dark:text-gray-400 mb-1" id="current-date">{{ \Carbon\Carbon::now()->format('l, d F Y') }}</div>
-                    <div class="text-2xl font-bold text-gray-800 dark:text-white" id="current-time">{{ \Carbon\Carbon::now()->format('H:i:s') }}</div>
+                    <div class="text-sm text-gray-500 dark:text-gray-400 mb-1" id="current-date"></div>
+                    <div class="text-2xl font-bold text-gray-800 dark:text-white" id="current-time"></div>
                 </div>
             </div>
         </div>
@@ -53,9 +53,11 @@
                     </div>
                     <div class="relative">
                         <i class="fas fa-inbox text-5xl opacity-30 group-hover:opacity-50 transition-opacity duration-300"></i>
-                        <div class="absolute -top-2 -right-2 w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center">
+                        @if($totalPendingTasks > 0)
+                        <div class="absolute -top-2 -right-2 w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center animate-ping-once">
                             <span class="text-xs font-bold text-blue-800">!</span>
                         </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -117,7 +119,7 @@
                     <p class="text-green-100 mt-1">{{ count($incomingTasks) }} tugas menunggu konfirmasi</p>
                 </div>
                 <div class="p-6">
-                    @forelse ($incomingTasks as $index => $task)
+                    @forelse ($incomingTasks as $task)
                         <div class="flex items-center justify-between p-4 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-700 transition-all duration-200 border-l-4 border-green-400 mb-4 group">
                             <div class="flex items-center space-x-4">
                                 <div class="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
@@ -125,14 +127,14 @@
                                 </div>
                                 <div>
                                     <p class="font-semibold text-gray-800 dark:text-white group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">
-                                        {{ $task->product->name }}
+                                        {{ optional($task->product)->name ?? 'Produk tidak ditemukan' }}
                                     </p>
                                     <p class="text-sm text-gray-600 dark:text-gray-400">
                                         Qty: <span class="font-medium text-green-600">{{ $task->quantity }}</span>
                                     </p>
                                     <p class="text-xs text-gray-500 dark:text-gray-400 flex items-center mt-1">
                                         <i class="fas fa-truck mr-1"></i>
-                                        Dari: {{ $task->supplier->name ?? 'N/A' }} • {{ $task->created_at->diffForHumans() }}
+                                        Dari: {{ optional($task->supplier)->name ?? 'N/A' }} • {{ $task->created_at->diffForHumans() }}
                                     </p>
                                 </div>
                             </div>
@@ -176,7 +178,7 @@
                                 </div>
                                 <div>
                                     <p class="font-semibold text-gray-800 dark:text-white group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">
-                                        {{ $task->product->name }}
+                                        {{ optional($task->product)->name ?? 'Produk tidak ditemukan' }}
                                     </p>
                                     <p class="text-sm text-gray-600 dark:text-gray-400">
                                         Qty: <span class="font-medium text-orange-600">{{ $task->quantity }}</span>
@@ -203,7 +205,7 @@
                         <div class="text-center py-12">
                             <i class="fas fa-truck text-6xl text-gray-300 dark:text-gray-600 mb-4"></i>
                             <p class="text-lg font-medium text-gray-500 dark:text-gray-400">Tidak ada tugas barang keluar</p>
-                            <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">Semua tugas telah selesai diproses</p>
+                            <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">Semua pesanan telah disiapkan</p>
                         </div>
                     @endforelse
                 </div>
@@ -231,7 +233,7 @@
                                 <div>
                                     <p class="font-semibold text-gray-900 dark:text-white">{{ $product->name }}</p>
                                     <p class="text-xs text-gray-500 dark:text-gray-400">
-                                        Min: {{ $product->min_stock }} {{ $product->unit }}
+                                        Min: {{ $product->min_stock ?? 0 }} {{ $product->unit }}
                                     </p>
                                 </div>
                             </div>
@@ -261,20 +263,20 @@
                 <div class="p-6">
                     @forelse ($recentTransactions as $transaction)
                         <div class="flex items-center space-x-4 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors duration-200 mb-3">
-                            <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-full {{ $transaction->type == 'Masuk' ? 'bg-green-100 dark:bg-green-900' : 'bg-red-100 dark:bg-red-900' }}">
-                                <i class="fas {{ $transaction->type == 'Masuk' ? 'fa-arrow-down text-green-600 dark:text-green-400' : 'fa-arrow-up text-red-600 dark:text-red-400' }}"></i>
+                            <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-full {{ $transaction->type == 'incoming' ? 'bg-green-100 dark:bg-green-900' : 'bg-red-100 dark:bg-red-900' }}">
+                                <i class="fas {{ $transaction->type == 'incoming' ? 'fa-arrow-down text-green-600 dark:text-green-400' : 'fa-arrow-up text-red-600 dark:text-red-400' }}"></i>
                             </div>
                             <div class="flex-1 min-w-0">
                                 <p class="text-sm font-semibold text-gray-900 dark:text-white truncate">
-                                    {{ $transaction->product->name ?? 'N/A' }}
+                                    {{ optional($transaction->product)->name ?? 'Produk Dihapus' }}
                                 </p>
                                 <p class="text-xs text-gray-500 dark:text-gray-400">
-                                    {{ $transaction->type }} • {{ $transaction->updated_at->diffForHumans() }}
+                                    {{ $transaction->type == 'incoming' ? 'Masuk' : 'Keluar' }} • {{ $transaction->updated_at->diffForHumans() }}
                                 </p>
                             </div>
                             <div class="text-right">
-                                <span class="text-sm font-medium {{ $transaction->type == 'Masuk' ? 'text-green-600' : 'text-red-600' }}">
-                                    {{ $transaction->type == 'Masuk' ? '+' : '-' }}{{ $transaction->quantity ?? 0 }}
+                                <span class="text-sm font-medium {{ $transaction->type == 'incoming' ? 'text-green-600' : 'text-red-600' }}">
+                                    {{ $transaction->type == 'incoming' ? '+' : '-' }}{{ $transaction->quantity ?? 0 }}
                                 </span>
                             </div>
                         </div>
@@ -289,7 +291,7 @@
         </div>
     </div>
 
-    {{-- JavaScript untuk Real-time Clock --}}
+    @push('scripts')
     <script>
         function updateClock() {
             const now = new Date();
@@ -301,24 +303,14 @@
                 month: 'long', 
                 year: 'numeric' 
             };
-            const currentDate = now.toLocaleDateString('id-ID', dateOptions);
-            document.getElementById('current-date').textContent = currentDate;
+            document.getElementById('current-date').textContent = now.toLocaleDateString('id-ID', dateOptions);
             
             // Update waktu
-            const timeOptions = { 
-                hour: '2-digit', 
-                minute: '2-digit', 
-                second: '2-digit',
-                hour12: false
-            };
-            const currentTime = now.toLocaleTimeString('id-ID', timeOptions);
-            document.getElementById('current-time').textContent = currentTime;
+            document.getElementById('current-time').textContent = now.toLocaleTimeString('id-ID', { hour12: false });
         }
         
-        // Update clock setiap detik
         setInterval(updateClock, 1000);
-        
-        // Update clock saat halaman pertama kali dimuat
-        updateClock();
+        updateClock(); // Initial call
     </script>
+    @endpush
 @endsection
