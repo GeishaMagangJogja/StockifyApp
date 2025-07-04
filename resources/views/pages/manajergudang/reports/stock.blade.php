@@ -57,7 +57,7 @@
             <div class="p-6 border-b dark:border-slate-700">
                 <form action="{{ route('manajergudang.reports.stock') }}" method="GET" class="grid grid-cols-1 gap-4 md:grid-cols-4">
                     <input type="text" name="search" placeholder="Cari SKU atau Nama..." value="{{ request('search') }}" class="w-full px-4 py-2 border rounded-lg md:col-span-2 dark:bg-slate-700 dark:border-gray-600">
-                    <select name="category_id" class="w-full px-4 py-2 border rounded-lg dark:bg-slate-700 dark:border-gray-600">
+                    <select name="category_id" class="w-full px-4 py-2 border rounded-lg dark:bg-slate-700 dark:border-gray-600 dark:text-white">
                         <option value="">Semua Kategori</option>
                         @foreach($categories as $category)
                             <option value="{{ $category->id }}" {{ request('category_id') == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>

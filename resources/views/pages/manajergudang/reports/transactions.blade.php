@@ -10,14 +10,18 @@
         <p class="mt-2 text-gray-600 dark:text-gray-400">Lacak semua pergerakan barang yang masuk dan keluar dari gudang.</p>
     </div>
 
-    {{-- Filter Panel --}}
+    {{-- Panel Filter --}}
     <div class="p-6 mb-6 bg-white rounded-xl shadow-lg dark:bg-slate-800">
         <form action="{{ route('manajergudang.reports.transactions') }}" method="GET">
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama produk..." class="w-full px-4 py-2 border rounded-lg lg:col-span-2 dark:bg-slate-700 dark:border-gray-600">
-                <select name="type" class="w-full px-4 py-2 border rounded-lg dark:bg-slate-700 dark:border-gray-600"><option value="">Semua Tipe</option><option value="Masuk" {{ request('type') == 'Masuk' ? 'selected' : '' }}>Masuk</option><option value="Keluar" {{ request('type') == 'Keluar' ? 'selected' : '' }}>Keluar</option></select>
-                <input type="date" name="start_date" value="{{ request('start_date') }}" class="w-full px-4 py-2 border rounded-lg dark:bg-slate-700 dark:border-gray-600">
-                <input type="date" name="end_date" value="{{ request('end_date') }}" class="w-full px-4 py-2 border rounded-lg dark:bg-slate-700 dark:border-gray-600">
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama produk..." class="w-full px-4 py-2 border rounded-lg lg:col-span-2 dark:bg-slate-700 dark:border-gray-600 dark:text-white">
+                <select name="type" class="w-full px-4 py-2 border rounded-lg dark:bg-slate-700 dark:border-gray-600 dark:text-white">
+                    <option value="">Semua Tipe</option>
+                    <option value="Masuk" {{ request('type') == 'Masuk' ? 'selected' : '' }}>Masuk</option>
+                    <option value="Keluar" {{ request('type') == 'Keluar' ? 'selected' : '' }}>Keluar</option>
+                </select>
+                <input type="date" name="start_date" value="{{ request('start_date') }}" class="w-full px-4 py-2 border rounded-lg dark:bg-slate-700 dark:border-gray-600 dark:text-white" title="Dari Tanggal">
+                <input type="date" name="end_date" value="{{ request('end_date') }}" class="w-full px-4 py-2 border rounded-lg dark:bg-slate-700 dark:border-gray-600 dark:text-white" title="Sampai Tanggal">
             </div>
             <div class="flex items-center justify-end gap-2 pt-4 mt-4 border-t dark:border-slate-700">
                 <a href="{{ route('manajergudang.reports.transactions') }}" class="px-4 py-2 text-gray-600 bg-gray-200 rounded-lg hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-300">Reset</a>
@@ -26,7 +30,7 @@
         </form>
     </div>
 
-    {{-- Table --}}
+    {{-- Tabel Laporan Transaksi --}}
     <div class="overflow-hidden bg-white rounded-xl shadow-lg dark:bg-slate-800">
         <div class="overflow-x-auto">
             <table class="w-full">
