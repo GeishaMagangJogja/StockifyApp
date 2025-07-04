@@ -30,6 +30,7 @@ class ReportController extends Controller
             })
             ->paginate(10);
 
+        // Asumsi path view untuk index utama
         return view('pages.admin.reports.index', compact('categories', 'products'));
     }
 
@@ -82,7 +83,7 @@ class ReportController extends Controller
     }
 
     /**
-     * Display the transactions report.
+     * Display the transactions report (Umum).
      */
     public function transactions(Request $request)
     {
@@ -100,6 +101,64 @@ class ReportController extends Controller
 
         return view('pages.admin.reports.transactions', compact('transactions'));
     }
+
+    // ===================================================================
+    // == METHOD BARU: LAPORAN BARANG KELUAR ==
+    // ===================================================================
+
+    /**
+     * Display the outgoing goods transaction report.
+     * Menampilkan laporan transaksi barang keluar.
+     */
+    public function outgoingReport(Request $request)
+    {
+        // 1. Query Dasar: Hanya ambil transaksi tipe 'outgoing'
+        // Eager load relasi 'product' dan 'user' untuk performa
+        $query = StockTransaction::with(['product', 'user'])
+                                  ->where('type', 'outgoing');
+
+        // 2. Terapkan Filter dari Request
+
+        // Filter Pencarian (Cari berdasarkan nama produk, SKU, atau catatan/tujuan)
+        $query->when($request->filled('search'), function ($q) use ($request) {
+            $search = $request->search;
+            $q->where(function ($sub) use ($search) {
+                $sub->where('notes', 'like', "%{$search}%")
+                    ->orWhereHas('product', function ($prod) use ($search) {
+                        $prod->where('name', 'like', "%{$search}%")
+                             ->orWhere('sku', 'like', "%{$search}%");
+                    });
+            });
+        });
+
+        // Filter Status (PENTING: Ini akan mengambil semua status jika filter kosong)
+        $query->when($request->filled('status'), function ($q) use ($request) {
+            $q->where('status', $request->status);
+        });
+
+        // Filter Rentang Tanggal
+        $query->when($request->filled('date_start'), function ($q) use ($request) {
+            $q->whereDate('date', '>=', $request->date_start);
+        });
+
+        $query->when($request->filled('date_end'), function ($q) use ($request) {
+            $q->whereDate('date', '<=', $request->date_end);
+        });
+
+        // 3. Urutkan & Paginasi
+        // Urutkan berdasarkan tanggal terbaru dan lakukan paginasi
+        $transactions = $query->latest('date')->paginate(20)->withQueryString();
+
+        // 4. Kirim data ke View
+        // Ganti path ini jika lokasi view blade Anda berbeda
+        // Jika Anda menggunakan struktur view yang Anda berikan sebelumnya, Anda mungkin perlu menyesuaikan pathnya.
+        return view('pages.admin.reports.outgoing.index', compact('transactions'));
+    }
+
+    // ===================================================================
+    // == AKHIR METHOD BARU ==
+    // ===================================================================
+
 
     /**
      * Display the users report.
