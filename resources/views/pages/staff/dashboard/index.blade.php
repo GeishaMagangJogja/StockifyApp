@@ -16,8 +16,8 @@
                     </p>
                 </div>
                 <div class="text-right">
-                    <div class="text-sm text-gray-500 dark:text-gray-400 mb-1">{{ \Carbon\Carbon::now()->format('l, d F Y') }}</div>
-                    <div class="text-2xl font-bold text-gray-800 dark:text-white">{{ \Carbon\Carbon::now()->format('H:i') }}</div>
+                    <div class="text-sm text-gray-500 dark:text-gray-400 mb-1" id="current-date">{{ \Carbon\Carbon::now()->format('l, d F Y') }}</div>
+                    <div class="text-2xl font-bold text-gray-800 dark:text-white" id="current-time">{{ \Carbon\Carbon::now()->format('H:i:s') }}</div>
                 </div>
             </div>
         </div>
@@ -288,4 +288,37 @@
             </div>
         </div>
     </div>
+
+    {{-- JavaScript untuk Real-time Clock --}}
+    <script>
+        function updateClock() {
+            const now = new Date();
+            
+            // Update tanggal
+            const dateOptions = { 
+                weekday: 'long', 
+                day: 'numeric', 
+                month: 'long', 
+                year: 'numeric' 
+            };
+            const currentDate = now.toLocaleDateString('id-ID', dateOptions);
+            document.getElementById('current-date').textContent = currentDate;
+            
+            // Update waktu
+            const timeOptions = { 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit',
+                hour12: false
+            };
+            const currentTime = now.toLocaleTimeString('id-ID', timeOptions);
+            document.getElementById('current-time').textContent = currentTime;
+        }
+        
+        // Update clock setiap detik
+        setInterval(updateClock, 1000);
+        
+        // Update clock saat halaman pertama kali dimuat
+        updateClock();
+    </script>
 @endsection
