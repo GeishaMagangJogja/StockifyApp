@@ -1,94 +1,148 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Laporan Stok Produk')
+@section('title', 'Laporan Analisis Stok')
+
+@push('styles')
+<style>
+    .sortable-header { cursor: pointer; transition: background-color 0.2s ease-in-out; }
+    .sortable-header:hover { background-color: rgba(0, 0, 0, 0.05); }
+    .dark .sortable-header:hover { background-color: rgba(255, 255, 255, 0.05); }
+    .sort-icon { transition: transform 0.2s ease-in-out, color 0.2s; }
+    a:hover .sort-icon { color: #06b6d4; } /* Warna Cyan-500 saat hover */
+</style>
+@endpush
 
 @section('content')
-<div class="container p-4 mx-auto sm:p-8">
-    <div class="py-8">
-        {{-- Header Halaman --}}
-        <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-800 dark:text-white"><i class="mr-3 text-blue-500 fas fa-chart-bar"></i>Laporan Stok Produk</h1>
-            <p class="mt-1 text-gray-500 dark:text-gray-400">Ringkasan kondisi stok untuk semua produk dalam sistem.</p>
-        </div>
+<div class="p-4 sm:p-6 lg:p-8">
 
-        {{-- [FIX] Kartu Statistik Dibuat Langsung, Tanpa Komponen --}}
-        <div class="grid grid-cols-1 gap-6 mb-8 md:grid-cols-2 lg:grid-cols-4">
-            <div class="p-6 bg-white rounded-xl shadow-lg dark:bg-slate-800">
-                <div class="flex items-start justify-between">
-                    <div>
-                        <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Varian</h4>
-                        <p class="mt-1 text-4xl font-bold text-gray-800 dark:text-white">{{ number_format($products->total()) }}</p>
-                    </div>
-                    <div class="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full dark:bg-blue-900/30"><i class="text-xl text-blue-500 fas fa-boxes-stacked"></i></div>
-                </div>
+    <!-- Header Halaman - Gaya Manajer -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Analisis Stok Gudang</h1>
+                <p class="mt-1 text-gray-600 dark:text-gray-400">Tinjauan komprehensif mengenai status dan valuasi stok.</p>
             </div>
-            <div class="p-6 bg-white rounded-xl shadow-lg dark:bg-slate-800">
-                <div class="flex items-start justify-between">
-                    <div>
-                        <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Stok Aman</h4>
-                        <p class="mt-1 text-4xl font-bold text-green-500">{{ $stockSummary['safe'] }}</p>
-                    </div>
-                    <div class="flex items-center justify-center w-12 h-12 bg-green-100 rounded-full dark:bg-green-900/30"><i class="text-xl text-green-500 fas fa-check-circle"></i></div>
-                </div>
-            </div>
-            <div class="p-6 bg-white rounded-xl shadow-lg dark:bg-slate-800">
-                <div class="flex items-start justify-between">
-                    <div>
-                        <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Stok Rendah</h4>
-                        <p class="mt-1 text-4xl font-bold text-yellow-500">{{ $stockSummary['low'] }}</p>
-                    </div>
-                    <div class="flex items-center justify-center w-12 h-12 bg-yellow-100 rounded-full dark:bg-yellow-900/30"><i class="text-xl text-yellow-500 fas fa-exclamation-triangle"></i></div>
-                </div>
-            </div>
-            <div class="p-6 bg-white rounded-xl shadow-lg dark:bg-slate-800">
-                <div class="flex items-start justify-between">
-                    <div>
-                        <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Stok Habis</h4>
-                        <p class="mt-1 text-4xl font-bold text-red-500">{{ $stockSummary['out'] }}</p>
-                    </div>
-                    <div class="flex items-center justify-center w-12 h-12 bg-red-100 rounded-full dark:bg-red-900/30"><i class="text-xl text-red-500 fas fa-times-circle"></i></div>
-                </div>
-            </div>
+            <a href="{{ route('manajergudang.reports.stock') }}" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 dark:bg-slate-700 dark:text-gray-300 dark:border-slate-600 dark:hover:bg-slate-600">
+                <i class="mr-2 fas fa-sync-alt"></i>Reset
+            </a>
         </div>
+        <div class="mt-4 border-b border-gray-200 dark:border-slate-700"></div>
+    </div>
+    
+    <!-- Kartu Statistik - Gaya Manajer (Lebih minimalis) -->
+    <div class="grid grid-cols-1 gap-5 mb-8 sm:grid-cols-2 lg:grid-cols-4">
+        <x-stat-card icon="fa-boxes-stacked" color="cyan" title="Total Varian Produk" value="{{ $stockSummary['total'] }}" />
+        <x-stat-card icon="fa-shield-alt" color="green" title="Stok Aman" value="{{ $stockSummary['safe'] }}" />
+        <x-stat-card icon="fa-exclamation-circle" color="yellow" title="Stok Rendah" value="{{ $stockSummary['low'] }}" />
+        <x-stat-card icon="fa-ban" color="red" title="Stok Habis" value="{{ $stockSummary['out'] }}" />
+    </div>
 
-        {{-- Panel Filter & Tabel --}}
-        <div class="overflow-hidden bg-white rounded-xl shadow-lg dark:bg-slate-800">
-            {{-- Form Pencarian dan Filter --}}
-            <div class="p-6 border-b dark:border-slate-700">
-                <form action="{{ route('manajergudang.reports.stock') }}" method="GET" class="grid grid-cols-1 gap-4 md:grid-cols-4">
-                    <input type="text" name="search" placeholder="Cari SKU atau Nama..." value="{{ request('search') }}" class="w-full px-4 py-2 border rounded-lg md:col-span-2 dark:bg-slate-700 dark:border-gray-600">
-                    <select name="category_id" class="w-full px-4 py-2 border rounded-lg dark:bg-slate-700 dark:border-gray-600 dark:text-white">
+    <!-- Panel Kontrol (Filter & Tabel) -->
+    <div class="bg-white border border-gray-200 shadow-sm rounded-xl dark:bg-slate-800 dark:border-slate-700">
+        <!-- Form Filter -->
+        <div class="p-6">
+            <form action="{{ route('manajergudang.reports.stock') }}" method="GET" class="space-y-4">
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <input type="text" name="search" placeholder="Cari SKU atau Nama Produk..." value="{{ request('search') }}"
+                           class="w-full px-4 py-2 text-gray-900 bg-gray-50 border-gray-300 rounded-lg md:col-span-1 dark:text-white dark:bg-slate-700 dark:border-slate-600 focus:ring-cyan-500 focus:border-cyan-500">
+                    <select name="category_id" class="w-full px-4 py-2 text-gray-900 bg-gray-50 border-gray-300 rounded-lg dark:text-white dark:bg-slate-700 dark:border-slate-600 focus:ring-cyan-500 focus:border-cyan-500">
                         <option value="">Semua Kategori</option>
                         @foreach($categories as $category)
-                            <option value="{{ $category->id }}" {{ request('category_id') == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
+                            <option value="{{ $category->id }}" @selected(request('category_id') == $category->id)>{{ $category->name }}</option>
                         @endforeach
                     </select>
-                    <div class="flex items-center gap-2">
-                        <button type="submit" class="flex items-center justify-center w-full px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700"><i class="mr-2 fas fa-filter"></i>Filter</button>
-                        <a href="{{ route('manajergudang.reports.stock') }}" class="p-2 text-gray-600 bg-gray-200 rounded-lg hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-300" title="Reset"><i class="fas fa-undo"></i></a>
-                    </div>
-                </form>
-            </div>
-            {{-- Tabel --}}
-            <div class="overflow-x-auto">
-                <table class="w-full">
-                    <thead class="bg-gray-50 dark:bg-slate-700/50"><tr><th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-300">Produk</th><th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-300">Kategori</th><th class="px-6 py-3 text-xs font-medium tracking-wider text-center text-gray-500 uppercase dark:text-gray-300">Stok</th><th class="px-6 py-3 text-xs font-medium tracking-wider text-center text-gray-500 uppercase dark:text-gray-300">Status</th></tr></thead>
-                    <tbody class="bg-white divide-y dark:divide-slate-700 dark:bg-slate-800">
-                        @forelse ($products as $product)
-                            <tr class="hover:bg-gray-50 dark:hover:bg-slate-700/50">
-                                <td class="px-6 py-4"><div class="flex items-center"><img class="object-cover w-10 h-10 mr-4 rounded-lg" src="{{ $product->image ? asset('storage/' . $product->image) : 'https://ui-avatars.com/api/?name='.urlencode($product->name) }}" alt="{{ $product->name }}"><div><p class="font-medium text-gray-900 dark:text-white">{{ $product->name }}</p><p class="text-xs text-gray-500 dark:text-gray-400">SKU: {{ $product->sku }}</p></div></div></td>
-                                <td class="px-6 py-4"><span class="inline-block px-2 py-1 text-xs font-semibold text-blue-800 bg-blue-100 rounded-full dark:bg-blue-900/50 dark:text-blue-300">{{ $product->category->name ?? 'N/A' }}</span></td>
-                                <td class="px-6 py-4 text-center"><p class="text-lg font-bold text-gray-900 dark:text-white">{{ number_format($product->current_stock) }}</p><p class="text-xs text-gray-500 dark:text-gray-400">Min: {{ number_format($product->min_stock) }}</p></td>
-                                <td class="px-6 py-4 text-center">@if($product->stock_status == 'out_of_stock')<span class="inline-flex items-center px-2.5 py-1 text-xs font-semibold text-red-800 bg-red-100 rounded-full dark:bg-red-900/50 dark:text-red-300"><i class="mr-1.5 fas fa-times-circle"></i>Habis</span>@elseif($product->stock_status == 'low_stock')<span class="inline-flex items-center px-2.5 py-1 text-xs font-semibold text-yellow-800 bg-yellow-100 rounded-full dark:bg-yellow-900/50 dark:text-yellow-300"><i class="mr-1.5 fas fa-exclamation-triangle"></i>Rendah</span>@else<span class="inline-flex items-center px-2.5 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full dark:bg-green-900/50 dark:text-green-300"><i class="mr-1.5 fas fa-check-circle"></i>Aman</span>@endif</td>
-                            </tr>
-                        @empty
-                            <tr><td colspan="4" class="px-6 py-16 text-center text-gray-500 dark:text-gray-400"><div class="flex flex-col items-center"><i class="mb-4 text-5xl fas fa-box-open opacity-50"></i><p>Tidak ada data ditemukan.</p></div></td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-            @if($products->hasPages())<div class="p-4 border-t dark:border-slate-700">{{ $products->appends(request()->query())->links() }}</div>@endif
+                    <select name="stock_status" class="w-full px-4 py-2 text-gray-900 bg-gray-50 border-gray-300 rounded-lg dark:text-white dark:bg-slate-700 dark:border-slate-600 focus:ring-cyan-500 focus:border-cyan-500">
+                        <option value="">Semua Status</option>
+                        <option value="safe" @selected(request('stock_status') == 'safe')>Aman</option>
+                        <option value="low" @selected(request('stock_status') == 'low')>Rendah</option>
+                        <option value="out" @selected(request('stock_status') == 'out')>Habis</option>
+                    </select>
+                </div>
+                <input type="hidden" name="sort_by" value="{{ $sortBy }}">
+                <input type="hidden" name="direction" value="{{ $sortDirection }}">
+                <div class="flex justify-end">
+                    <button type="submit" class="flex items-center justify-center px-5 py-2 font-semibold text-white transition-all bg-cyan-600 rounded-lg hover:bg-cyan-700 focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500">
+                        <i class="mr-2 fas fa-search"></i>Cari
+                    </button>
+                </div>
+            </form>
         </div>
+
+        <!-- Tabel -->
+        <div class="overflow-x-auto border-t border-gray-200 dark:border-slate-700">
+            <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                 <thead class="text-xs text-gray-700 uppercase bg-gray-100 dark:bg-slate-700/50 dark:text-gray-400">
+                    <tr>
+                        @php
+                            function getSortLink($column, $sortBy, $sortDirection) {
+                                $direction = ($sortBy == $column && $sortDirection == 'asc') ? 'desc' : 'asc';
+                                return request()->fullUrlWithQuery(['sort_by' => $column, 'direction' => $direction]);
+                            }
+                        @endphp
+                        <th scope="col" class="px-6 py-3 sortable-header">
+                             <a href="{{ getSortLink('name', $sortBy, $sortDirection) }}" class="flex items-center">
+                                PRODUK
+                                <i class="ml-1.5 text-gray-400 fas sort-icon @if($sortBy == 'name') fa-sort-{{ $sortDirection }} @else fa-sort @endif"></i>
+                            </a>
+                        </th>
+                        <th scope="col" class="px-6 py-3 sortable-header">
+                             <a href="{{ getSortLink('category_name', $sortBy, $sortDirection) }}" class="flex items-center">
+                                KATEGORI
+                                <i class="ml-1.5 text-gray-400 fas sort-icon @if($sortBy == 'category_name') fa-sort-{{ $sortDirection }} @else fa-sort @endif"></i>
+                            </a>
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-center sortable-header">
+                            <a href="{{ getSortLink('current_stock', $sortBy, $sortDirection) }}" class="inline-flex items-center">
+                                STOK SAAT INI
+                                <i class="ml-1.5 text-gray-400 fas sort-icon @if($sortBy == 'current_stock') fa-sort-{{ $sortDirection }} @else fa-sort @endif"></i>
+                            </a>
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-center sortable-header">
+                             <a href="{{ getSortLink('stock_status', $sortBy, $sortDirection) }}" class="inline-flex items-center">
+                                STATUS
+                                <i class="ml-1.5 text-gray-400 fas sort-icon @if($sortBy == 'stock_status') fa-sort-{{ $sortDirection }} @else fa-sort @endif"></i>
+                            </a>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse ($products as $product)
+                        <tr class="bg-white border-b dark:bg-slate-800 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center">
+                                    <img class="object-cover w-10 h-10 mr-4 rounded-md" src="{{ $product->image ? asset('storage/' . $product->image) : 'https://ui-avatars.com/api/?name='.urlencode($product->name).'&background=1e293b&color=fff' }}" alt="{{ $product->name }}">
+                                    <div>
+                                        <p class="font-semibold text-gray-900 dark:text-white">{{ $product->name }}</p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">SKU: {{ $product->sku }}</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="px-2 py-1 text-xs font-medium text-slate-800 bg-slate-100 rounded-full dark:bg-slate-600 dark:text-slate-200">{{ $product->category->name ?? 'N/A' }}</span>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <p class="text-base font-bold text-gray-900 dark:text-white">{{ number_format($product->current_stock) }}</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Batas Min: {{ number_format($product->min_stock) }}</p>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <x-badge-status type="{{ $product->stock_status_calculated == 'safe' ? 'success' : ($product->stock_status_calculated == 'low_stock' ? 'warning' : 'danger') }}" text="{{ $product->stock_status_calculated == 'safe' ? 'Aman' : ($product->stock_status_calculated == 'low_stock' ? 'Rendah' : 'Habis') }}" />
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="4" class="px-6 py-16 text-center">
+                                <x-empty-state title="Data Stok Tidak Ditemukan"
+                                    message="Silakan sesuaikan filter pencarian Anda."
+                                    icon="fa-search" />
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        @if($products->hasPages())
+            <div class="p-4 border-t border-gray-200 dark:border-slate-700">{{ $products->links() }}</div>
+        @endif
     </div>
 </div>
 @endsection

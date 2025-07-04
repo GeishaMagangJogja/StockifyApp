@@ -299,41 +299,94 @@ class ManagerDashboardController extends Controller
         return view('pages.manajergudang.suppliers.show', compact('supplier'));
     }
 
+    // app/Http/Controllers/ManagerDashboardController.php
+
     public function reportStock(Request $request)
     {
-        $query = Product::with('category');
+        // [BARU] Logika untuk pengurutan
+        $sortableColumns = ['name', 'category_name', 'current_stock', 'stock_status'];
+        $sortBy = in_array($request->query('sort_by'), $sortableColumns) ? $request->query('sort_by') : 'name';
+        $sortDirection = in_array($request->query('direction'), ['asc', 'desc']) ? $request->query('direction') : 'asc';
+
+        $query = Product::with('category')
+            ->select('products.*') // Pastikan semua kolom produk terpilih
+            ->addSelect(DB::raw('
+                CASE
+                    WHEN current_stock <= 0 THEN "out_of_stock"
+                    WHEN current_stock > 0 AND current_stock <= min_stock THEN "low_stock"
+                    ELSE "safe"
+                END as stock_status_calculated
+            '));
+
+        // Filter
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(fn($q) => $q->where('name', 'like', "%{$search}%")->orWhere('sku', 'like', "%{$search}%"));
+            $query->where(fn($q) => $q->where('products.name', 'like', "%{$search}%")->orWhere('sku', 'like', "%{$search}%"));
         }
         if ($request->filled('category_id')) {
             $query->where('category_id', $request->category_id);
         }
         if ($request->filled('stock_status')) {
             $status = $request->stock_status;
-            $query->where(function($q) use ($status) {
-                if ($status == 'safe') $q->whereColumn('current_stock', '>', 'min_stock');
-                if ($status == 'low') $q->where('current_stock', '>', 0)->whereColumn('current_stock', '<=', 'min_stock');
-                if ($status == 'out') $q->where('current_stock', '<=', 0);
-            });
+            // Gunakan HAVING untuk memfilter berdasarkan kolom alias hasil kalkulasi
+            if ($status == 'safe') {
+                $query->having('stock_status_calculated', '=', 'safe');
+            } elseif ($status == 'low') {
+                $query->having('stock_status_calculated', '=', 'low_stock');
+            } elseif ($status == 'out') {
+                $query->having('stock_status_calculated', '=', 'out_of_stock');
+            }
         }
-        $products = $query->paginate(15);
+
+        // [BARU] Terapkan pengurutan
+        if ($sortBy === 'category_name') {
+            // Urutkan berdasarkan nama kategori melalui join
+            $query->leftJoin('categories', 'products.category_id', '=', 'categories.id')
+                ->orderBy('categories.name', $sortDirection);
+        } elseif ($sortBy === 'stock_status') {
+            $query->orderBy('stock_status_calculated', $sortDirection);
+        } else {
+            $query->orderBy($sortBy, $sortDirection);
+        }
+        
+        // Paginate
+        $products = $query->paginate(15)->withQueryString(); // withQueryString() agar parameter filter dan sort tetap ada di link paginasi
+
+        // Data lainnya
         $categories = Category::orderBy('name')->get();
+        
         $stockSummary = [
             'safe' => Product::whereColumn('current_stock', '>', 'min_stock')->count(),
             'low' => Product::where('current_stock', '>', 0)->whereColumn('current_stock', '<=', 'min_stock')->count(),
             'out' => Product::where('current_stock', '<=', 0)->count(),
-            'total' => $products->total()
+            'total' => Product::count() // Ambil total keseluruhan untuk kartu
         ];
-        return view('pages.manajergudang.reports.stock', compact('products', 'categories', 'stockSummary'));
+
+        // Kirim variabel sort ke view
+        return view('pages.manajergudang.reports.stock', compact('products', 'categories', 'stockSummary', 'sortBy', 'sortDirection'));
     }
 
     public function reportTransactions(Request $request)
     {
-        $query = StockTransaction::with(['product', 'user', 'supplier'])->latest('date');
+        // Logika untuk pengurutan
+        $sortableColumns = ['date', 'product_name', 'quantity', 'user_name'];
+        $sortBy = in_array($request->query('sort_by'), $sortableColumns) ? $request->query('sort_by') : 'date';
+        $sortDirection = in_array($request->query('direction'), ['asc', 'desc']) ? $request->query('direction') : 'desc'; // Default descending untuk tanggal
+
+        // [PERBAIKAN] Hapus ->latest('date') dari sini. Kita akan tambahkan orderBy di akhir.
+        $query = StockTransaction::with(['product', 'user', 'supplier']);
+
+        // [PERBAIKAN] Tambahkan select untuk menghindari ambiguitas kolom 'id' setelah join
+        $query->select('stock_transactions.*');
+
+        // Filter
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->whereHas('product', fn($q) => $q->where('name', 'like', "%{$search}%"));
+            $query->where(function($q) use ($search) {
+                $q->whereHas('product', fn($pq) => $pq->where('name', 'like', "%{$search}%"))
+                ->orWhereHas('user', fn($uq) => $uq->where('name', 'like', "%{$search}%"))
+                ->orWhereHas('supplier', fn($sq) => $sq->where('name', 'like', "%{$search}%"));
+            });
         }
         if ($request->filled('type')) {
             $query->where('type', $request->type);
@@ -344,8 +397,36 @@ class ManagerDashboardController extends Controller
         if ($request->filled('end_date')) {
             $query->whereDate('date', '<=', $request->end_date);
         }
-        $transactions = $query->paginate(15);
-        return view('pages.manajergudang.reports.transactions', compact('transactions'));
+
+        // Ambil data statistik sebelum paginasi dan sorting
+        $statsQuery = clone $query;
+        $stats = [
+            'total' => $statsQuery->count(),
+            'incoming' => (clone $statsQuery)->where('type', 'Masuk')->count(),
+            'outgoing' => (clone $statsQuery)->where('type', 'Keluar')->count(),
+            'total_quantity' => (clone $statsQuery)->sum('quantity')
+        ];
+        
+        // [PERBAIKAN] Terapkan pengurutan di sini, setelah semua filter
+        switch ($sortBy) {
+            case 'product_name':
+                $query->leftJoin('products', 'stock_transactions.product_id', '=', 'products.id')
+                    ->orderBy('products.name', $sortDirection);
+                break;
+            case 'user_name':
+                $query->leftJoin('users', 'stock_transactions.user_id', '=', 'users.id')
+                    ->orderBy('users.name', $sortDirection);
+                break;
+            default:
+                // Urutkan berdasarkan kolom dari tabel stock_transactions
+                $query->orderBy($sortBy, $sortDirection);
+        }
+
+        // Paginate
+        $transactions = $query->paginate(15)->withQueryString();
+
+        // Kirim data ke view
+        return view('pages.manajergudang.reports.transactions', compact('transactions', 'stats', 'sortBy', 'sortDirection'));
     }
 
     public function profile()

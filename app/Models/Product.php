@@ -112,4 +112,6 @@ class Product extends Model
 
         $this->save();
     }
+
+    
 }
