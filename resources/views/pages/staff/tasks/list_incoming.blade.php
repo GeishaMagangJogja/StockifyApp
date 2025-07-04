@@ -95,35 +95,70 @@
                     <tbody class="bg-white divide-y dark:divide-gray-700 dark:bg-gray-800">
                         @forelse($transactions as $transaction)
                             <tr class="text-gray-700 dark:text-gray-400">
-                                {{-- ... (Isi tabel sama seperti sebelumnya) ... --}}
+                                {{-- PERUBAHAN DIMULAI DARI SINI --}}
                                 <td class="px-4 py-3">
-                                    <p class="font-semibold">{{ optional($transaction->product)->name ?? 'N/A' }}</p>
+                                    <div class="flex items-center text-sm">
+                                        <div>
+                                            <p class="font-semibold">{{ optional($transaction->product)->name ?? 'Produk Dihapus' }}</p>
+                                            <p class="text-xs text-gray-600 dark:text-gray-400">
+                                                SKU: {{ optional($transaction->product)->sku ?? 'N/A' }}
+                                            </p>
+                                        </div>
+                                    </div>
                                 </td>
                                 <td class="px-4 py-3 text-sm">{{ $transaction->quantity }}</td>
-                                <td class="px-4 py-3 text-sm">{{ optional($transaction->supplier)->name ?? 'N/A' }}</td>
+                                <td class="px-4 py-3 text-sm">
+    {{ optional($transaction->supplier)->name ?? optional($transaction->product->supplier)->name ?? 'N/A' }}
+</td>
                                 <td class="px-4 py-3 text-xs">
-                                    {{-- ... logika status ... --}}
+                                    @if($transaction->status == 'completed')
+                                        <span class="px-2 py-1 font-semibold leading-tight text-green-700 bg-green-100 rounded-full dark:bg-green-700 dark:text-green-100">
+                                            Selesai
+                                        </span>
+                                    @elseif($transaction->status == 'pending')
+                                        <span class="px-2 py-1 font-semibold leading-tight text-yellow-700 bg-yellow-100 rounded-full dark:bg-yellow-700 dark:text-yellow-100">
+                                            Pending
+                                        </span>
+                                    @elseif($transaction->status == 'rejected')
+                                        <span class="px-2 py-1 font-semibold leading-tight text-red-700 bg-red-100 rounded-full dark:bg-red-700 dark:text-red-100">
+                                            Ditolak
+                                        </span>
+                                    @else
+                                        <span class="px-2 py-1 font-semibold leading-tight text-gray-700 bg-gray-100 rounded-full dark:bg-gray-700 dark:text-gray-100">
+                                            {{ ucfirst($transaction->status) }}
+                                        </span>
+                                    @endif
                                 </td>
                                 <td class="px-4 py-3 text-sm">{{ \Carbon\Carbon::parse($transaction->date)->format('d M Y') }}</td>
                                 <td class="px-4 py-3">
                                     @if($transaction->status == 'pending')
-                                        <a href="{{ route('staff.stock.incoming.confirm', $transaction) }}" class="px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-md">Proses</a>
+                                        <a href="{{ route('staff.stock.incoming.confirm', $transaction) }}" 
+                                           class="px-4 py-2 text-sm font-medium leading-5 text-white transition-colors duration-150 bg-blue-600 border border-transparent rounded-lg active:bg-blue-600 hover:bg-blue-700 focus:outline-none focus:shadow-outline-blue">
+                                            Proses
+                                        </a>
+                                    @else
+                                        -
                                     @endif
                                 </td>
+                                {{-- PERUBAHAN SELESAI --}}
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="px-4 py-10 text-center">Data tidak ditemukan. Coba ubah kata kunci pencarian atau filter Anda.</td>
+                                <td colspan="6" class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
+                                    Data tidak ditemukan. Coba ubah kata kunci pencarian atau filter Anda.
+                                </td>
                             </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
             <div class="grid px-4 py-3 text-xs font-semibold tracking-wide text-gray-500 uppercase border-t dark:border-gray-700 bg-gray-50 sm:grid-cols-9 dark:text-gray-400 dark:bg-gray-800">
-                <span class="flex items-center col-span-3">Menampilkan {{ $transactions->firstItem() ?? 0 }}-{{ $transactions->lastItem() ?? 0 }} dari {{ $transactions->total() }}</span>
+                <span class="flex items-center col-span-3">
+                    Menampilkan {{ $transactions->firstItem() ?? 0 }}-{{ $transactions->lastItem() ?? 0 }} dari {{ $transactions->total() }}
+                </span>
                 <span class="col-span-2"></span>
                 <span class="flex col-span-4 mt-2 sm:mt-auto sm:justify-end">
-                    {{ $transactions->links() }}
+                    {{ $transactions->appends(request()->query())->links() }}
                 </span>
             </div>
         </div>
