@@ -269,34 +269,61 @@ class ManagerDashboardController extends Controller
 
     public function supplierList(Request $request)
     {
-        $query = Supplier::withCount('products');
+        // [BARU] Logika untuk pengurutan
+        $sortableColumns = ['name', 'products_count', 'created_at'];
+        $sortBy = in_array($request->query('sort_by'), $sortableColumns) ? $request->query('sort_by') : 'name';
+        $sortDirection = in_array($request->query('direction'), ['asc', 'desc']) ? $request->query('direction') : 'asc';
 
+        $query = Supplier::withCount('products'); // withCount sudah menambahkan 'products_count'
+
+        // Filter pencarian
         if ($request->filled('search')) {
-            $search = $request->get('search');
+            $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                ->orWhere('email', 'like', "%{$search}%")
-                ->orWhere('contact_person', 'like', "%{$search}%");
+                ->orWhere('contact_person', 'like', "%{$search}%")
+                ->orWhere('phone', 'like', "%{$search}%")
+                ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
-        $suppliers = $query->latest()->paginate(15);
+        // [BARU] Terapkan pengurutan
+        $query->orderBy($sortBy, $sortDirection);
+
+        $suppliers = $query->paginate(15)->withQueryString();
+
+        // Statistik untuk kartu
+        $totalSuppliers = Supplier::count();
+        $totalProductsFromSuppliers = Product::whereNotNull('supplier_id')->count();
         
-        // [BARU] Hitung statistik untuk kartu
         $stats = [
-            'total_suppliers' => Supplier::count(),
-            'total_products_from_suppliers' => Product::whereHas('supplier')->count(),
+            'total_suppliers' => $totalSuppliers,
+            'total_products_from_suppliers' => $totalProductsFromSuppliers,
+            // Hindari pembagian dengan nol
+            'avg_products_per_supplier' => $totalSuppliers > 0 ? round($totalProductsFromSuppliers / $totalSuppliers, 1) : 0,
         ];
 
-        // [MODIFIKASI] Kirim data $stats ke view
-        return view('pages.manajergudang.suppliers.index', compact('suppliers', 'stats'));
+        // Kirim variabel sort ke view
+        return view('pages.manajergudang.suppliers.index', compact('suppliers', 'stats', 'sortBy', 'sortDirection'));
     }
 
     public function supplierShow(Supplier $supplier)
     {
-        // Load relasi produk untuk menampilkan statistik
-        $supplier->load('products');
-        return view('pages.manajergudang.suppliers.show', compact('supplier'));
+        // Load relasi produk
+        $supplier->load('products.category');
+
+        // [BARU] Hitung statistik spesifik untuk supplier ini
+        $supplierStats = [
+            'total_products' => $supplier->products->count(),
+            'total_units_supplied' => \App\Models\StockTransaction::where('type', 'Masuk')
+                                    ->where('supplier_id', $supplier->id)
+                                    ->sum('quantity'),
+            'last_transaction_date' => \App\Models\StockTransaction::where('supplier_id', $supplier->id)
+                                    ->latest('date')
+                                    ->first()?->date,
+        ];
+
+        return view('pages.manajergudang.suppliers.show', compact('supplier', 'supplierStats'));
     }
 
     // app/Http/Controllers/ManagerDashboardController.php
