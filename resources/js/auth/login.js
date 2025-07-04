@@ -6,6 +6,8 @@ function togglePassword() {
     const eyeOpen = document.getElementById('eye-open');
     const eyeClosed = document.getElementById('eye-closed');
 
+    if (!passwordInput || !eyeOpen || !eyeClosed) return;
+
     if (passwordInput.type === 'password') {
         passwordInput.type = 'text';
         eyeOpen.classList.add('hidden');
@@ -17,14 +19,15 @@ function togglePassword() {
     }
 }
 
-// Make toggle function global
+// Make toggle function global so it can be called from HTML onclick
 window.togglePassword = togglePassword;
 
 document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('loginForm');
+    if (!loginForm) return; // Stop if form not found
+
     const loginButton = document.getElementById('loginButton');
     const loginText = document.getElementById('loginText');
-    const loginIcon = document.getElementById('loginIcon');
     const loadingIcon = document.getElementById('loadingIcon');
     const alertContainer = document.getElementById('alertContainer');
 
@@ -38,15 +41,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const remember = document.getElementById('remember').checked;
 
         try {
-            // CSRF protection untuk Laravel Sanctum (jika digunakan)
+            // CSRF protection for Laravel Sanctum
             try {
                 await axios.get('/sanctum/csrf-cookie');
             } catch (csrfError) {
-                // Jika sanctum tidak ada, lanjutkan saja
-                console.log('CSRF cookie not available, continuing...');
+                console.log('CSRF cookie endpoint not available, proceeding without it.');
             }
 
-            // Kirim data login
+            // Send login request
             const response = await axios.post('/login', {
                 email,
                 password,
@@ -54,39 +56,31 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             const data = response.data;
-
-            // Tampilkan alert sukses
-            showAlert('success', data.message || 'Login berhasil!');
-
-            // Simpan token jika ada (untuk API authentication)
-            if (data.data && data.data.access_token) {
-                localStorage.setItem('auth_token', data.data.access_token);
-                localStorage.setItem('user_data', JSON.stringify(data.data.user));
-
-                // Set default authorization header untuk request selanjutnya
-                axios.defaults.headers.common['Authorization'] = `Bearer ${data.data.access_token}`;
+            
+            // Periksa jika respons dari server tidak memiliki properti 'success'
+            // Ini untuk menangani redirect dari middleware Laravel yang mungkin terjadi.
+            if (typeof data !== 'object' || !data.hasOwnProperty('success')) {
+                 // Jika server melakukan redirect (bukan mengembalikan JSON),
+                 // muat ulang halaman untuk mengikuti redirect tersebut.
+                 window.location.reload();
+                 return;
             }
 
-            // Redirect berdasarkan role
+            showAlert('success', data.message || 'Login berhasil! Mengarahkan...');
+
+            // Redirect based on the response
             setTimeout(() => {
-                if (data.data && data.data.redirect_to) {
-                    window.location.href = data.data.redirect_to;
+                // Utamakan redirect_url dari backend
+                if (data.redirect_url) {
+                    window.location.href = data.redirect_url;
                 } else {
-                    // Fallback redirect berdasarkan role user
-                    const user = data.data?.user;
-                    if (user?.role === 'Admin') {
-                        window.location.href = '/admin/dashboard';
-                    } else if (user?.role === 'Manajer Gudang') {
-                        window.location.href = '/manajergudang/dashboard';
-                    } else if (user?.role === 'Staff Gudang') {
-                        window.location.href = '/staff/dashboard';
-                    } else {
-                        window.location.href = '/';
-                    }
+                    // Fallback jika tidak ada URL redirect spesifik
+                    window.location.href = '/dashboard';
                 }
-            }, 1500);
+            }, 1000);
 
         } catch (err) {
+            setLoading(false); // Pastikan loading state dihentikan saat error
             console.error('Login error:', err);
 
             if (err.response) {
@@ -94,59 +88,53 @@ document.addEventListener('DOMContentLoaded', () => {
                 const errorData = err.response.data;
 
                 if (status === 422) {
-                    // Validation errors
                     const errors = errorData.errors || {};
                     if (errors.email) showFieldError('email', errors.email[0]);
                     if (errors.password) showFieldError('password', errors.password[0]);
-                } else if (status === 401) {
-                    // Unauthorized - wrong credentials
-                    showAlert('error', errorData.message || 'Email atau password salah.');
+                    // Tampilkan pesan error umum jika ada
+                    if(errorData.message) showAlert('error', errorData.message);
+                    
                 } else {
-                    // Other server errors
                     showAlert('error', errorData.message || 'Terjadi kesalahan pada server.');
                 }
             } else if (err.request) {
-                // Network error
                 showAlert('error', 'Koneksi ke server gagal. Periksa koneksi internet Anda.');
             } else {
-                // Unknown error
                 showAlert('error', 'Terjadi kesalahan tidak terduga.');
             }
-        } finally {
-            setLoading(false);
-        }
+        } 
+        // Jangan panggil setLoading(false) di sini lagi karena sudah ada di blok catch
     });
 
     function setLoading(isLoading) {
+        if (!loginButton || !loadingIcon || !loginText) return;
+
         loginButton.disabled = isLoading;
-        loginText.textContent = isLoading ? 'Memproses...' : 'Masuk';
 
         if (isLoading) {
-            loginIcon.classList.add('hidden');
+            loginText.textContent = 'Memproses...';
             loadingIcon.classList.remove('hidden');
         } else {
-            loginIcon.classList.remove('hidden');
+            loginText.textContent = 'Masuk';
             loadingIcon.classList.add('hidden');
         }
     }
 
     function showAlert(type, message) {
+        if (!alertContainer) return;
+
         const alertClass = type === 'success'
-            ? 'bg-green-50 border-green-200 text-green-800'
-            : 'bg-red-50 border-red-200 text-red-800';
+            ? 'bg-green-100 border-green-400 text-green-700 dark:bg-green-900/50 dark:border-green-700 dark:text-green-300'
+            : 'bg-red-100 border-red-400 text-red-700 dark:bg-red-900/50 dark:border-red-700 dark:text-red-300';
 
         const iconSvg = type === 'success'
-            ? `<svg class="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-               </svg>`
-            : `<svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
-               </svg>`;
+            ? `<i class="fa-solid fa-check-circle"></i>`
+            : `<i class="fa-solid fa-exclamation-triangle"></i>`;
 
         alertContainer.innerHTML = `
-            <div class="border rounded-lg p-4 ${alertClass}">
-                <div class="flex">
-                    <div class="flex-shrink-0">
+            <div class="border rounded-xl p-4 ${alertClass}">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 text-xl">
                         ${iconSvg}
                     </div>
                     <div class="ml-3">
@@ -156,60 +144,36 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>`;
 
         alertContainer.classList.remove('hidden');
-
-        // Auto hide success alerts after 3 seconds
-        if (type === 'success') {
-            setTimeout(() => {
-                alertContainer.classList.add('hidden');
-            }, 3000);
-        }
     }
 
     function clearErrors() {
-        // Clear field errors
+        if (alertContainer) {
+            alertContainer.classList.add('hidden');
+            alertContainer.innerHTML = '';
+        }
         ['email', 'password'].forEach(fieldId => {
             const errorElement = document.getElementById(`${fieldId}-error`);
+            const inputElement = document.getElementById(fieldId);
             if (errorElement) {
                 errorElement.classList.add('hidden');
                 errorElement.textContent = '';
             }
+            if (inputElement) {
+                inputElement.classList.remove('border-red-500', 'focus:ring-red-500');
+            }
         });
-
-        // Clear alert container
-        alertContainer.classList.add('hidden');
-        alertContainer.innerHTML = '';
     }
 
     function showFieldError(fieldName, message) {
         const errorElement = document.getElementById(`${fieldName}-error`);
+        const inputElement = document.getElementById(fieldName);
+        
         if (errorElement) {
             errorElement.textContent = message;
             errorElement.classList.remove('hidden');
         }
-
-        // Add red border to input field
-        const inputElement = document.getElementById(fieldName);
         if (inputElement) {
-            inputElement.classList.add('border-red-500');
-            inputElement.classList.remove('border-gray-300');
+            inputElement.classList.add('border-red-500', 'focus:ring-red-500');
         }
     }
-
-    // Remove error styling when user starts typing
-    ['email', 'password'].forEach(fieldId => {
-        const inputElement = document.getElementById(fieldId);
-        if (inputElement) {
-            inputElement.addEventListener('input', () => {
-                // Remove error styling
-                inputElement.classList.remove('border-red-500');
-                inputElement.classList.add('border-gray-300');
-
-                // Hide error message
-                const errorElement = document.getElementById(`${fieldId}-error`);
-                if (errorElement) {
-                    errorElement.classList.add('hidden');
-                }
-            });
-        }
-    });
 });
