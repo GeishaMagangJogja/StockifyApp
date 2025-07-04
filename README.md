@@ -1,237 +1,170 @@
-# 📦 Stockify - Aplikasi Stok Gudang
+# 📦 Stockify - Manajemen Stok Gudang Modern
 
-> **Aplikasi untuk mengelola barang di gudang dengan mudah!** 🚀
-
-Stockify adalah aplikasi web untuk mengelola stok barang di gudang. Cocok untuk toko, warehouse, atau bisnis yang perlu mencatat barang masuk dan keluar.
-
-## ✨ Kenapa Pilih Stockify?
-
--   🔐 **Aman** - Ada sistem login untuk melindungi data
--   📱 **Mudah Digunakan** - Tampilan yang simpel dan mudah dipahami
--   💾 **Data Tersimpan** - Semua data barang tersimpan dengan aman
--   📊 **Laporan Lengkap** - Bisa lihat stok barang kapan saja
--   🔍 **Pencarian Cepat** - Mudah cari barang yang diinginkan
+**Stockify** adalah aplikasi web berbasis Laravel untuk mengelola stok barang masuk dan keluar di gudang, toko, atau bisnis retail. Dirancang agar mudah digunakan, aman, dan mendukung pelaporan stok serta transaksi secara real-time.
 
 ---
 
-## 🛠️ Yang Digunakan
+## 🚀 Fitur Utama
 
-| Teknologi        | Fungsi                  |
-| ---------------- | ----------------------- |
-| **Laravel**      | Sistem utama aplikasi   |
-| **MySQL**        | Tempat menyimpan data   |
-| **Tailwind CSS** | Membuat tampilan cantik |
+- **Manajemen Produk & Kategori**  
+  Tambah, edit, hapus produk dan kategori dengan mudah.
+
+- **Transaksi Barang Masuk & Keluar**  
+  Catat setiap pergerakan stok, baik barang masuk maupun keluar.
+
+- **Laporan & Statistik**  
+  Lihat laporan stok, riwayat transaksi, dan statistik harian/mingguan.
+
+- **Multi User Role**  
+  Mendukung Admin, Manajer Gudang, dan Staff Gudang dengan hak akses berbeda.
+
+- **Supplier Management**  
+  Kelola data supplier barang.
+
+- **Export/Import Excel**  
+  Ekspor laporan atau template produk ke Excel, serta import data produk.
+
+- **Keamanan & Audit**  
+  Sistem login, otorisasi, dan pencatatan aktivitas pengguna.
 
 ---
 
-## 🚀 Cara Install
+## 🛠️ Teknologi yang Digunakan
 
-### Yang Perlu Dipersiapkan
+| Teknologi        | Keterangan                |
+|------------------|--------------------------|
+| Laravel 10+      | Framework utama backend  |
+| MySQL/MariaDB    | Database relasional      |
+| Tailwind CSS     | Styling modern & responsif |
+| Blade            | Templating Laravel       |
+| FontAwesome      | Ikon UI                  |
+| Maatwebsite/Excel| Export/Import Excel      |
+| Carbon           | Manipulasi tanggal/waktu |
 
-Pastikan komputer sudah ada:
+---
 
--   **PHP** versi 8.1 atau lebih baru ✅
--   **Composer** (untuk install Laravel) ✅
--   **MySQL** (tempat menyimpan data) ✅
--   **Git** (untuk download kode) ✅
+## 📁 Struktur Folder Penting
 
-### Langkah Install
+```
+StockifyApp/
+├── app/
+│   ├── Http/Controllers/   # Controller (Admin, Manager, Staff, Report, Auth, dsb)
+│   ├── Models/             # Model Eloquent (Product, Category, StockTransaction, User, Supplier)
+│   └── Exports/Imports/    # Export/Import Excel
+├── resources/
+│   ├── views/              # Blade templates (admin, manajergudang, staff, auth, dsb)
+│   └── js/css/             # Asset frontend
+├── routes/
+│   └── web.php             # Routing aplikasi
+├── database/
+│   ├── migrations/         # Struktur tabel
+│   └── seeders/            # Data awal (dummy)
+└── public/                 # Asset publik
+```
 
-**1. Download aplikasi**
+---
+
+## ⚡ Instalasi Cepat
+
+### 1. Clone & Masuk ke Folder
 
 ```bash
 git clone https://github.com/GeishaMagangJogja/StockifyApp.git
 cd StockifyApp
 ```
 
-**2. Install komponen Laravel**
+### 2. Install Dependency
 
 ```bash
 composer install
+npm install && npm run build
 ```
 
-**3. Setup konfigurasi**
+### 3. Konfigurasi Environment
 
 ```bash
 cp .env.example .env
 php artisan key:generate
 ```
-
-**4. Setting database**
-Buka file `.env` dan isi:
-
+Edit `.env` dan sesuaikan database:
 ```
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
 DB_DATABASE=stockify
 DB_USERNAME=root
 DB_PASSWORD=
 ```
 
-**5. Buat tabel database**
+### 4. Migrasi & Seed Database
 
 ```bash
 php artisan migrate:fresh --seed
 ```
 
-**6. Jalankan aplikasi**
+### 5. Jalankan Aplikasi
 
 ```bash
 php artisan serve
 ```
-
-Buka browser ke: http://127.0.0.1:8000 🎉
-
----
-
-## 📁 Struktur Folder
-
-```
-stockify-backend/
-├── app/
-│   ├── Http/Controllers/     # Pengendali halaman
-│   ├── Models/              # Model data
-│   └── Services/           # Logika bisnis
-├── database/
-│   ├── migrations/         # Struktur tabel
-│   └── seeders/           # Data awal
-├── routes/
-│   └── api.php            # Alamat halaman
-└── resources/
-    └── css/              # File tampilan
-```
+Buka [http://127.0.0.1:8000](http://127.0.0.1:8000)
 
 ---
 
-## 🔗 Alamat Halaman (API)
+## 👤 Role & Login Default
 
-### Login & Daftar
-
-| Cara | Alamat               | Fungsi            |
-| ---- | -------------------- | ----------------- |
-| POST | `/api/auth/register` | Daftar akun baru  |
-| POST | `/api/auth/login`    | Masuk ke aplikasi |
-
-### Kelola Barang
-
-| Cara   | Alamat               | Fungsi              |
-| ------ | -------------------- | ------------------- |
-| GET    | `/api/products`      | Lihat semua barang  |
-| POST   | `/api/products`      | Tambah barang baru  |
-| GET    | `/api/products/{id}` | Lihat detail barang |
-| PUT    | `/api/products/{id}` | Edit barang         |
-| DELETE | `/api/products/{id}` | Hapus barang        |
-
-### Kelola Kategori
-
-| Cara   | Alamat                 | Fungsi          |
-| ------ | ---------------------- | --------------- |
-| GET    | `/api/categories`      | Lihat kategori  |
-| POST   | `/api/categories`      | Tambah kategori |
-| PUT    | `/api/categories/{id}` | Edit kategori   |
-| DELETE | `/api/categories/{id}` | Hapus kategori  |
-
-### Profile Pengguna
-
-| Cara | Alamat         | Fungsi        |
-| ---- | -------------- | ------------- |
-| GET  | `/api/profile` | Lihat profile |
+| Role           | Email                | Password  |
+|----------------|----------------------|-----------|
+| Admin          | admin@stockify.com   | password  |
+| Manajer Gudang | manager@stockify.com | password  |
+| Staff Gudang   | staff@stockify.com   | password  |
 
 ---
 
-## 🔐 Sistem Keamanan
+## 📊 Fitur Laporan
 
-Stockify menggunakan sistem token untuk keamanan.
-
-### Cara menggunakan:
-
-1. **Login** dulu untuk dapat token
-2. **Masukkan token** di setiap request
-
-### Contoh:
-
-```bash
-# Login dulu
-curl -X POST http://localhost:8000/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"user@example.com","password":"password"}'
-
-# Akses data barang (pakai token)
-curl -X GET http://localhost:8000/api/products \
-  -H "Authorization: Bearer token-yang-didapat"
-```
+- **Laporan Stok**: Lihat stok aman, menipis, dan habis.
+- **Laporan Transaksi**: Filter berdasarkan tanggal, jenis (masuk/keluar), produk, dsb.
+- **Export Excel**: Semua laporan bisa diekspor ke Excel.
+- **Statistik**: Grafik barang masuk/keluar mingguan.
 
 ---
 
-## 🧪 Testing
+## 🔒 Keamanan
 
-### Jalankan test:
-
-```bash
-# Test semua
-php artisan test
-
-# Test file tertentu
-php artisan test tests/Feature/ProductControllerTest.php
-```
+- Sistem login & otorisasi berbasis role.
+- Validasi input & proteksi CSRF.
+- Audit log aktivitas penting.
 
 ---
 
-## 🚢 Pasang di Server
+## 🧑‍💻 Kontribusi
 
-### Persiapan production:
-
-```bash
-# Optimasi untuk server
-composer install --optimize-autoloader --no-dev
-php artisan config:cache
-php artisan route:cache
-```
-
-### Setting server:
-
-```env
-APP_ENV=production
-APP_DEBUG=false
-APP_URL=https://website-kamu.com
-
-# Database server
-DB_HOST=alamat-database-server
-DB_DATABASE=stockify_production
-```
+1. Fork repo ini
+2. Buat branch baru: `git checkout -b fitur-baru`
+3. Commit perubahan: `git commit -m "fitur baru"`
+4. Push ke repo kamu
+5. Buat Pull Request
 
 ---
 
-## 🤝 Kontribusi
+## 📝 Tips Pengembangan
 
-Mau bantu develop? Silakan!
+- Gunakan `php artisan optimize:clear` jika ada error cache.
+- Untuk generate model + migration + controller:
+  ```bash
+  php artisan make:model NamaModel -mcr
+  ```
+- Jalankan test:
+  ```bash
+  php artisan test
+  ```
 
-### Caranya:
+---
 
-1. **Fork** repository ini
-2. **Buat branch** baru: `git checkout -b fitur-baru`
-3. **Commit** perubahan: `git commit -m "tambah fitur baru"`
-4. **Push**: `git push origin fitur-baru`
-5. **Buat Pull Request**
+## 📄 Lisensi
+
+MIT License © 2025 Stokyfiy
 
 ---
 
-## 📝 Tips Development
-
-### Command berguna:
-
-```bash
-# Buat model baru dengan controller
-php artisan make:model NamaBarang -mcr
-
-# Hapus semua cache
-php artisan optimize:clear
-
-# Debug mode
-php artisan tinker
-```
-
----
+**Stockify** - Solusi stok gudang modern, mudah, dan powerful!
 
 
