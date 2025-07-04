@@ -123,10 +123,16 @@ Route::middleware(['auth', 'role:Admin'])->prefix('admin')->name('admin.')->grou
     Route::prefix('reports')->name('reports.')->group(function () {
         Route::get('/', [ReportController::class, 'index'])->name('index');
         Route::get('/stock', [ReportController::class, 'stock'])->name('stock');
+
+        // ===================================================================
+        // == PERBAIKAN: MENAMBAHKAN ROUTE LAPORAN BARANG KELUAR UNTUK ADMIN ==
+        // ===================================================================
+        Route::get('/outgoing', [ReportController::class, 'outgoingReport'])->name('outgoing.index');
+        // ===================================================================
+
         Route::get('/transactions', [ReportController::class, 'transactions'])->name('transactions');
         Route::get('/users', [ReportController::class, 'users'])->name('users');
         Route::get('/system', [ReportController::class, 'system'])->name('system');
-        // ##### PERBAIKAN: Tambahkan route export untuk admin di sini jika diperlukan #####
         Route::get('/export', [ReportController::class, 'export'])->name('export');
     });
 
@@ -167,7 +173,6 @@ Route::middleware(['auth', 'role:Manajer Gudang'])->prefix('manajergudang')->nam
     Route::get('/reports/stock', [ManagerDashboardController::class, 'reportStock'])->name('reports.stock');
     Route::get('/reports/transactions', [ManagerDashboardController::class, 'reportTransactions'])->name('reports.transactions');
     Route::get('/reports/inventory', [ManagerDashboardController::class, 'reportInventory'])->name('reports.inventory');
-    // ##### PERBAIKAN: Mengganti method dari POST ke GET dan membuat namanya unik #####
     Route::get('/reports/export', [ManagerDashboardController::class, 'reportExport'])->name('reports.export');
     Route::get('/staff', [ManagerDashboardController::class, 'staffList'])->name('staff.index');
     Route::get('/staff/{user}', [ManagerDashboardController::class, 'staffShow'])->name('staff.show');
@@ -200,10 +205,6 @@ Route::middleware(['auth', 'role:Staff Gudang'])->prefix('staff')->name('staff.'
     Route::prefix('reports')->name('reports.')->group(function () {
         Route::get('/incoming', [StaffReportController::class, 'showIncomingReport'])->name('incoming');
         Route::get('/outgoing', [StaffReportController::class, 'showOutgoingReport'])->name('outgoing');
-        
-        // ##### PERBAIKAN: INI ADALAH ROUTE YANG BENAR UNTUK STAFF #####
-        // Diletakkan di dalam prefix 'reports' agar URL-nya menjadi /staff/reports/export
-        // Namanya menjadi 'staff.reports.export' secara otomatis karena grup.
         Route::get('/export', [ReportController::class, 'export'])->name('export');
     });
     Route::get('/products', [StaffDashboardController::class, 'productList'])->name('products.index');
@@ -217,8 +218,6 @@ Route::middleware(['auth', 'role:Staff Gudang'])->prefix('staff')->name('staff.'
     Route::put('/transactions/{transaction}/process', [StaffDashboardController::class, 'transactionProcess'])->name('transactions.process');
     Route::get('/profile', [StaffDashboardController::class, 'profile'])->name('profile');
     Route::put('/profile', [StaffDashboardController::class, 'updateProfile'])->name('profile.update');
-    // ##### PERBAIKAN: Baris route export yang lama di bawah ini sudah dipindahkan ke dalam grup reports di atas. #####
-    // Route::get('/reports/export', [ReportController::class, 'export'])->name('reports.export');
 });
 
 // Tambahkan route ini di dalam group admin routes

@@ -9,6 +9,7 @@
     <nav class="flex mb-4" aria-label="Breadcrumb">
         <ol class="inline-flex items-center space-x-2 text-sm">
             <li class="inline-flex items-center">
+                {{-- Sesuaikan dengan rute dashboard Anda, contoh untuk admin --}}
                 <a href="{{ route('admin.dashboard') }}"
                    class="inline-flex items-center text-gray-500 transition-colors hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400">
                     <i class="w-4 h-4 mr-2 fas fa-home"></i>
@@ -85,21 +86,19 @@
             </div>
         </div>
     </div>
-
     <div class="p-6 transition-shadow duration-300 bg-white border border-gray-200 rounded-xl dark:bg-gray-800 dark:border-gray-700 hover:shadow-lg">
         <div class="flex items-center">
             <div class="flex items-center justify-center w-12 h-12 bg-green-100 rounded-lg dark:bg-green-800">
                 <i class="text-green-600 fas fa-check-circle dark:text-green-300"></i>
             </div>
             <div class="ml-4">
-                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Dikeluarkan</p>
+                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Selesai</p>
                 <p class="text-2xl font-bold text-gray-900 dark:text-white">
-                    {{ $transactions->where('status', 'completed')->count() + $transactions->where('status', 'dikeluarkan')->count() }}
+                    {{ $transactions->whereIn('status', ['completed', 'dikeluarkan'])->count() }}
                 </p>
             </div>
         </div>
     </div>
-
     <div class="p-6 transition-shadow duration-300 bg-white border border-gray-200 rounded-xl dark:bg-gray-800 dark:border-gray-700 hover:shadow-lg">
         <div class="flex items-center">
             <div class="flex items-center justify-center w-12 h-12 bg-orange-100 rounded-lg dark:bg-orange-800">
@@ -113,7 +112,6 @@
             </div>
         </div>
     </div>
-
     <div class="p-6 transition-shadow duration-300 bg-white border border-gray-200 rounded-xl dark:bg-gray-800 dark:border-gray-700 hover:shadow-lg">
         <div class="flex items-center">
             <div class="flex items-center justify-center w-12 h-12 bg-purple-100 rounded-lg dark:bg-purple-800">
@@ -122,57 +120,66 @@
             <div class="ml-4">
                 <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Hari Ini</p>
                 <p class="text-2xl font-bold text-gray-900 dark:text-white">
-                    {{ $transactions->where('date', today()->format('Y-m-d'))->count() }}
+                    {{ $transactions->where('date', today()->toDateString())->count() }}
                 </p>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Filter Section -->
+<!-- ======================================= -->
+<!-- BAGIAN FILTER YANG SUDAH DIPERBAIKI -->
+<!-- ======================================= -->
 <div class="p-6 mb-6 bg-white border border-gray-200 rounded-xl dark:bg-gray-800 dark:border-gray-700">
     <div class="flex items-center justify-between mb-4">
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Filter & Pencarian</h3>
-        <button onclick="resetFilters()" class="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400">
+        <a href="{{ route('admin.reports.outgoing.index') }}" class="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400">
             <i class="mr-1 fas fa-undo"></i>Reset Filter
-        </button>
+        </a>
     </div>
+    
+    <form action="{{ route('admin.reports.outgoing.index') }}" method="GET">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-5">
+            <div class="md:col-span-2">
+                <label for="search-input" class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Pencarian</label>
+                <div class="relative">
+                    <i class="absolute text-gray-400 transform -translate-y-1/2 left-3 top-1/2 fas fa-search"></i>
+                    <input type="text" name="search" id="search-input" placeholder="Cari produk, tujuan..." value="{{ request('search') }}"
+                           class="w-full py-2 pl-10 pr-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                </div>
+            </div>
 
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
-        <div>
-            <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Pencarian</label>
-            <div class="relative">
-                <i class="absolute text-gray-400 transform -translate-y-1/2 left-3 top-1/2 fas fa-search"></i>
-                <input type="text" id="search-input" placeholder="Cari produk, tujuan..."
-                       class="w-full py-2 pl-10 pr-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+            <div>
+                <label for="status-filter" class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
+                <select name="status" id="status-filter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    <option value="">Semua Status</option>
+                    <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Selesai (Completed)</option>
+                    <option value="dikeluarkan" {{ request('status') == 'dikeluarkan' ? 'selected' : '' }}>Selesai (Dikeluarkan)</option>
+                    <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
+                    <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>Ditolak</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="date-start" class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Tanggal Mulai</label>
+                <input type="date" name="date_start" id="date-start" value="{{ request('date_start') }}"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+            </div>
+
+            <div>
+                <label for="date-end" class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Tanggal Akhir</label>
+                <input type="date" name="date_end" id="date-end" value="{{ request('date_end') }}"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
             </div>
         </div>
-
-        <div>
-            <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
-            <select id="status-filter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                <option value="">Semua Status</option>
-                <option value="completed">Completed</option>
-                <option value="dikeluarkan">Dikeluarkan</option>
-                <option value="pending">Pending</option>
-                <option value="rejected">Rejected</option>
-                <option value="ditolak">Ditolak</option>
-            </select>
+        <div class="mt-4 text-right">
+            <button type="submit" class="px-5 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 dark:bg-blue-500 dark:hover:bg-blue-600">
+                <i class="mr-2 fas fa-filter"></i> Terapkan
+            </button>
         </div>
-
-        <div>
-            <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Tanggal Mulai</label>
-            <input type="date" id="date-start"
-                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-        </div>
-
-        <div>
-            <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Tanggal Akhir</label>
-            <input type="date" id="date-end"
-                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-        </div>
-    </div>
+    </form>
 </div>
+
 
 <!-- Enhanced Table -->
 <div class="overflow-hidden bg-white border border-gray-200 shadow-sm rounded-xl dark:bg-gray-800 dark:border-gray-700">
@@ -193,84 +200,105 @@
     <div class="overflow-x-auto" id="table-container">
         <table class="w-full" id="data-table">
             <thead>
-    <tr class="text-xs font-semibold tracking-wide text-left text-gray-500 uppercase border-b dark:border-gray-700 bg-gray-50 dark:text-gray-400 dark:bg-gray-800">
-        <th class="px-6 py-4 transition-colors cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700" onclick="sortTable(0)">
-            <div class="flex items-center space-x-1">
-                <span>Tanggal</span>
-                <i class="text-gray-400 fas fa-sort"></i>
-            </div>
-        </th>
-        <th class="px-6 py-4 transition-colors cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700" onclick="sortTable(1)">
-            <div class="flex items-center space-x-1">
-                <span>Produk</span>
-                <i class="text-gray-400 fas fa-sort"></i>
-            </div>
-        </th>
-        <th class="px-6 py-4 transition-colors cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700" onclick="sortTable(2)">
-            <div class="flex items-center space-x-1">
-                <span>Jumlah</span>
-                <i class="text-gray-400 fas fa-sort"></i>
-            </div>
-        </th>
-        <th class="px-6 py-4 transition-colors cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700" onclick="sortTable(3)">
-            <div class="flex items-center space-x-1">
-                <span>Catatan/Tujuan</span>
-                <i class="text-gray-400 fas fa-sort"></i>
-            </div>
-        </th>
-        <th class="px-6 py-4">Status</th>
-        <th class="px-6 py-4">Diproses Oleh</th>
-        <!-- <th class="px-6 py-4">Aksi</th>  // HAPUS BARIS INI -->
-    </tr>
-</thead>
-<tbody class="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-800">
-    @forelse($transactions as $index => $transaction)
-        <tr class="transition-colors duration-150 hover:bg-gray-50 dark:hover:bg-gray-700 {{ $index % 2 == 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-25 dark:bg-gray-825' }}">
-            <!-- ...kolom lain tetap... -->
-            <!-- HAPUS KOLOM INI:
-            <td class="px-6 py-4">
-                <div class="flex items-center space-x-2">
-                    <button ...>...</button>
-                    <button ...>...</button>
-                    <button ...>...</button>
-                </div>
-            </td>
-            -->
-        </tr>
-    @empty
-        <tr>
-            <td colspan="6" class="px-6 py-16 text-center">
-                <div class="flex flex-col items-center">
-                    <div class="flex items-center justify-center w-16 h-16 mb-4 bg-gray-100 rounded-full dark:bg-gray-700">
-                        <i class="text-2xl text-gray-400 fas fa-truck-loading"></i>
-                    </div>
-                    <h3 class="mb-2 text-lg font-medium text-gray-900 dark:text-white">Tidak ada data</h3>
-                    <p class="text-gray-500 dark:text-gray-400">Belum ada data barang keluar yang dapat ditampilkan dalam laporan ini.</p>
-                </div>
-            </td>
-        </tr>
-    @endforelse
-</tbody>
+                <tr class="text-xs font-semibold tracking-wide text-left text-gray-500 uppercase border-b dark:border-gray-700 bg-gray-50 dark:text-gray-400 dark:bg-gray-800">
+                    <th class="px-6 py-3">Tanggal</th>
+                    <th class="px-6 py-3">Produk</th>
+                    <th class="px-6 py-3 text-center">Jumlah</th>
+                    <th class="px-6 py-3">Catatan/Tujuan</th>
+                    <th class="px-6 py-3">Status</th>
+                    <th class="px-6 py-3">Diproses Oleh</th>
+                </tr>
+            </thead>
+            <!-- ======================================= -->
+            <!-- BAGIAN TBODY YANG SUDAH DIPERBAIKI -->
+            <!-- ======================================= -->
+            <tbody class="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-800">
+                @forelse($transactions as $transaction)
+                    <tr class="transition-colors duration-150 hover:bg-gray-50 dark:hover:bg-gray-700">
+                        {{-- Kolom Tanggal --}}
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900 dark:text-gray-200">{{ \Carbon\Carbon::parse($transaction->date)->isoFormat('D MMMM YYYY') }}</div>
+                            <div class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($transaction->created_at)->format('H:i') }} WIB</div>
+                        </td>
+
+                        {{-- Kolom Produk --}}
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 w-10 h-10">
+                                    <div class="flex items-center justify-center w-10 h-10 font-bold text-white bg-red-500 rounded-full">
+                                        {{ substr(optional($transaction->product)->name ?? 'P', 0, 1) }}
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">
+                                        {{ optional($transaction->product)->name ?? 'Produk Dihapus' }}
+                                    </div>
+                                    <div class="text-sm text-gray-500 dark:text-gray-400">
+                                        SKU: {{ optional($transaction->product)->sku ?? 'N/A' }}
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+
+                        {{-- Kolom Jumlah --}}
+                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                            <span class="px-3 py-1 text-sm font-semibold leading-5 text-red-800 bg-red-100 rounded-full dark:bg-red-900 dark:text-red-200">
+                                {{ $transaction->quantity }}
+                            </span>
+                        </td>
+                        
+                        {{-- Kolom Catatan/Tujuan --}}
+                        <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-300">
+                            {{ $transaction->notes ?? '-' }}
+                        </td>
+                        
+                        {{-- Kolom Status --}}
+                        <td class="px-6 py-4 whitespace-nowrap">
+                             @if($transaction->status == 'completed' || $transaction->status == 'dikeluarkan')
+                                <span class="inline-flex px-2 text-xs font-semibold leading-5 text-green-800 bg-green-100 rounded-full dark:bg-green-700 dark:text-green-100">
+                                    <i class="mr-1 fas fa-check-circle"></i> Selesai
+                                </span>
+                            @elseif($transaction->status == 'pending')
+                                <span class="inline-flex px-2 text-xs font-semibold leading-5 text-yellow-800 bg-yellow-100 rounded-full dark:bg-yellow-700 dark:text-yellow-100">
+                                    <i class="mr-1 fas fa-clock"></i> Pending
+                                </span>
+                            @elseif($transaction->status == 'rejected' || $transaction->status == 'ditolak')
+                                <span class="inline-flex px-2 text-xs font-semibold leading-5 text-red-800 bg-red-100 rounded-full dark:bg-red-700 dark:text-red-100">
+                                    <i class="mr-1 fas fa-times-circle"></i> Ditolak
+                                </span>
+                            @else
+                                <span class="inline-flex px-2 text-xs font-semibold leading-5 text-gray-800 bg-gray-100 rounded-full dark:bg-gray-600 dark:text-gray-100">
+                                    {{ ucfirst($transaction->status) }}
+                                </span>
+                            @endif
+                        </td>
+
+                        {{-- Kolom Diproses Oleh --}}
+                        <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap">
+                            {{ optional($transaction->user)->name ?? 'Sistem' }}
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="6" class="px-6 py-16 text-center">
+                            <div class="flex flex-col items-center">
+                                <div class="flex items-center justify-center w-16 h-16 mb-4 bg-gray-100 rounded-full dark:bg-gray-700">
+                                    <i class="text-2xl text-gray-400 fas fa-inbox"></i>
+                                </div>
+                                <h3 class="mb-2 text-lg font-medium text-gray-900 dark:text-white">Tidak ada data ditemukan</h3>
+                                <p class="text-gray-500 dark:text-gray-400">Coba ubah filter pencarian Anda atau belum ada transaksi barang keluar.</p>
+                            </div>
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
         </table>
     </div>
 
     <!-- Enhanced Pagination -->
     @if($transactions->hasPages())
         <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center text-sm text-gray-700 dark:text-gray-300">
-                    <span>Menampilkan</span>
-                    <span class="mx-1 font-medium">{{ $transactions->firstItem() }}</span>
-                    <span>sampai</span>
-                    <span class="mx-1 font-medium">{{ $transactions->lastItem() }}</span>
-                    <span>dari</span>
-                    <span class="mx-1 font-medium">{{ $transactions->total() }}</span>
-                    <span>hasil</span>
-                </div>
-                <div class="flex items-center space-x-2">
-                    {{ $transactions->links() }}
-                </div>
-            </div>
+            {{ $transactions->appends(request()->query())->links() }}
         </div>
     @endif
 </div>
@@ -278,85 +306,35 @@
 
 @push('scripts')
 <script>
-// Export menu toggle
+// Menu toggle
 function toggleExportMenu() {
-    console.log('toggleExportMenu() dipanggil.'); // Debugging log
-    const menu = document.getElementById('export-menu');
-    if (menu) {
-        menu.classList.toggle('hidden');
-    } else {
-        console.error('Elemen dengan ID "export-menu" tidak ditemukan!');
-    }
+    document.getElementById('export-menu').classList.toggle('hidden');
 }
 
-// Close export menu when clicking outside
+// Close menu when clicking outside
 document.addEventListener('click', function(event) {
     const menu = document.getElementById('export-menu');
-    // Pastikan menu dan tombolnya ada sebelum melanjutkan
-    if (!menu) return;
-
-    const button = event.target.closest('button[onclick="toggleExportMenu()"]');
-
-    if (!menu.classList.contains('hidden') && !button) {
-        console.log('Menutup menu karena klik di luar.'); // Debugging log
+    const button = document.getElementById('export-button');
+    if (menu && button && !menu.classList.contains('hidden') && !button.contains(event.target) && !menu.contains(event.target)) {
         menu.classList.add('hidden');
     }
 });
 
-// ===================================================================
-// == FUNGSI EXPORT YANG LEBIH BAIK UNTUK DEBUGGING ==
-// ===================================================================
 function exportToExcel() {
-    try {
-        console.log('Fungsi exportToExcel() dimulai...');
+    // Bangun URL dengan parameter filter saat ini
+    const currentUrl = new URL(window.location.href);
+    const params = new URLSearchParams(currentUrl.search);
+    
+    // Set parameter spesifik untuk export
+    params.set('report_type', 'outgoing_goods');
+    params.set('format', 'excel');
 
-        // Ambil nilai dari semua filter
-        const search = document.getElementById('search-input').value;
-        const status = document.getElementById('status-filter').value;
-        const dateStart = document.getElementById('date-start').value;
-        const dateEnd = document.getElementById('date-end').value;
-
-        console.log('Filter yang didapat:', { search, status, dateStart, dateEnd });
-
-        // Buat URLSearchParams untuk menampung parameter filter
-        const params = new URLSearchParams();
-        params.append('report_type', 'incoming_goods');
-        params.append('format', 'excel');
-
-        // Tambahkan filter jika ada nilainya
-        if (search) params.append('search', search);
-        if (status) params.append('status', status);
-        if (dateStart) params.append('date_start', dateStart);
-        if (dateEnd) params.append('date_end', dateEnd);
-
-        // Bangun URL lengkap dengan route dan parameter
-        const url = `{{ route('staff.reports.export') }}?${params.toString()}`;
-
-        console.log('URL yang akan diakses:', url); // <-- INI SANGAT PENTING
-
-        // Arahkan browser ke URL untuk memulai download
-        window.location.href = url;
-
-        console.log('Proses download seharusnya sudah dimulai.');
-
-        // Tutup menu dropdown setelah diklik
-        toggleExportMenu();
-
-    } catch (error) {
-        console.error('Terjadi kesalahan di dalam fungsi exportToExcel:', error);
-    }
-}
-
-
-// Fungsi lainnya (biarkan seperti semula)
-function exportToPDF() {
-    console.log('Exporting to PDF...');
-    toggleExportMenu();
-}
-
-function printReport() {
-    window.print();
-    toggleExportMenu();
+    // Gunakan rute export dari admin dengan parameter yang ada
+    const exportUrl = `{{ route('admin.reports.export') }}?${params.toString()}`;
+    
+    // Arahkan ke URL untuk download
+    window.location.href = exportUrl;
+    toggleExportMenu(); // Tutup menu
 }
 
 function refreshData() {
@@ -367,7 +345,10 @@ function refreshData() {
     }, 1000);
 }
 
-// ... Sisa fungsi Anda (resetFilters, dll) biarkan seperti semula ...
+// Fungsi untuk reset filter (mengarahkan ke URL tanpa parameter)
+function resetFilters() {
+    window.location.href = "{{ route('admin.reports.outgoing.index') }}";
+}
 
 </script>
 @endpush
