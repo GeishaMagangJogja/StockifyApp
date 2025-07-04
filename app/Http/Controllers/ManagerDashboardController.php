@@ -73,8 +73,14 @@ class ManagerDashboardController extends Controller
 
     public function productList(Request $request)
     {
-        $query = Product::with('category');
+        // [BARU] Logika untuk pengurutan
+        $sortableColumns = ['name', 'category_name', 'current_stock', 'purchase_price', 'selling_price'];
+        $sortBy = in_array($request->query('sort_by'), $sortableColumns) ? $request->query('sort_by') : 'name';
+        $sortDirection = in_array($request->query('direction'), ['asc', 'desc']) ? $request->query('direction') : 'asc';
 
+        $query = Product::with(['category']);
+
+        // Filter
         if ($request->filled('search')) {
             $search = $request->get('search');
             $query->where(function($q) use ($search) {
@@ -83,9 +89,18 @@ class ManagerDashboardController extends Controller
             });
         }
 
-        $products = $query->latest()->paginate(15);
+        // [BARU] Terapkan pengurutan
+        if ($sortBy === 'category_name') {
+            $query->select('products.*')
+                ->leftJoin('categories', 'products.category_id', '=', 'categories.id')
+                ->orderBy('categories.name', $sortDirection);
+        } else {
+            $query->orderBy($sortBy, $sortDirection);
+        }
         
-        // [BARU] Hitung statistik untuk kartu
+        $products = $query->paginate(15)->withQueryString();
+        
+        // Statistik untuk kartu
         $stockStats = [
             'total' => Product::count(),
             'safe' => Product::whereColumn('current_stock', '>', 'min_stock')->count(),
@@ -93,12 +108,16 @@ class ManagerDashboardController extends Controller
             'out_of_stock' => Product::where('current_stock', '<=', 0)->count(),
         ];
 
-        return view('pages.manajergudang.products.index', compact('products', 'stockStats'));
+        return view('pages.manajergudang.products.index', compact('products', 'stockStats', 'sortBy', 'sortDirection'));
     }
 
     public function productShow(Product $product)
     {
-        $product->load('category', 'supplier', 'stockTransactions');
+        // Load relasi yang dibutuhkan
+        $product->load(['category', 'supplier', 'stockTransactions' => function ($query) {
+            $query->with('user')->latest('date')->take(10); // Ambil 10 transaksi terakhir
+        }]);
+
         return view('pages.manajergudang.products.show', compact('product'));
     }
 
@@ -326,17 +345,18 @@ class ManagerDashboardController extends Controller
         return view('pages.manajergudang.suppliers.show', compact('supplier', 'supplierStats'));
     }
 
-    // app/Http/Controllers/ManagerDashboardController.php
+        // app/Http/Controllers/ManagerDashboardController.php
 
     public function reportStock(Request $request)
     {
-        // [BARU] Logika untuk pengurutan
-        $sortableColumns = ['name', 'category_name', 'current_stock', 'stock_status'];
-        $sortBy = in_array($request->query('sort_by'), $sortableColumns) ? $request->query('sort_by') : 'name';
-        $sortDirection = in_array($request->query('direction'), ['asc', 'desc']) ? $request->query('direction') : 'asc';
+        // Logika untuk pengurutan
+        $sortableColumns = ['name', 'category_name', 'current_stock', 'stock_status', 'stock_value'];
+        $sortBy = in_array($request->query('sort_by'), $sortableColumns) ? $request->query('sort_by') : 'stock_value';
+        $sortDirection = in_array($request->query('direction'), ['asc', 'desc']) ? $request->query('direction') : 'desc';
 
         $query = Product::with('category')
-            ->select('products.*') // Pastikan semua kolom produk terpilih
+            ->select('products.*')
+            ->addSelect(DB::raw('(current_stock * purchase_price) as stock_value'))
             ->addSelect(DB::raw('
                 CASE
                     WHEN current_stock <= 0 THEN "out_of_stock"
@@ -355,19 +375,13 @@ class ManagerDashboardController extends Controller
         }
         if ($request->filled('stock_status')) {
             $status = $request->stock_status;
-            // Gunakan HAVING untuk memfilter berdasarkan kolom alias hasil kalkulasi
-            if ($status == 'safe') {
-                $query->having('stock_status_calculated', '=', 'safe');
-            } elseif ($status == 'low') {
-                $query->having('stock_status_calculated', '=', 'low_stock');
-            } elseif ($status == 'out') {
-                $query->having('stock_status_calculated', '=', 'out_of_stock');
-            }
+            if ($status == 'safe') $query->having('stock_status_calculated', '=', 'safe');
+            elseif ($status == 'low') $query->having('stock_status_calculated', '=', 'low_stock');
+            elseif ($status == 'out') $query->having('stock_status_calculated', '=', 'out_of_stock');
         }
 
-        // [BARU] Terapkan pengurutan
+        // Terapkan pengurutan
         if ($sortBy === 'category_name') {
-            // Urutkan berdasarkan nama kategori melalui join
             $query->leftJoin('categories', 'products.category_id', '=', 'categories.id')
                 ->orderBy('categories.name', $sortDirection);
         } elseif ($sortBy === 'stock_status') {
@@ -376,20 +390,23 @@ class ManagerDashboardController extends Controller
             $query->orderBy($sortBy, $sortDirection);
         }
         
-        // Paginate
-        $products = $query->paginate(15)->withQueryString(); // withQueryString() agar parameter filter dan sort tetap ada di link paginasi
-
-        // Data lainnya
-        $categories = Category::orderBy('name')->get();
+        $products = $query->paginate(15)->withQueryString();
         
+        // [PERBAIKAN] Definisikan variabel $categories di sini
+        $categories = \App\Models\Category::orderBy('name')->get();
+
+        // Hitung statistik valuasi total
+        $totalStockValue = Product::sum(DB::raw('current_stock * purchase_price'));
+
+        // Statistik untuk kartu
         $stockSummary = [
+            'total' => Product::count(),
             'safe' => Product::whereColumn('current_stock', '>', 'min_stock')->count(),
             'low' => Product::where('current_stock', '>', 0)->whereColumn('current_stock', '<=', 'min_stock')->count(),
             'out' => Product::where('current_stock', '<=', 0)->count(),
-            'total' => Product::count() // Ambil total keseluruhan untuk kartu
+            'total_value' => $totalStockValue,
         ];
 
-        // Kirim variabel sort ke view
         return view('pages.manajergudang.reports.stock', compact('products', 'categories', 'stockSummary', 'sortBy', 'sortDirection'));
     }
 
