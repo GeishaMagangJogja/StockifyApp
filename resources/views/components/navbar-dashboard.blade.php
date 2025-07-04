@@ -8,10 +8,10 @@
                     <i class="text-xl fas fa-bars"></i>
                 </button>
                 @endauth
-                {{-- Logo --}}
-                <a href="{{ url('/') }}" class="flex items-center ml-2 md:mr-24">
+              <a href="{{ url('/') }}" class="flex items-center ml-2 md:mr-24">
                      <span class="text-xl font-bold text-gray-800 dark:text-white">{{ config('app.name') }}</span>
-                </a>
+                </a>  {{-- Logo --}}
+
             </div>
 
             <div class="flex items-center space-x-2 sm:space-x-3">
