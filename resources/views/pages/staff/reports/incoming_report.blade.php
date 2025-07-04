@@ -25,7 +25,8 @@
     </nav>
 
     <!-- Page Header with Stats -->
-    <div class="relative p-6 overflow-hidden bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-2xl">
+    {{-- PERUBAHAN: Mengubah p-6 menjadi p-8 untuk menambah tinggi header --}}
+    <div class="relative p-9 overflow-hidden bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-2xl">
         <div class="absolute inset-0 bg-black opacity-10"></div>
         <div class="relative">
             <div class="flex items-center justify-between">
