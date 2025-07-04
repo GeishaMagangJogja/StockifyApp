@@ -86,14 +86,14 @@ class ReportController extends Controller
      */
     public function transactions(Request $request)
     {
-        $query = StockTransaction::with(['product', 'user'])->orderBy('created_at', 'desc');
+        $query = StockTransaction::with(['product', 'user'])->orderBy('date', 'desc');
 
         if ($request->filled('type')) {
             $query->where('type', $request->type);
         }
 
         if ($request->filled('from') && $request->filled('to')) {
-            $query->whereBetween('created_at', [$request->from, $request->to]);
+            $query->whereBetween('date', [$request->from, $request->to]);
         }
 
         $transactions = $query->paginate(20);
@@ -129,7 +129,7 @@ class ReportController extends Controller
     // ===================================================================
     // == METHOD EXPORT YANG SUDAH DIPERBARUI ==
     // ===================================================================
-    
+
     /**
      * Handle export requests for reports.
      *
