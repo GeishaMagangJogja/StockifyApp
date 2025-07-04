@@ -5,10 +5,10 @@
 @section('content')
     {{-- Header dengan Breadcrumb --}}
     <div class="mb-6">
-        <nav class="flex px-5 py-3 text-gray-700 border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700" aria-label="Breadcrumb">
+        <nav class="flex px-5 py-3 text-gray-700 border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700 transition-all duration-300 hover:shadow-md" aria-label="Breadcrumb">
             <ol class="inline-flex items-center space-x-1 md:space-x-3">
                 <li class="inline-flex items-center">
-                    <a href="{{ route('staff.dashboard') }}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white">
+                    <a href="{{ route('staff.dashboard') }}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white transition-colors duration-300">
                         <i class="fas fa-tachometer-alt w-4 h-4 mr-2.5"></i>
                         Dashboard
                     </a>
@@ -23,26 +23,33 @@
         </nav>
     </div>
 
-    {{-- Pesan Sukses --}}
+    {{-- Pesan Sukses dengan Animasi --}}
     @if (session('success'))
-        <div class="px-4 py-3 mb-4 text-sm font-medium text-white bg-green-500 rounded-lg" role="alert">
-            <p>{{ session('success') }}</p>
+        <div class="px-4 py-3 mb-4 text-sm font-medium text-white bg-green-500 rounded-lg shadow-lg transform transition-all duration-500 hover:scale-105 animate-pulse" role="alert">
+            <div class="flex items-center">
+                <i class="fas fa-check-circle mr-2"></i>
+                <p>{{ session('success') }}</p>
+            </div>
         </div>
     @endif
 
     {{-- Card Utama --}}
-    <div class="w-full p-6 bg-white rounded-lg shadow-md dark:bg-gray-800">
-        {{-- Header Card dengan Filter --}}
-        <div class="flex flex-col md:flex-row justify-between items-center mb-4">
-            <h2 class="text-xl font-semibold text-gray-700 dark:text-gray-200">
+    <div class="w-full p-4 bg-white rounded-lg shadow-md dark:bg-gray-800 border border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-lg">
+        {{-- Header Card --}}
+        <div class="flex flex-col md:flex-row justify-between items-center mb-4 p-3 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-700 dark:to-gray-600 rounded-lg">
+            <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200">
+                <i class="fas fa-box-open mr-2 text-blue-600"></i>
                 Riwayat & Daftar Barang Masuk
             </h2>
-            {{-- Tombol bisa ditambahkan di sini --}}
+            <div class="flex items-center space-x-2 mt-2 md:mt-0">
+                <span class="text-xs text-gray-500 dark:text-gray-400">Total: {{ $transactions->total() }} item</span>
+                <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            </div>
         </div>
 
         {{-- Form Pencarian dan Filter --}}
-        <form action="{{ route('staff.stock.incoming.list') }}" method="GET">
-            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-4">
+        <form action="{{ route('staff.stock.incoming.list') }}" method="GET" class="transition-all duration-300">
+            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-4">
                 {{-- Kolom Pencarian --}}
                 <div class="md:col-span-2 lg:col-span-2">
                     <label for="search" class="sr-only">Cari</label>
@@ -51,7 +58,7 @@
                             <i class="fas fa-search text-gray-400"></i>
                         </div>
                         <input type="text" name="search" id="search"
-                               class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                               class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 transition-all duration-300"
                                placeholder="Cari produk berdasarkan nama atau SKU..."
                                value="{{ $search ?? '' }}">
                     </div>
@@ -61,7 +68,7 @@
                 <div>
                     <label for="status" class="sr-only">Filter Status</label>
                     <select name="status" id="status"
-                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 transition-all duration-300">
                         <option value="semua" {{ ($selectedStatus ?? 'semua') == 'semua' ? 'selected' : '' }}>Semua Status</option>
                         <option value="pending" {{ ($selectedStatus ?? '') == 'pending' ? 'selected' : '' }}>Pending</option>
                         <option value="completed" {{ ($selectedStatus ?? '') == 'completed' ? 'selected' : '' }}>Selesai</option>
@@ -71,7 +78,7 @@
 
                 {{-- Tombol Aksi Filter --}}
                 <div>
-                    <button type="submit" class="w-full px-5 py-2.5 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                    <button type="submit" class="w-full px-4 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg transition-all duration-300">
                         <i class="fas fa-filter mr-2"></i>Terapkan Filter
                     </button>
                 </div>
@@ -79,88 +86,178 @@
         </form>
 
         {{-- Tabel Data --}}
-        <div class="w-full overflow-hidden rounded-lg">
-            <div class="w-full overflow-x-auto border-t dark:border-gray-700">
+        <div class="w-full overflow-hidden rounded-lg shadow">
+            <div class="w-full overflow-x-auto">
                 <table class="w-full whitespace-no-wrap">
                     <thead>
-                        <tr class="text-xs font-semibold tracking-wide text-left text-gray-500 uppercase border-b dark:border-gray-700 bg-gray-50 dark:text-gray-400 dark:bg-gray-800">
-                            <th class="px-4 py-3">Produk</th>
-                            <th class="px-4 py-3">Jumlah</th>
-                            <th class="px-4 py-3">Supplier</th>
-                            <th class="px-4 py-3">Status</th>
-                            <th class="px-4 py-3">Tanggal</th>
-                            <th class="px-4 py-3">Aksi</th>
+                        <tr class="text-xs font-semibold tracking-wide text-left text-gray-500 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                            <th class="px-4 py-3">
+                                <i class="fas fa-box mr-1"></i>
+                                Produk
+                            </th>
+                            <th class="px-4 py-3">
+                                <i class="fas fa-sort-numeric-up mr-1"></i>
+                                Jumlah
+                            </th>
+                            <th class="px-4 py-3">
+                                <i class="fas fa-truck mr-1"></i>
+                                Supplier
+                            </th>
+                            <th class="px-4 py-3">
+                                <i class="fas fa-flag mr-1"></i>
+                                Status
+                            </th>
+                            <th class="px-4 py-3">
+                                <i class="fas fa-calendar mr-1"></i>
+                                Tanggal
+                            </th>
+                            <th class="px-4 py-3">
+                                <i class="fas fa-cog mr-1"></i>
+                                Aksi
+                            </th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white divide-y dark:divide-gray-700 dark:bg-gray-800">
+                    <tbody class="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-800">
                         @forelse($transactions as $transaction)
-                            <tr class="text-gray-700 dark:text-gray-400">
-                                {{-- PERUBAHAN DIMULAI DARI SINI --}}
+                            <tr class="text-gray-700 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
+                                {{-- Kolom Produk --}}
                                 <td class="px-4 py-3">
                                     <div class="flex items-center text-sm">
+                                        <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold mr-3 text-xs">
+                                            {{ substr(optional($transaction->product)->name ?? 'P', 0, 1) }}
+                                        </div>
                                         <div>
-                                            <p class="font-semibold">{{ optional($transaction->product)->name ?? 'Produk Dihapus' }}</p>
+                                            <p class="font-semibold text-gray-900 dark:text-white">
+                                                {{ optional($transaction->product)->name ?? 'Produk Dihapus' }}
+                                            </p>
                                             <p class="text-xs text-gray-600 dark:text-gray-400">
                                                 SKU: {{ optional($transaction->product)->sku ?? 'N/A' }}
                                             </p>
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-4 py-3 text-sm">{{ $transaction->quantity }}</td>
+                                
+                                {{-- Kolom Jumlah --}}
+                                <td class="px-4 py-3">
+                                    <span class="px-2 py-1 text-sm font-semibold text-blue-700 bg-blue-100 rounded-full dark:bg-blue-900 dark:text-blue-300">
+                                        {{ $transaction->quantity }}
+                                    </span>
+                                </td>
+                                
+                                {{-- Kolom Supplier --}}
                                 <td class="px-4 py-3 text-sm">
-    {{ optional($transaction->supplier)->name ?? optional($transaction->product->supplier)->name ?? 'N/A' }}
-</td>
-                                <td class="px-4 py-3 text-xs">
+                                    {{ optional($transaction->supplier)->name ?? optional($transaction->product->supplier)->name ?? 'N/A' }}
+                                </td>
+                                
+                                {{-- Kolom Status --}}
+                                <td class="px-4 py-3">
                                     @if($transaction->status == 'completed')
-                                        <span class="px-2 py-1 font-semibold leading-tight text-green-700 bg-green-100 rounded-full dark:bg-green-700 dark:text-green-100">
+                                        <span class="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full dark:bg-green-900 dark:text-green-300">
+                                            <i class="fas fa-check-circle mr-1"></i>
                                             Selesai
                                         </span>
                                     @elseif($transaction->status == 'pending')
-                                        <span class="px-2 py-1 font-semibold leading-tight text-yellow-700 bg-yellow-100 rounded-full dark:bg-yellow-700 dark:text-yellow-100">
+                                        <span class="px-2 py-1 text-xs font-semibold text-yellow-800 bg-yellow-100 rounded-full dark:bg-yellow-900 dark:text-yellow-300">
+                                            <i class="fas fa-clock mr-1"></i>
                                             Pending
                                         </span>
                                     @elseif($transaction->status == 'rejected')
-                                        <span class="px-2 py-1 font-semibold leading-tight text-red-700 bg-red-100 rounded-full dark:bg-red-700 dark:text-red-100">
+                                        <span class="px-2 py-1 text-xs font-semibold text-red-800 bg-red-100 rounded-full dark:bg-red-900 dark:text-red-300">
+                                            <i class="fas fa-times-circle mr-1"></i>
                                             Ditolak
                                         </span>
                                     @else
-                                        <span class="px-2 py-1 font-semibold leading-tight text-gray-700 bg-gray-100 rounded-full dark:bg-gray-700 dark:text-gray-100">
+                                        <span class="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-100 rounded-full dark:bg-gray-900 dark:text-gray-300">
                                             {{ ucfirst($transaction->status) }}
                                         </span>
                                     @endif
                                 </td>
-                                <td class="px-4 py-3 text-sm">{{ \Carbon\Carbon::parse($transaction->date)->format('d M Y') }}</td>
+                                
+                                {{-- Kolom Tanggal --}}
+                                <td class="px-4 py-3 text-sm">
+                                    {{ \Carbon\Carbon::parse($transaction->date)->format('d M Y') }}
+                                </td>
+                                
+                                {{-- Kolom Aksi --}}
                                 <td class="px-4 py-3">
                                     @if($transaction->status == 'pending')
                                         <a href="{{ route('staff.stock.incoming.confirm', $transaction) }}" 
-                                           class="px-4 py-2 text-sm font-medium leading-5 text-white transition-colors duration-150 bg-blue-600 border border-transparent rounded-lg active:bg-blue-600 hover:bg-blue-700 focus:outline-none focus:shadow-outline-blue">
+                                           class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors duration-200">
+                                            <i class="fas fa-check mr-1"></i>
                                             Proses
                                         </a>
                                     @else
-                                        -
+                                        <span class="text-gray-400 text-xs">-</span>
                                     @endif
                                 </td>
-                                {{-- PERUBAHAN SELESAI --}}
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
-                                    Data tidak ditemukan. Coba ubah kata kunci pencarian atau filter Anda.
+                                <td colspan="6" class="px-4 py-8 text-center">
+                                    <div class="flex flex-col items-center justify-center">
+                                        <i class="fas fa-inbox text-4xl text-gray-300 dark:text-gray-600 mb-2"></i>
+                                        <p class="text-gray-500 dark:text-gray-400 font-medium">Data tidak ditemukan</p>
+                                        <p class="text-gray-400 dark:text-gray-500 text-sm">Coba ubah kata kunci pencarian atau filter</p>
+                                    </div>
                                 </td>
                             </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
-            <div class="grid px-4 py-3 text-xs font-semibold tracking-wide text-gray-500 uppercase border-t dark:border-gray-700 bg-gray-50 sm:grid-cols-9 dark:text-gray-400 dark:bg-gray-800">
-                <span class="flex items-center col-span-3">
-                    Menampilkan {{ $transactions->firstItem() ?? 0 }}-{{ $transactions->lastItem() ?? 0 }} dari {{ $transactions->total() }}
-                </span>
-                <span class="col-span-2"></span>
-                <span class="flex col-span-4 mt-2 sm:mt-auto sm:justify-end">
-                    {{ $transactions->appends(request()->query())->links() }}
-                </span>
+            
+            {{-- Pagination --}}
+            <div class="px-4 py-3 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
+                <div class="flex flex-col sm:flex-row justify-between items-center">
+                    <div class="flex items-center text-sm text-gray-600 dark:text-gray-400 mb-2 sm:mb-0">
+                        <span>Menampilkan {{ $transactions->firstItem() ?? 0 }}-{{ $transactions->lastItem() ?? 0 }} dari {{ $transactions->total() }} item</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        {{ $transactions->appends(request()->query())->links() }}
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+
+    <script>
+        // Auto-hide success message
+        const successAlert = document.querySelector('[role="alert"]');
+        if (successAlert) {
+            setTimeout(() => {
+                successAlert.style.opacity = '0';
+                successAlert.style.transform = 'translateY(-20px)';
+                setTimeout(() => {
+                    successAlert.remove();
+                }, 300);
+            }, 5000);
+        }
+
+        // Simple hover effect for table rows
+        document.querySelectorAll('tbody tr').forEach(row => {
+            row.addEventListener('mouseenter', function() {
+                this.style.backgroundColor = this.classList.contains('dark') ? '#374151' : '#f9fafb';
+            });
+        });
+    </script>mouseenter', function() {
+                this.style.transform = 'translateX(5px)';
+            });
+            
+            row.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateX(0)';
+            });
+        });
+
+        // Auto-hide success message
+        const successAlert = document.querySelector('[role="alert"]');
+        if (successAlert) {
+            setTimeout(() => {
+                successAlert.style.opacity = '0';
+                successAlert.style.transform = 'translateY(-20px)';
+                setTimeout(() => {
+                    successAlert.remove();
+                }, 300);
+            }, 5000);
+        }
+    </script>
 @endsection
