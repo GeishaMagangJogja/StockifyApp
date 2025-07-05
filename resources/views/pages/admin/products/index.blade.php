@@ -41,7 +41,7 @@
     </div>
 
     <!-- Enhanced Statistics Cards -->
-    <div class="grid grid-cols-1 gap-6 mb-8 md:grid-cols-4">
+    <div class="grid grid-cols-1 gap-6 mb-8 md:grid-cols-3"> <!-- Ubah dari 4 kolom menjadi 3 -->
         <!-- Total Products Card -->
         <div class="relative overflow-hidden transition-all duration-300 transform bg-white shadow-lg group rounded-2xl hover:shadow-xl hover:-translate-y-1 dark:bg-gray-800">
             <div class="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-blue-600/10"></div>
@@ -98,27 +98,6 @@
                     <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Stok Rendah</p>
                     <p class="text-3xl font-bold text-gray-900 dark:text-white">
                         {{ $stockStats['low_stock'] }}
-                    </p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Out of Stock Products Card -->
-        <div class="relative overflow-hidden transition-all duration-300 transform bg-white shadow-lg group rounded-2xl hover:shadow-xl hover:-translate-y-1 dark:bg-gray-800">
-            <div class="absolute inset-0 bg-gradient-to-br from-red-500/5 to-red-600/10"></div>
-            <div class="relative p-6">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="flex items-center justify-center w-12 h-12 shadow-lg bg-gradient-to-br from-red-500 to-red-600 rounded-xl">
-                        <i class="text-xl text-white fas fa-times-circle"></i>
-                    </div>
-                    <div class="px-3 py-1 text-xs font-medium text-red-600 bg-red-100 rounded-full dark:text-red-400 dark:bg-red-900/50">
-                        Habis
-                    </div>
-                </div>
-                <div class="space-y-1">
-                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Stok Habis</p>
-                    <p class="text-3xl font-bold text-gray-900 dark:text-white">
-                        {{ $stockStats['out_of_stock'] }}
                     </p>
                 </div>
             </div>
@@ -263,11 +242,6 @@
                                     </th>
                                     <th scope="col" class="px-6 py-4 text-left">
                                         <span class="text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-300">
-                                            <i class="mr-2 fas fa-boxes"></i>Stok
-                                        </span>
-                                    </th>
-                                    <th scope="col" class="px-6 py-4 text-left">
-                                        <span class="text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-300">
                                             <i class="mr-2 fas fa-info-circle"></i>Status
                                         </span>
                                     </th>
@@ -317,14 +291,6 @@
                                         </td>
                                         <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                             {{ $product->formatted_selling_price }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm font-semibold text-gray-900 dark:text-white">
-                                                {{ number_format($product->current_stock, 0) }} {{ $product->unit }}
-                                            </div>
-                                            <div class="text-xs text-gray-500 dark:text-gray-400">
-                                                Min: {{ number_format($product->min_stock, 0) }} {{ $product->unit }}
-                                            </div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             @php

@@ -17,7 +17,7 @@ class StaffTaskController extends Controller
     // == PUSAT PENGERJAAN TUGAS (WORKSPACE)
     // ==========================================================
 
-    public function index(): View
+     public function index(): View
     {
         $incomingTasks = StockTransaction::with('product', 'supplier')
             ->where('type', 'masuk')
@@ -34,192 +34,88 @@ class StaffTaskController extends Controller
         return view('pages.staff.tasks.index', compact('incomingTasks', 'outgoingTasks'));
     }
 
-    // ==========================================================
-    // == BAGIAN BARANG MASUK (INCOMING)
-    // ==========================================================
+    public function listIncoming()
+{
+    $transactions = StockTransaction::with(['product', 'supplier', 'user'])
+        ->where('type', StockTransaction::TYPE_MASUK)
+        ->latest()
+        ->paginate(15);
 
-    public function listIncoming(): View
-    {
-        $transactions = StockTransaction::with(['product', 'supplier', 'user', 'processedByUser'])
-            ->where('type', 'masuk')
-            ->latest()
-            ->paginate(15);
+    return view('pages.staff.tasks.list_incoming', compact('transactions'));
+}
 
-        return view('pages.staff.tasks.list_incoming', compact('transactions'));
-    }
+    // ... method listIncoming dan listOutgoing tetap sama
 
     public function showIncomingConfirmationForm(StockTransaction $transaction): View|RedirectResponse
     {
-        if ($transaction->type !== 'masuk') {
+        if (!$transaction->exists ||
+            !$transaction->isTypeMasuk() ||
+            !$transaction->isPending()) {
             return redirect()->route('staff.tasks.index')
-                ->with('error', 'Transaksi ini bukan jenis barang masuk.');
-        }
-
-        if ($transaction->status !== 'pending') {
-            return redirect()->route('staff.tasks.index')
-                ->with('error', 'Transaksi ini sudah diproses sebelumnya.');
-        }
-
-        if (!$transaction->product) {
-            return redirect()->route('staff.tasks.index')
-                ->with('error', 'Produk untuk transaksi ini tidak ditemukan.');
+                ->with('error', 'Transaksi tidak valid atau sudah diproses.');
         }
 
         return view('pages.staff.tasks.confirm_incoming', ['task' => $transaction]);
     }
+ public function processIncomingConfirmation(Request $request, StockTransaction $transaction): RedirectResponse
+{
+    $request->validate([
+        'quantity_received' => 'required|integer|min:1|max:'.$transaction->quantity,
+        'received_date' => 'required|date',
+        'additional_notes' => 'nullable|string|max:500',
+    ]);
 
-    public function approveIncomingTask(Request $request, StockTransaction $transaction): RedirectResponse
-    {
-        $validated = $request->validate([
-            'quantity_received' => 'required|integer|min:1|max:999999',
-            'received_date' => 'required|date|before_or_equal:today',
-            'additional_notes' => 'nullable|string|max:1000',
-        ], [
-            'quantity_received.required' => 'Jumlah barang diterima harus diisi',
-            'quantity_received.integer' => 'Jumlah barang harus berupa angka',
-            'quantity_received.min' => 'Jumlah barang minimal 1',
-            'quantity_received.max' => 'Jumlah barang terlalu besar',
-            'received_date.required' => 'Tanggal penerimaan harus diisi',
-            'received_date.date' => 'Format tanggal tidak valid',
-            'received_date.before_or_equal' => 'Tanggal penerimaan tidak boleh lebih dari hari ini',
-            'additional_notes.max' => 'Catatan terlalu panjang (maksimal 1000 karakter)',
-        ]);
-
-        if ($transaction->type !== 'masuk') {
-            return redirect()->route('staff.tasks.index')
-                ->with('error', 'Transaksi ini bukan jenis barang masuk.');
-        }
-
-        if ($transaction->status !== 'pending') {
-            return redirect()->route('staff.tasks.index')
-                ->with('error', 'Transaksi ini sudah diproses sebelumnya.');
-        }
-
-        $product = $transaction->product;
-        if (!$product) {
-            return redirect()->route('staff.tasks.index')
-                ->with('error', 'Produk untuk transaksi ini tidak ditemukan.');
-        }
-
-        DB::beginTransaction();
-        try {
-            Log::info('Processing incoming stock transaction', [
-                'transaction_id' => $transaction->id,
-                'product_id' => $product->id,
-                'current_stock' => $product->current_stock,
-                'quantity_received' => $validated['quantity_received'],
-                'processed_by' => Auth::id(),
-            ]);
-
-            $oldStock = $product->current_stock;
-
-            $product = Product::find($product->id);
-            if (!$product) {
-                throw new \Exception('Produk tidak ditemukan saat update stock');
-            }
-
-            $product->current_stock = $product->current_stock + $validated['quantity_received'];
-            $product->save();
-            $product->refresh();
-
-            $notes = $transaction->notes ?: '';
-            $notes .= "\n\nDISETUJUI OLEH STAFF";
-            $notes .= "\nStaff: " . Auth::user()->name;
-            $notes .= "\nTanggal: " . now()->format('d M Y H:i:s');
-            $notes .= "\nStock Sebelum: " . $oldStock;
-            $notes .= "\nJumlah Diterima: " . $validated['quantity_received'];
-            $notes .= "\nStock Sesudah: " . $product->current_stock;
-
-            if ($validated['additional_notes']) {
-                $notes .= "\nCatatan Staff: " . $validated['additional_notes'];
-            }
-
-            $transaction->update([
-                'status' => 'approved',
-                'quantity' => $validated['quantity_received'],
-                'date' => $validated['received_date'],
-                'processed_by_user_id' => Auth::id(),
-                'notes' => $notes,
-                'processed_at' => now(),
-            ]);
-
-            DB::commit();
-
-            Log::info('Stock transaction approved successfully', [
-                'transaction_id' => $transaction->id,
-                'product_id' => $product->id,
-                'old_stock' => $oldStock,
-                'new_stock' => $product->current_stock,
-                'quantity_added' => $validated['quantity_received'],
-            ]);
-
-            return redirect()->route('staff.tasks.index')
-                ->with('success',
-                    "Barang masuk berhasil disetujui! " .
-                    "Stock {$product->name} bertambah {$validated['quantity_received']} unit " .
-                    "(dari {$oldStock} menjadi {$product->current_stock})"
-                );
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            Log::error('Failed to process incoming stock transaction', [
-                'transaction_id' => $transaction->id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            return redirect()->back()
-                ->with('error', 'Gagal memproses transaksi: ' . $e->getMessage())
-                ->withInput();
-        }
+    // Validasi yang lebih robust
+    if (!$transaction->exists || !$transaction->isTypeMasuk() || !$transaction->isPending()) {
+        return redirect()->route('staff.tasks.index')
+               ->with('error', 'Transaksi tidak valid atau sudah diproses.');
     }
 
-    public function rejectIncomingTask(Request $request, StockTransaction $transaction): RedirectResponse
-    {
-        $validated = $request->validate([
-            'rejection_reason' => 'required|string|max:255',
-        ], [
-            'rejection_reason.required' => 'Alasan penolakan harus diisi',
-            'rejection_reason.max' => 'Alasan penolakan terlalu panjang',
+    DB::beginTransaction();
+    try {
+        $product = $transaction->product;
+        if (!$product) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Produk terkait transaksi ini tidak ditemukan.');
+        }
+
+        // Update stok
+        $product->increment('current_stock', $request->quantity_received);
+
+        // Update transaksi
+        $transaction->update([
+            'status' => StockTransaction::STATUS_COMPLETED,
+            'quantity' => $request->quantity_received,
+            'date' => $request->received_date,
+            'processed_by_user_id' => Auth::id(),
+            'notes' => ($transaction->notes ? $transaction->notes . "\n" : "") .
+                      "Konfirmasi Staff: " . ($request->additional_notes ?? 'Diterima sesuai pesanan.'),
         ]);
 
+        DB::commit();
+        return redirect()->route('staff.tasks.index')
+               ->with('success', 'Barang masuk berhasil dikonfirmasi dan stok telah diperbarui.');
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return redirect()->back()
+               ->with('error', 'Gagal memproses transaksi: ' . $e->getMessage());
+    }
+}
+
+    public function rejectIncomingTask(StockTransaction $transaction): RedirectResponse
+    {
         if ($transaction->status !== 'pending') {
-            return redirect()->route('staff.tasks.index')
-                ->with('error', 'Transaksi ini sudah diproses sebelumnya.');
+            return redirect()->route('staff.tasks.index')->with('error', 'Transaksi tidak valid atau sudah diproses.');
         }
 
-        DB::beginTransaction();
-        try {
-            $notes = $transaction->notes ?: '';
-            $notes .= "\n\nDITOLAK OLEH STAFF";
-            $notes .= "\nStaff: " . Auth::user()->name;
-            $notes .= "\nTanggal: " . now()->format('d M Y H:i:s');
-            $notes .= "\nAlasan: " . $validated['rejection_reason'];
+        $transaction->update([
+            'status' => 'rejected',
+            'processed_by_user_id' => Auth::id(),
+            'notes' => ($transaction->notes ? $transaction->notes . "\n" : "") .
+                     "Ditolak oleh Staff: " . Auth::user()->name . " pada " . now()->format('d M Y H:i'),
+        ]);
 
-            $transaction->update([
-                'status' => 'rejected',
-                'processed_by_user_id' => Auth::id(),
-                'notes' => $notes,
-                'processed_at' => now(),
-            ]);
-
-            DB::commit();
-
-            return redirect()->route('staff.tasks.index')
-                ->with('success', 'Transaksi barang masuk berhasil ditolak.');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            Log::error('Failed to reject incoming stock transaction', [
-                'transaction_id' => $transaction->id,
-                'error' => $e->getMessage(),
-            ]);
-
-            return redirect()->back()
-                ->with('error', 'Gagal menolak transaksi: ' . $e->getMessage());
-        }
+        return redirect()->route('staff.tasks.index')->with('success', 'Tugas barang masuk berhasil ditolak.');
     }
 
     // ==========================================================
@@ -415,13 +311,81 @@ class StaffTaskController extends Controller
     // == BACKWARD COMPATIBILITY METHODS
     // ==========================================================
 
-    public function processIncomingConfirmation(Request $request, StockTransaction $transaction): RedirectResponse
-    {
-        return $this->approveIncomingTask($request, $transaction);
+   public function processOutgoingDispatch(Request $request, StockTransaction $transaction): RedirectResponse
+{
+    $product = $transaction->product;
+
+    // Validasi dasar
+    if (!$product) {
+        return redirect()->route('staff.tasks.index')
+            ->with('error', 'Produk untuk transaksi ini tidak ditemukan.');
     }
 
-    public function processOutgoingDispatch(Request $request, StockTransaction $transaction): RedirectResponse
-    {
-        return $this->approveOutgoingTask($request, $transaction);
+    // Validasi request
+    $validated = $request->validate([
+        'quantity_dispatched' => [
+            'required',
+            'integer',
+            'min:1',
+            'max:' . $product->current_stock,
+            function ($attribute, $value, $fail) use ($product) {
+                if ($value > $product->current_stock) {
+                    $fail("Jumlah barang melebihi stock yang tersedia ({$product->current_stock})");
+                }
+            }
+        ],
+        'dispatch_notes' => 'nullable|string|max:1000',
+    ]);
+
+    // Validasi transaksi
+    if ($transaction->type !== 'keluar' || $transaction->status !== 'pending') {
+        return redirect()->route('staff.tasks.index')
+            ->with('error', 'Transaksi ini tidak bisa diproses lagi.');
     }
+
+    DB::beginTransaction();
+    try {
+        $oldStock = $product->current_stock;
+
+        // Update stok produk
+        $product->decrement('current_stock', $validated['quantity_dispatched']);
+
+        // Update transaksi
+        $notes = $transaction->notes ?: '';
+        $notes .= "\n\nDIPROSES OLEH STAFF";
+        $notes .= "\nStaff: " . Auth::user()->name;
+        $notes .= "\nTanggal: " . now()->format('d M Y H:i:s');
+        $notes .= "\nStock Sebelum: " . $oldStock;
+        $notes .= "\nJumlah Keluar: " . $validated['quantity_dispatched'];
+        $notes .= "\nStock Sesudah: " . $product->current_stock;
+
+        if (!empty($validated['dispatch_notes'])) {
+            $notes .= "\nCatatan Staff: " . $validated['dispatch_notes'];
+        }
+
+        $transaction->update([
+            'status' => 'completed',
+            'quantity' => $validated['quantity_dispatched'],
+            'processed_by_user_id' => Auth::id(),
+            'notes' => $notes,
+            'processed_at' => now(),
+        ]);
+
+        DB::commit();
+
+        return redirect()->route('staff.tasks.index')
+            ->with('success',
+                "Barang keluar berhasil diproses! " .
+                "Stock {$product->name} berkurang {$validated['quantity_dispatched']} unit " .
+                "(dari {$oldStock} menjadi {$product->current_stock})"
+            );
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+
+        return redirect()->back()
+            ->with('error', 'Gagal memproses transaksi: ' . $e->getMessage())
+            ->withInput();
+    }
+}
 }

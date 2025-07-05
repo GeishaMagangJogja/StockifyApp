@@ -105,7 +105,7 @@
                     Form Konfirmasi Penerimaan
                 </h3>
 
-                <form action="{{ route('staff.tasks.incoming.approve', $task) }}" method="POST" class="space-y-6">
+            <form action="{{ route('staff.tasks.incoming.complete', $task) }}" method="POST" class="space-y-6">
                     @csrf
 
                     <!-- Jumlah Aktual Diterima -->

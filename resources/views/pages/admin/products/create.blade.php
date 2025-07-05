@@ -9,7 +9,7 @@
         <nav class="flex mb-4" aria-label="Breadcrumb">
             <ol class="inline-flex items-center space-x-1 md:space-x-3">
                 <li class="inline-flex items-center">
-                    <a href="{{ route('admin.dashboard') }}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white transition-colors">
+                    <a href="{{ route('admin.dashboard') }}" class="inline-flex items-center text-sm font-medium text-gray-700 transition-colors hover:text-blue-600 dark:text-gray-400 dark:hover:text-white">
                         <svg class="w-3 h-3 mr-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
                             <path d="m19.707 9.293-2-2-7-7a1 1 0 0 0-1.414 0l-7 7-2 2a1 1 0 0 0 1.414 1.414L2 10.414V18a2 2 0 0 0 2 2h3a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1h3a2 2 0 0 0 2-2v-7.586l.293.293a1 1 0 0 0 1.414-1.414Z"/>
                         </svg>
@@ -21,7 +21,7 @@
                         <svg class="w-3 h-3 mx-1 text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
                             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/>
                         </svg>
-                        <a href="{{ route('admin.products.index') }}" class="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2 dark:text-gray-400 dark:hover:text-white transition-colors">Produk</a>
+                        <a href="{{ route('admin.products.index') }}" class="ml-1 text-sm font-medium text-gray-700 transition-colors hover:text-blue-600 md:ml-2 dark:text-gray-400 dark:hover:text-white">Produk</a>
                     </div>
                 </li>
                 <li aria-current="page">
@@ -44,7 +44,7 @@
             <div class="flex items-center space-x-3">
                 <!-- Quick Actions -->
                 <button type="button" class="inline-flex items-center px-3 py-2 text-xs font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:bg-gray-700" onclick="window.print()">
-                    <i class="fas fa-print mr-1"></i>
+                    <i class="mr-1 fas fa-print"></i>
                     Print
                 </button>
             </div>
@@ -53,12 +53,12 @@
 
     <!-- Alert Messages -->
     @if ($errors->any())
-        <div class="mb-6 p-4 text-sm text-red-800 bg-red-50 border border-red-200 rounded-lg dark:bg-red-900/20 dark:text-red-400 dark:border-red-800">
+        <div class="p-4 mb-6 text-sm text-red-800 border border-red-200 rounded-lg bg-red-50 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800">
             <div class="flex items-center mb-2">
-                <i class="fas fa-exclamation-triangle mr-2"></i>
+                <i class="mr-2 fas fa-exclamation-triangle"></i>
                 <span class="font-medium">Terdapat kesalahan dalam form:</span>
             </div>
-            <ul class="list-disc list-inside space-y-1">
+            <ul class="space-y-1 list-disc list-inside">
                 @foreach ($errors->all() as $error)
                     <li>{{ $error }}</li>
                 @endforeach
@@ -67,20 +67,20 @@
     @endif
 
     <!-- Main Form Card -->
-    <div class="overflow-hidden bg-white border border-gray-200 rounded-xl shadow-sm dark:bg-gray-800 dark:border-gray-700">
+    <div class="overflow-hidden bg-white border border-gray-200 shadow-sm rounded-xl dark:bg-gray-800 dark:border-gray-700">
         <!-- Form Header -->
         <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800/50">
             <div class="flex items-center justify-between">
                 <div>
-                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
-                        <i class="fas fa-plus-circle mr-2 text-blue-600 dark:text-blue-400"></i>
+                    <h2 class="flex items-center text-lg font-semibold text-gray-900 dark:text-white">
+                        <i class="mr-2 text-blue-600 fas fa-plus-circle dark:text-blue-400"></i>
                         Form Data Produk
                     </h2>
                     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Lengkapi semua field yang bertanda (*) wajib diisi</p>
                 </div>
                 <div class="flex items-center space-x-2">
                     <div class="flex items-center px-2 py-1 text-xs font-medium text-blue-700 bg-blue-100 rounded-full dark:bg-blue-900/20 dark:text-blue-400">
-                        <i class="fas fa-info-circle mr-1"></i>
+                        <i class="mr-1 fas fa-info-circle"></i>
                         Form Baru
                     </div>
                 </div>
@@ -93,11 +93,11 @@
 
             <div class="grid grid-cols-1 gap-8 lg:grid-cols-12">
                 <!-- Left Column - Basic Information -->
-                <div class="lg:col-span-8 space-y-6">
+                <div class="space-y-6 lg:col-span-8">
                     <!-- Section: Product Information -->
                     <div class="p-6 border border-gray-200 rounded-lg bg-gray-50/50 dark:bg-gray-800/50 dark:border-gray-700">
-                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center">
-                            <i class="fas fa-box mr-2 text-blue-600 dark:text-blue-400"></i>
+                        <h3 class="flex items-center mb-4 text-lg font-medium text-gray-900 dark:text-white">
+                            <i class="mr-2 text-blue-600 fas fa-box dark:text-blue-400"></i>
                             Informasi Produk
                         </h3>
                         <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -120,8 +120,8 @@
                                     <label for="sku" class="block text-sm font-medium text-gray-900 dark:text-white">
                                         Kode SKU <span class="text-red-500">*</span>
                                     </label>
-                                    <button type="button" id="generateSkuBtn" class="inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 bg-blue-50 rounded-md hover:bg-blue-100 dark:text-blue-400 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 transition-colors">
-                                        <i class="fas fa-magic mr-1"></i>
+                                    <button type="button" id="generateSkuBtn" class="inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 transition-colors rounded-md bg-blue-50 hover:bg-blue-100 dark:text-blue-400 dark:bg-blue-900/20 dark:hover:bg-blue-900/30">
+                                        <i class="mr-1 fas fa-magic"></i>
                                         Generate
                                     </button>
                                 </div>
@@ -196,8 +196,8 @@
 
                     <!-- Section: Price & Stock -->
                     <div class="p-6 border border-gray-200 rounded-lg bg-gray-50/50 dark:bg-gray-800/50 dark:border-gray-700">
-                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center">
-                            <i class="fas fa-dollar-sign mr-2 text-green-600 dark:text-green-400"></i>
+                        <h3 class="flex items-center mb-4 text-lg font-medium text-gray-900 dark:text-white">
+                            <i class="mr-2 text-green-600 fas fa-dollar-sign dark:text-green-400"></i>
                             Harga & Stok
                         </h3>
                         <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -208,7 +208,7 @@
                                 </label>
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                        <span class="text-gray-500 dark:text-gray-400 font-medium">Rp</span>
+                                        <span class="font-medium text-gray-500 dark:text-gray-400">Rp</span>
                                     </div>
                                     <input type="hidden" id="purchase_price_raw" name="purchase_price" value="{{ old('purchase_price', '0') }}">
                                     <input type="text" id="purchase_price_display" value="{{ old('purchase_price', '0') }}" required
@@ -227,7 +227,7 @@
                                 </label>
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                        <span class="text-gray-500 dark:text-gray-400 font-medium">Rp</span>
+                                        <span class="font-medium text-gray-500 dark:text-gray-400">Rp</span>
                                     </div>
                                     <input type="hidden" id="selling_price_raw" name="selling_price" value="{{ old('selling_price', '0') }}">
                                     <input type="text" id="selling_price_display" value="{{ old('selling_price', '0') }}" required
@@ -238,28 +238,15 @@
                                     <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                                 @enderror
                                 <!-- Profit Margin Display -->
-                                <div id="profitMargin" class="mt-2 text-sm text-gray-600 dark:text-gray-400 hidden">
+                                <div id="profitMargin" class="hidden mt-2 text-sm text-gray-600 dark:text-gray-400">
                                     <span class="font-medium">Margin: </span>
                                     <span id="marginAmount" class="text-green-600 dark:text-green-400"></span>
                                     <span class="text-gray-500">(<span id="marginPercent"></span>%)</span>
                                 </div>
                             </div>
 
-                            <!-- Current Stock -->
-                            <div>
-                                <label for="current_stock" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                                    Stok Awal <span class="text-red-500">*</span>
-                                </label>
-                                <input type="number" id="current_stock" name="current_stock" value="{{ old('current_stock', '0') }}" min="0" required
-                                       class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full p-3 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 transition-all @error('current_stock') border-red-500 dark:border-red-500 @enderror"
-                                       placeholder="0">
-                                @error('current_stock')
-                                    <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                                @enderror
-                            </div>
-
                             <!-- Minimum Stock -->
-                            <div>
+                            <div class="md:col-span-2">
                                 <label for="min_stock" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                                     Stok Minimum <span class="text-red-500">*</span>
                                 </label>
@@ -276,8 +263,8 @@
 
                     <!-- Description -->
                     <div class="p-6 border border-gray-200 rounded-lg bg-gray-50/50 dark:bg-gray-800/50 dark:border-gray-700">
-                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center">
-                            <i class="fas fa-align-left mr-2 text-purple-600 dark:text-purple-400"></i>
+                        <h3 class="flex items-center mb-4 text-lg font-medium text-gray-900 dark:text-white">
+                            <i class="mr-2 text-purple-600 fas fa-align-left dark:text-purple-400"></i>
                             Deskripsi Produk
                         </h3>
                         <div>
@@ -299,16 +286,16 @@
                 <div class="lg:col-span-4">
                     <div class="sticky top-6">
                         <div class="p-6 border border-gray-200 rounded-lg bg-gray-50/50 dark:bg-gray-800/50 dark:border-gray-700">
-                            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center">
-                                <i class="fas fa-image mr-2 text-indigo-600 dark:text-indigo-400"></i>
+                            <h3 class="flex items-center mb-4 text-lg font-medium text-gray-900 dark:text-white">
+                                <i class="mr-2 text-indigo-600 fas fa-image dark:text-indigo-400"></i>
                                 Gambar Produk
                             </h3>
 
                             <!-- Image Preview -->
                             <div class="mb-4">
                                 <div class="relative group">
-                                    <img id="imagePreview" class="object-cover w-full h-48 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 transition-all group-hover:border-blue-400" src="https://via.placeholder.com/300x200?text=No+Image" alt="Preview gambar">
-                                    <button type="button" id="removeImageBtn" class="absolute p-2 text-white bg-red-500 rounded-full -top-2 -right-2 hover:bg-red-600 transition-colors shadow-lg" style="display: none;">
+                                    <img id="imagePreview" class="object-cover w-full h-48 transition-all border-2 border-gray-300 border-dashed rounded-lg dark:border-gray-600 group-hover:border-blue-400" src="https://via.placeholder.com/300x200?text=No+Image" alt="Preview gambar">
+                                    <button type="button" id="removeImageBtn" class="absolute p-2 text-white transition-colors bg-red-500 rounded-full shadow-lg -top-2 -right-2 hover:bg-red-600" style="display: none;">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                                         </svg>
@@ -320,23 +307,23 @@
                             <div>
                                 <input type="file" id="image" name="image" accept="image/*" class="hidden">
                                 <label for="image" class="cursor-pointer">
-                                    <div class="flex flex-col items-center justify-center w-full px-4 py-6 text-sm font-medium text-gray-700 bg-white border-2 border-gray-300 border-dashed rounded-lg hover:bg-gray-50 hover:border-blue-400 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600 dark:hover:border-blue-500 transition-all">
-                                        <i class="fas fa-cloud-upload-alt text-2xl mb-2 text-blue-500"></i>
+                                    <div class="flex flex-col items-center justify-center w-full px-4 py-6 text-sm font-medium text-gray-700 transition-all bg-white border-2 border-gray-300 border-dashed rounded-lg hover:bg-gray-50 hover:border-blue-400 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600 dark:hover:border-blue-500">
+                                        <i class="mb-2 text-2xl text-blue-500 fas fa-cloud-upload-alt"></i>
                                         <span class="font-medium">Klik untuk pilih gambar</span>
-                                        <span class="text-xs text-gray-500 dark:text-gray-400 mt-1">atau drag & drop file di sini</span>
+                                        <span class="mt-1 text-xs text-gray-500 dark:text-gray-400">atau drag & drop file di sini</span>
                                     </div>
                                 </label>
-                                <div class="mt-3 text-xs text-gray-500 dark:text-gray-400 space-y-1">
+                                <div class="mt-3 space-y-1 text-xs text-gray-500 dark:text-gray-400">
                                     <div class="flex items-center">
-                                        <i class="fas fa-check-circle text-green-500 mr-1"></i>
+                                        <i class="mr-1 text-green-500 fas fa-check-circle"></i>
                                         Format: JPG, PNG, GIF
                                     </div>
                                     <div class="flex items-center">
-                                        <i class="fas fa-check-circle text-green-500 mr-1"></i>
+                                        <i class="mr-1 text-green-500 fas fa-check-circle"></i>
                                         Maksimal: 2MB
                                     </div>
                                     <div class="flex items-center">
-                                        <i class="fas fa-info-circle text-blue-500 mr-1"></i>
+                                        <i class="mr-1 text-blue-500 fas fa-info-circle"></i>
                                         Rekomendasi: 800x600px
                                     </div>
                                 </div>
@@ -347,12 +334,12 @@
                         </div>
 
                         <!-- Quick Tips -->
-                        <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg dark:bg-blue-900/20 dark:border-blue-800">
-                            <h4 class="text-sm font-medium text-blue-900 dark:text-blue-300 mb-2 flex items-center">
-                                <i class="fas fa-lightbulb mr-1"></i>
+                        <div class="p-4 mt-6 border border-blue-200 rounded-lg bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800">
+                            <h4 class="flex items-center mb-2 text-sm font-medium text-blue-900 dark:text-blue-300">
+                                <i class="mr-1 fas fa-lightbulb"></i>
                                 Tips Pengisian Form
                             </h4>
-                            <ul class="text-xs text-blue-800 dark:text-blue-400 space-y-1">
+                            <ul class="space-y-1 text-xs text-blue-800 dark:text-blue-400">
                                 <li>• Gunakan nama produk yang jelas dan deskriptif</li>
                                 <li>• Pastikan harga jual lebih tinggi dari harga beli</li>
                                 <li>• Set stok minimum untuk mendapat notifikasi</li>
@@ -364,20 +351,20 @@
             </div>
 
             <!-- Action Buttons -->
-            <div class="flex items-center justify-between mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+            <div class="flex items-center justify-between pt-6 mt-8 border-t border-gray-200 dark:border-gray-700">
                 <div class="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
                     <i class="fas fa-info-circle"></i>
                     <span>Semua field bertanda (*) wajib diisi</span>
                 </div>
                 <div class="flex items-center space-x-3">
-                                        <a href="{{ route('admin.products.index') }}"
+                    <a href="{{ route('admin.products.index') }}"
                        class="inline-flex items-center px-6 py-2.5 text-sm font-medium text-gray-900 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 transition-colors">
-                        <i class="fas fa-times mr-2"></i>
+                        <i class="mr-2 fas fa-times"></i>
                         Batal
                     </a>
                     <button type="submit"
                             class="inline-flex items-center px-6 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-blue-600 dark:hover:bg-blue-700 transition-colors">
-                        <i class="fas fa-save mr-2"></i>
+                        <i class="mr-2 fas fa-save"></i>
                         Simpan Produk
                     </button>
                 </div>

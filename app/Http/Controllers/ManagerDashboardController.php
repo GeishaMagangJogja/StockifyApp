@@ -97,9 +97,9 @@ class ManagerDashboardController extends Controller
         } else {
             $query->orderBy($sortBy, $sortDirection);
         }
-        
+
         $products = $query->paginate(15)->withQueryString();
-        
+
         // Statistik untuk kartu
         $stockStats = [
             'total' => Product::count(),
@@ -149,12 +149,13 @@ class ManagerDashboardController extends Controller
             StockTransaction::create([
                 'product_id' => $validatedData['product_id'],
                 'user_id' => Auth::id(), // User yang mengajukan (Manajer)
+                'type' => StockTransaction::TYPE_MASUK,
                 'supplier_id' => $validatedData['supplier_id'],
-                'type' => 'Masuk',
                 'quantity' => $validatedData['quantity'],
                 'notes' => $validatedData['notes'],
                 'date' => Carbon::parse($validatedData['transaction_date'])->setTimeFrom(now()),
-                'status' => 'Pending', // <-- PASTIKAN BARIS INI ADA DAN BENAR
+                'status' => StockTransaction::STATUS_PENDING,
+
             ]);
 
             return redirect()->route('manajergudang.dashboard')
@@ -181,21 +182,21 @@ class ManagerDashboardController extends Controller
             'transaction_date' => 'required|date',
             'notes' => 'nullable|string|max:255',
         ]);
-        
+
         try {
             StockTransaction::create([
                 'product_id' => $validatedData['product_id'],
                 'user_id' => Auth::id(), // User yang mengajukan (Manajer)
-                'type' => 'Keluar',
+                'type' => StockTransaction::TYPE_KELUAR,
                 'quantity' => $validatedData['quantity'],
                 'notes' => $validatedData['notes'],
                 'date' => Carbon::parse($validatedData['transaction_date'])->setTimeFrom(now()),
-                'status' => 'Pending', // <-- PASTIKAN BARIS INI ADA DAN BENAR
+                'status' => StockTransaction::STATUS_PENDING,
             ]);
 
             return redirect()->route('manajergudang.dashboard')
                 ->with('success', 'Permintaan barang keluar berhasil dibuat dan menunggu konfirmasi Staff.');
-        
+
         } catch (\Exception $e) {
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage())->withInput();
         }
@@ -218,11 +219,11 @@ class ManagerDashboardController extends Controller
         if ($request->filled('category_id')) {
             $query->where('category_id', $request->category_id);
         }
-        
+
         $products = $query->paginate(15);
         $suppliers = Supplier::orderBy('name')->get();
         $categories = Category::orderBy('name')->get(); // For the filter
-        
+
         return view('pages.manajergudang.stock.opname', compact('products', 'suppliers', 'categories'));
     }
 
@@ -240,7 +241,7 @@ class ManagerDashboardController extends Controller
             foreach ($validated['products'] as $item) {
                 $systemStock = (int)$item['system_stock'];
                 $physicalStock = (int)$item['physical_stock'];
-                
+
                 if ($physicalStock !== $systemStock) {
                     $product = Product::findOrFail($item['id']);
                     $difference = $physicalStock - $systemStock;
@@ -249,13 +250,13 @@ class ManagerDashboardController extends Controller
                         'product_id' => $product->id,
                         'user_id' => Auth::id(),
                         'supplier_id' => $item['supplier_id'] ?? null, // [BARU] Simpan supplier_id
-                        'type' => $difference > 0 ? 'Masuk' : 'Keluar', 
-                        'quantity' => abs($difference), 
+                        'type' => $difference > 0 ? 'Masuk' : 'Keluar',
+                        'quantity' => abs($difference),
                         'notes' => 'Penyesuaian Stock Opname',
                         'date' => now(),
                         'status' => $difference > 0 ? 'Diterima' : 'Dikeluarkan',
                     ]);
-                    
+
                     $product->update(['current_stock' => $physicalStock]);
                 }
             }
@@ -292,7 +293,7 @@ class ManagerDashboardController extends Controller
         // Statistik untuk kartu
         $totalSuppliers = Supplier::count();
         $totalProductsFromSuppliers = Product::whereNotNull('supplier_id')->count();
-        
+
         $stats = [
             'total_suppliers' => $totalSuppliers,
             'total_products_from_suppliers' => $totalProductsFromSuppliers,
@@ -367,9 +368,9 @@ class ManagerDashboardController extends Controller
         } else {
             $query->orderBy($sortBy, $sortDirection);
         }
-        
+
         $products = $query->paginate(15)->withQueryString();
-        
+
         // [PERBAIKAN] Definisikan variabel $categories di sini
         $categories = \App\Models\Category::orderBy('name')->get();
 
@@ -428,7 +429,7 @@ class ManagerDashboardController extends Controller
             'outgoing' => (clone $statsQuery)->where('type', 'Keluar')->count(),
             'total_quantity' => (clone $statsQuery)->sum('quantity')
         ];
-        
+
         // [PERBAIKAN] Terapkan pengurutan di sini, setelah semua filter
         switch ($sortBy) {
             case 'product_name':
