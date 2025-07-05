@@ -210,18 +210,14 @@ public function userDestroy(User $user)
 }
 
     // Products Management
-  public function productList(Request $request)
+ public function productList(Request $request)
 {
     $query = Product::query()
         ->with(['category', 'supplier'])
         ->withCount('stockTransactions');
 
-    // Calculate current stock from transactions
-    $query->select('products.*')
-        ->addSelect([
-            'current_stock' => StockTransaction::selectRaw('COALESCE(SUM(CASE WHEN type = "Masuk" THEN quantity ELSE -quantity END), 0)')
-                ->whereColumn('product_id', 'products.id')
-        ]);
+    // Gunakan current_stock langsung dari model Product seperti di manajer
+    // Hapus perhitungan manual current_stock dari stock_transactions
 
     // Search filter
     if ($request->filled('search')) {
@@ -238,28 +234,20 @@ public function userDestroy(User $user)
         $query->where('category_id', $request->input('category'));
     }
 
-    // Stock status filter
+    // Stock status filter - disesuaikan dengan manajer
     if ($request->filled('stock_status')) {
         $status = $request->input('stock_status');
         $query->where(function($q) use ($status) {
             switch ($status) {
                 case 'out_of_stock':
-                    $q->whereRaw('(SELECT COALESCE(SUM(CASE WHEN type = "Masuk" THEN quantity ELSE -quantity END), 0)
-                       FROM stock_transactions
-                       WHERE product_id = products.id) <= 0');
+                    $q->where('current_stock', '<=', 0);
                     break;
                 case 'low_stock':
-                    $q->whereRaw('(SELECT COALESCE(SUM(CASE WHEN type = "Masuk" THEN quantity ELSE -quantity END), 0)
-                       FROM stock_transactions
-                       WHERE product_id = products.id) > 0')
-                       ->whereRaw('(SELECT COALESCE(SUM(CASE WHEN type = "Masuk" THEN quantity ELSE -quantity END), 0)
-                       FROM stock_transactions
-                       WHERE product_id = products.id) <= products.min_stock');
+                    $q->where('current_stock', '>', 0)
+                      ->whereColumn('current_stock', '<=', 'min_stock');
                     break;
                 case 'in_stock':
-                    $q->whereRaw('(SELECT COALESCE(SUM(CASE WHEN type = "Masuk" THEN quantity ELSE -quantity END), 0)
-                       FROM stock_transactions
-                       WHERE product_id = products.id) > products.min_stock');
+                    $q->whereColumn('current_stock', '>', 'min_stock');
                     break;
             }
         });
@@ -278,43 +266,18 @@ public function userDestroy(User $user)
     $sort = $request->input('sort', 'name_asc');
     [$sortColumn, $sortDirection] = $sortOptions[$sort] ?? ['name', 'asc'];
 
-    // Handle sorting for calculated fields
-    if ($sortColumn === 'current_stock') {
-        $query->orderByRaw('(SELECT COALESCE(SUM(CASE WHEN type = "Masuk" THEN quantity ELSE -quantity END), 0)
-                            FROM stock_transactions
-                            WHERE product_id = products.id) ' . $sortDirection);
-    } else {
-        $query->orderBy($sortColumn, $sortDirection);
-    }
+    $query->orderBy($sortColumn, $sortDirection);
 
     $products = $query->paginate(15);
+    $categories = Category::orderBy('name')->get();
 
-    $categories = Category::orderBy('name')->get(); // Tambahkan baris ini
-
+    // Statistik disesuaikan dengan manajer
     $stockStats = [
-        'in_stock' => DB::table('products')
-            ->selectRaw('COUNT(*) as count')
-            ->whereRaw('(SELECT COALESCE(SUM(CASE WHEN type = "Masuk" THEN quantity ELSE -quantity END), 0)
-                       FROM stock_transactions
-                       WHERE product_id = products.id) > min_stock')
-            ->first()->count,
-
-        'low_stock' => DB::table('products')
-            ->selectRaw('COUNT(*) as count')
-            ->whereRaw('(SELECT COALESCE(SUM(CASE WHEN type = "Masuk" THEN quantity ELSE -quantity END), 0)
-                       FROM stock_transactions
-                       WHERE product_id = products.id) > 0')
-            ->whereRaw('(SELECT COALESCE(SUM(CASE WHEN type = "Masuk" THEN quantity ELSE -quantity END), 0)
-                       FROM stock_transactions
-                       WHERE product_id = products.id) <= min_stock')
-            ->first()->count,
-
-        'out_of_stock' => DB::table('products')
-            ->selectRaw('COUNT(*) as count')
-            ->whereRaw('(SELECT COALESCE(SUM(CASE WHEN type = "Masuk" THEN quantity ELSE -quantity END), 0)
-                       FROM stock_transactions
-                       WHERE product_id = products.id) <= 0')
-            ->first()->count,
+        'in_stock' => Product::whereColumn('current_stock', '>', 'min_stock')->count(),
+        'low_stock' => Product::where('current_stock', '>', 0)
+                        ->whereColumn('current_stock', '<=', 'min_stock')
+                        ->count(),
+        'out_of_stock' => Product::where('current_stock', '<=', 0)->count(),
     ];
 
     return view('pages.admin.products.index', compact('products', 'categories', 'stockStats'));
