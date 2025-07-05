@@ -133,12 +133,12 @@
 <div class="p-6 mb-6 bg-white border border-gray-200 rounded-xl dark:bg-gray-800 dark:border-gray-700">
     <div class="flex items-center justify-between mb-4">
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Filter & Pencarian</h3>
-        <a href="{{ route('admin.reports.outgoing.index') }}" class="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400">
+        <a href="{{ route('staff.reports.outgoing') }}" class="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400">
             <i class="mr-1 fas fa-undo"></i>Reset Filter
         </a>
     </div>
     
-    <form action="{{ route('admin.reports.outgoing.index') }}" method="GET">
+    <form action="{{ route('staff.reports.outgoing') }}" method="GET">
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-5">
             <div class="md:col-span-2">
                 <label for="search-input" class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Pencarian</label>
@@ -306,35 +306,85 @@
 
 @push('scripts')
 <script>
-// Menu toggle
+// Export menu toggle
 function toggleExportMenu() {
-    document.getElementById('export-menu').classList.toggle('hidden');
+    console.log('toggleExportMenu() dipanggil.'); // Debugging log
+    const menu = document.getElementById('export-menu');
+    if (menu) {
+        menu.classList.toggle('hidden');
+    } else {
+        console.error('Elemen dengan ID "export-menu" tidak ditemukan!');
+    }
 }
 
-// Close menu when clicking outside
+// Close export menu when clicking outside
 document.addEventListener('click', function(event) {
     const menu = document.getElementById('export-menu');
-    const button = document.getElementById('export-button');
-    if (menu && button && !menu.classList.contains('hidden') && !button.contains(event.target) && !menu.contains(event.target)) {
+    // Pastikan menu dan tombolnya ada sebelum melanjutkan
+    if (!menu) return;
+
+    const button = event.target.closest('button[onclick="toggleExportMenu()"]');
+
+    if (!menu.classList.contains('hidden') && !button) {
+        console.log('Menutup menu karena klik di luar.'); // Debugging log
         menu.classList.add('hidden');
     }
 });
 
+// ===================================================================
+// == FUNGSI EXPORT YANG LEBIH BAIK UNTUK DEBUGGING ==
+// ===================================================================
 function exportToExcel() {
-    // Bangun URL dengan parameter filter saat ini
-    const currentUrl = new URL(window.location.href);
-    const params = new URLSearchParams(currentUrl.search);
-    
-    // Set parameter spesifik untuk export
-    params.set('report_type', 'outgoing_goods');
-    params.set('format', 'excel');
+    try {
+        console.log('Fungsi exportToExcel() dimulai...');
 
-    // Gunakan rute export dari admin dengan parameter yang ada
-    const exportUrl = `{{ route('admin.reports.export') }}?${params.toString()}`;
-    
-    // Arahkan ke URL untuk download
-    window.location.href = exportUrl;
-    toggleExportMenu(); // Tutup menu
+        // Ambil nilai dari semua filter
+        const search = document.getElementById('search-input').value;
+        const status = document.getElementById('status-filter').value;
+        const dateStart = document.getElementById('date-start').value;
+        const dateEnd = document.getElementById('date-end').value;
+
+        console.log('Filter yang didapat:', { search, status, dateStart, dateEnd });
+
+        // Buat URLSearchParams untuk menampung parameter filter
+        const params = new URLSearchParams();
+        params.append('report_type', 'incoming_goods');
+        params.append('format', 'excel');
+
+        // Tambahkan filter jika ada nilainya
+        if (search) params.append('search', search);
+        if (status) params.append('status', status);
+        if (dateStart) params.append('date_start', dateStart);
+        if (dateEnd) params.append('date_end', dateEnd);
+
+        // Bangun URL lengkap dengan route dan parameter
+        const url = `{{ route('staff.reports.export') }}?${params.toString()}`;
+
+        console.log('URL yang akan diakses:', url); // <-- INI SANGAT PENTING
+
+        // Arahkan browser ke URL untuk memulai download
+        window.location.href = url;
+
+        console.log('Proses download seharusnya sudah dimulai.');
+
+        // Tutup menu dropdown setelah diklik
+        toggleExportMenu();
+
+    } catch (error) {
+        console.error('Terjadi kesalahan di dalam fungsi exportToExcel:', error);
+    }
+}
+
+
+// Fungsi lainnya (biarkan seperti semula)
+function exportToPDF() {
+    console.log('Exporting to PDF...');
+    toggleExportMenu();
+}
+
+function printReport() {
+    window.print();
+    toggleExportMenu();
 }
 
 function refreshData() {
@@ -345,10 +395,7 @@ function refreshData() {
     }, 1000);
 }
 
-// Fungsi untuk reset filter (mengarahkan ke URL tanpa parameter)
-function resetFilters() {
-    window.location.href = "{{ route('admin.reports.outgoing.index') }}";
-}
+// ... Sisa fungsi Anda (resetFilters, dll) biarkan seperti semula ...
 
 </script>
 @endpush
