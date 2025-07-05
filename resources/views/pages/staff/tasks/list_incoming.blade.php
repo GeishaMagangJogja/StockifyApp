@@ -25,10 +25,18 @@
 
     {{-- Pesan Sukses dengan Animasi --}}
     @if (session('success'))
-        <div class="px-4 py-3 mb-4 text-sm font-medium text-white bg-green-500 rounded-lg shadow-lg transform transition-all duration-500 hover:scale-105 animate-pulse" role="alert">
+        <div class="px-4 py-3 mb-4 text-sm font-medium text-white bg-green-500 rounded-lg shadow-lg transform transition-all duration-500 hover:scale-105" role="alert">
             <div class="flex items-center">
                 <i class="fas fa-check-circle mr-2"></i>
                 <p>{{ session('success') }}</p>
+            </div>
+        </div>
+    @endif
+    @if (session('error'))
+        <div class="px-4 py-3 mb-4 text-sm font-medium text-white bg-red-500 rounded-lg shadow-lg transform transition-all duration-500 hover:scale-105" role="alert">
+            <div class="flex items-center">
+                <i class="fas fa-exclamation-circle mr-2"></i>
+                <p>{{ session('error') }}</p>
             </div>
         </div>
     @endif
@@ -48,7 +56,7 @@
         </div>
 
         {{-- Form Pencarian dan Filter --}}
-        <form action="{{ route('staff.stock.incoming.list') }}" method="GET" class="transition-all duration-300">
+        <form action="{{ route('staff.tasks.incoming.list') }}" method="GET" class="transition-all duration-300">
             <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-4">
                 {{-- Kolom Pencarian --}}
                 <div class="md:col-span-2 lg:col-span-2">
@@ -60,7 +68,7 @@
                         <input type="text" name="search" id="search"
                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 transition-all duration-300"
                                placeholder="Cari produk berdasarkan nama atau SKU..."
-                               value="{{ $search ?? '' }}">
+                               value="{{ request('search') }}">
                     </div>
                 </div>
 
@@ -69,10 +77,10 @@
                     <label for="status" class="sr-only">Filter Status</label>
                     <select name="status" id="status"
                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 transition-all duration-300">
-                        <option value="semua" {{ ($selectedStatus ?? 'semua') == 'semua' ? 'selected' : '' }}>Semua Status</option>
-                        <option value="pending" {{ ($selectedStatus ?? '') == 'pending' ? 'selected' : '' }}>Pending</option>
-                        <option value="completed" {{ ($selectedStatus ?? '') == 'completed' ? 'selected' : '' }}>Selesai</option>
-                        <option value="rejected" {{ ($selectedStatus ?? '') == 'rejected' ? 'selected' : '' }}>Ditolak</option>
+                        <option value="" {{ !request('status') ? 'selected' : '' }}>Semua Status</option>
+                        <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
+                        <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Selesai</option>
+                        <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>Ditolak</option>
                     </select>
                 </div>
 
@@ -152,22 +160,22 @@
                                 {{-- Kolom Status --}}
                                 <td class="px-4 py-3">
                                     @if($transaction->status == 'completed')
-                                        <span class="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full dark:bg-green-900 dark:text-green-300">
+                                        <span class="inline-flex items-center px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full dark:bg-green-900 dark:text-green-300">
                                             <i class="fas fa-check-circle mr-1"></i>
                                             Selesai
                                         </span>
                                     @elseif($transaction->status == 'pending')
-                                        <span class="px-2 py-1 text-xs font-semibold text-yellow-800 bg-yellow-100 rounded-full dark:bg-yellow-900 dark:text-yellow-300">
+                                        <span class="inline-flex items-center px-2 py-1 text-xs font-semibold text-yellow-800 bg-yellow-100 rounded-full dark:bg-yellow-900 dark:text-yellow-300">
                                             <i class="fas fa-clock mr-1"></i>
                                             Pending
                                         </span>
                                     @elseif($transaction->status == 'rejected')
-                                        <span class="px-2 py-1 text-xs font-semibold text-red-800 bg-red-100 rounded-full dark:bg-red-900 dark:text-red-300">
+                                        <span class="inline-flex items-center px-2 py-1 text-xs font-semibold text-red-800 bg-red-100 rounded-full dark:bg-red-900 dark:text-red-300">
                                             <i class="fas fa-times-circle mr-1"></i>
                                             Ditolak
                                         </span>
                                     @else
-                                        <span class="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-100 rounded-full dark:bg-gray-900 dark:text-gray-300">
+                                        <span class="inline-flex items-center px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-100 rounded-full dark:bg-gray-900 dark:text-gray-300">
                                             {{ ucfirst($transaction->status) }}
                                         </span>
                                     @endif
@@ -178,14 +186,31 @@
                                     {{ \Carbon\Carbon::parse($transaction->date)->format('d M Y') }}
                                 </td>
                                 
-                                {{-- Kolom Aksi --}}
+                                {{-- =================================== --}}
+                                {{-- == PERBAIKAN KOLOM AKSI DI SINI == --}}
+                                {{-- =================================== --}}
                                 <td class="px-4 py-3">
                                     @if($transaction->status == 'pending')
-                                        <a href="{{ route('staff.stock.incoming.confirm', $transaction) }}" 
-                                           class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors duration-200">
-                                            <i class="fas fa-check mr-1"></i>
-                                            Proses
-                                        </a>
+                                        <div class="flex items-center space-x-2">
+                                            {{-- Tombol Proses/Selesaikan --}}
+                                            <a href="{{ route('staff.tasks.incoming.confirm', $transaction) }}" 
+                                               title="Proses Tugas"
+                                               class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors duration-200">
+                                                <i class="fas fa-check mr-1"></i>
+                                                Proses
+                                            </a>
+                                            
+                                            {{-- Tombol Tolak --}}
+                                            <form action="{{ route('staff.tasks.incoming.reject', $transaction) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menolak tugas ini?');">
+                                                @csrf
+                                                <button type="submit" 
+                                                        title="Tolak Tugas"
+                                                        class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors duration-200">
+                                                    <i class="fas fa-times mr-1"></i>
+                                                    Tolak
+                                                </button>
+                                            </form>
+                                        </div>
                                     @else
                                         <span class="text-gray-400 text-xs">-</span>
                                     @endif
@@ -222,42 +247,17 @@
 
     <script>
         // Auto-hide success message
-        const successAlert = document.querySelector('[role="alert"]');
+        const successAlert = document.querySelectorAll('[role="alert"]');
         if (successAlert) {
-            setTimeout(() => {
-                successAlert.style.opacity = '0';
-                successAlert.style.transform = 'translateY(-20px)';
+            successAlert.forEach(function(alert) {
                 setTimeout(() => {
-                    successAlert.remove();
-                }, 300);
-            }, 5000);
-        }
-
-        // Simple hover effect for table rows
-        document.querySelectorAll('tbody tr').forEach(row => {
-            row.addEventListener('mouseenter', function() {
-                this.style.backgroundColor = this.classList.contains('dark') ? '#374151' : '#f9fafb';
+                    alert.style.opacity = '0';
+                    alert.style.transform = 'translateY(-20px)';
+                    setTimeout(() => {
+                        alert.remove();
+                    }, 300);
+                }, 5000);
             });
-        });
-    </script>mouseenter', function() {
-                this.style.transform = 'translateX(5px)';
-            });
-            
-            row.addEventListener('mouseleave', function() {
-                this.style.transform = 'translateX(0)';
-            });
-        });
-
-        // Auto-hide success message
-        const successAlert = document.querySelector('[role="alert"]');
-        if (successAlert) {
-            setTimeout(() => {
-                successAlert.style.opacity = '0';
-                successAlert.style.transform = 'translateY(-20px)';
-                setTimeout(() => {
-                    successAlert.remove();
-                }, 300);
-            }, 5000);
         }
     </script>
 @endsection

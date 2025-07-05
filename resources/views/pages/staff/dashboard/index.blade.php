@@ -143,7 +143,8 @@
                                     <div class="text-xs text-gray-500 dark:text-gray-400">Prioritas</div>
                                     <div class="text-sm font-medium text-green-600">Normal</div>
                                 </div>
-                                <a href="{{ route('staff.stock.incoming.confirm', $task->id) }}" 
+                                {{-- PERBAIKAN DI SINI: Gunakan route 'tasks' --}}
+                                <a href="{{ route('staff.tasks.incoming.confirm', $task->id) }}" 
                                    class="px-4 py-2 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors duration-200 shadow-md hover:shadow-lg transform hover:scale-105">
                                     <i class="fas fa-check mr-1"></i>
                                     Proses
@@ -194,7 +195,8 @@
                                     <div class="text-xs text-gray-500 dark:text-gray-400">Status</div>
                                     <div class="text-sm font-medium text-orange-600">Pending</div>
                                 </div>
-                                <a href="{{ route('staff.stock.outgoing.prepare', $task->id) }}" 
+                                {{-- PERBAIKAN DI SINI: Gunakan route 'tasks' --}}
+                                <a href="{{ route('staff.tasks.outgoing.prepare', $task->id) }}" 
                                    class="px-4 py-2 bg-orange-500 text-white rounded-full hover:bg-orange-600 transition-colors duration-200 shadow-md hover:shadow-lg transform hover:scale-105">
                                     <i class="fas fa-cogs mr-1"></i>
                                     Siapkan

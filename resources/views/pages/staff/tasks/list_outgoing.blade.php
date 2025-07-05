@@ -48,7 +48,8 @@
         </div>
 
         {{-- Form Pencarian dan Filter --}}
-        <form action="{{ route('staff.stock.outgoing.list') }}" method="GET" class="transition-all duration-300">
+        {{-- PERBAIKAN 1 DI SINI --}}
+        <form action="{{ route('staff.tasks.outgoing.list') }}" method="GET" class="transition-all duration-300">
             <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-4">
                 {{-- Kolom Pencarian --}}
                 <div class="md:col-span-2 lg:col-span-2">
@@ -183,7 +184,8 @@
                                 {{-- Kolom Aksi --}}
                                 <td class="px-4 py-3">
                                     @if($transaction->status == 'pending')
-                                        <a href="{{ route('staff.stock.outgoing.prepare', $transaction) }}" 
+                                        {{-- PERBAIKAN 2 DI SINI --}}
+                                        <a href="{{ route('staff.tasks.outgoing.prepare', $transaction) }}" 
                                            class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors duration-200">
                                             <i class="fas fa-box mr-1"></i>
                                             Siapkan
@@ -234,12 +236,5 @@
                 }, 300);
             }, 5000);
         }
-
-        // Simple hover effect for table rows
-        document.querySelectorAll('tbody tr').forEach(row => {
-            row.addEventListener('mouseenter', function() {
-                this.style.backgroundColor = this.classList.contains('dark') ? '#374151' : '#f9fafb';
-            });
-        });
     </script>
 @endsection

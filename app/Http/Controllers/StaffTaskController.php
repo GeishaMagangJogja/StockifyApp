@@ -5,26 +5,54 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use App\Models\StockTransaction;
-use Illuminate\Contracts\View\View; // Menggunakan contract untuk return type
-use Illuminate\Http\RedirectResponse; // Return type untuk redirect
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class StaffTaskController extends Controller
 {
     // ==========================================================
-    // == BAGIAN BARANG MASUK (INCOMING)
+    // == PUSAT PENGERJAAN TUGAS (WORKSPACE)
+    // ==========================================================
+    
+    /**
+     * Menampilkan halaman pusat pengerjaan tugas (workspace).
+     * Hanya menampilkan tugas yang berstatus 'pending'.
+     */
+    public function index(): View
+    {
+        // Ambil semua tugas barang masuk yang masih pending
+        $incomingTasks = StockTransaction::with('product', 'supplier')
+            ->where('type', 'masuk')
+            ->where('status', 'pending')
+            ->latest()
+            ->get();
+
+        // Ambil semua tugas barang keluar yang masih pending
+        $outgoingTasks = StockTransaction::with('product')
+            ->where('type', 'keluar')
+            ->where('status', 'pending')
+            ->latest()
+            ->get();
+
+        // Tampilkan view workspace dengan data tugas yang pending
+        return view('pages.staff.tasks.index', compact('incomingTasks', 'outgoingTasks'));
+    }
+
+    // ==========================================================
+    // == BAGIAN BARANG MASUK (INCOMING) - SEKARANG BERFUNGSI SEBAGAI RIWAYAT
     // ==========================================================
 
     /**
-     * Menampilkan daftar semua transaksi barang masuk.
+     * Menampilkan daftar semua transaksi barang masuk (sebagai riwayat).
      */
     public function listIncoming(): View
     {
+        // Menggunakan with() untuk Eager Loading, lebih efisien
         $transactions = StockTransaction::with(['product', 'supplier', 'user'])
             ->where('type', 'masuk')
-            ->latest('date')
-            ->latest() // Default ke 'created_at'
+            ->latest() // Mengurutkan berdasarkan created_at (terbaru)
             ->paginate(15);
 
         return view('pages.staff.tasks.list_incoming', compact('transactions'));
@@ -60,18 +88,20 @@ class StaffTaskController extends Controller
         DB::beginTransaction();
         try {
             $product = $transaction->product;
-            if ($product) {
-                $product->stock += $request->quantity_received;
-                $product->save();
+            if (!$product) {
+                 DB::rollBack();
+                 return redirect()->back()->with('error', 'Produk terkait transaksi ini tidak ditemukan.');
             }
+            
+            $product->increment('stock', $request->quantity_received);
 
             $transaction->status = 'completed';
             $transaction->quantity = $request->quantity_received;
             $transaction->date = $request->received_date;
-            $transaction->user_id = Auth::id();
+            $transaction->processed_by_user_id = Auth::id();
             
             $originalNotes = $transaction->notes ? $transaction->notes . "\n" : "";
-            $transaction->notes = $originalNotes . "Konfirmasi: " . ($request->additional_notes ?? 'Diterima sesuai pesanan.');
+            $transaction->notes = $originalNotes . "Konfirmasi Staff: " . ($request->additional_notes ?? 'Diterima sesuai pesanan.');
             
             $transaction->save();
 
@@ -81,22 +111,40 @@ class StaffTaskController extends Controller
             return redirect()->back()->with('error', 'Gagal memproses transaksi. Error: ' . $e->getMessage())->withInput();
         }
 
-        return redirect()->route('staff.stock.incoming.list')->with('success', 'Barang masuk berhasil dikonfirmasi dan stok telah diperbarui.');
+        // Redirect ke halaman PUSAT TUGAS setelah selesai
+        return redirect()->route('staff.tasks.index')->with('success', 'Barang masuk berhasil dikonfirmasi dan stok telah diperbarui.');
+    }
+
+    /**
+     * Menolak tugas barang masuk yang pending.
+     */
+    public function rejectIncomingTask(StockTransaction $transaction): RedirectResponse
+    {
+        if ($transaction->status !== 'pending') {
+            return redirect()->route('staff.tasks.index')->with('error', 'Tugas ini tidak bisa diproses lagi.');
+        }
+
+        $transaction->status = 'rejected';
+        $transaction->notes .= "\n Ditolak oleh Staff: " . Auth::user()->name . " pada " . now()->format('d M Y H:i');
+        $transaction->processed_by_user_id = Auth::id();
+        $transaction->save();
+
+        // Redirect ke halaman PUSAT TUGAS setelah menolak
+        return redirect()->route('staff.tasks.index')->with('success', 'Tugas barang masuk berhasil ditolak.');
     }
 
 
     // ==========================================================
-    // == BAGIAN BARANG KELUAR (OUTGOING)
+    // == BAGIAN BARANG KELUAR (OUTGOING) - SEKARANG BERFUNGSI SEBAGAI RIWAYAT
     // ==========================================================
 
     /**
-     * Menampilkan daftar semua transaksi barang keluar.
+     * Menampilkan daftar semua transaksi barang keluar (sebagai riwayat).
      */
     public function listOutgoing(): View
     {
         $transactions = StockTransaction::with(['product', 'user'])
             ->where('type', 'keluar')
-            ->latest('date')
             ->latest()
             ->paginate(15);
 
@@ -141,12 +189,11 @@ class StaffTaskController extends Controller
 
         DB::beginTransaction();
         try {
-            $product->stock -= $request->quantity_dispatched;
-            $product->save();
+            $product->decrement('stock', $request->quantity_dispatched);
 
             $transaction->status = 'completed';
             $transaction->quantity = $request->quantity_dispatched;
-            $transaction->user_id = Auth::id();
+            $transaction->processed_by_user_id = Auth::id();
             $transaction->save();
 
             DB::commit();
@@ -155,6 +202,25 @@ class StaffTaskController extends Controller
             return redirect()->back()->with('error', 'Gagal memproses transaksi. Error: ' . $e->getMessage())->withInput();
         }
 
-        return redirect()->route('staff.stock.outgoing.list')->with('success', 'Barang keluar berhasil dikonfirmasi dan stok telah diperbarui.');
+        // Redirect ke halaman PUSAT TUGAS setelah selesai
+        return redirect()->route('staff.tasks.index')->with('success', 'Barang keluar berhasil dikonfirmasi dan stok telah diperbarui.');
+    }
+
+    /**
+     * Menolak tugas barang keluar yang pending.
+     */
+    public function rejectOutgoingTask(StockTransaction $transaction): RedirectResponse
+    {
+        if ($transaction->status !== 'pending') {
+            return redirect()->route('staff.tasks.index')->with('error', 'Tugas ini tidak bisa diproses lagi.');
+        }
+
+        $transaction->status = 'rejected';
+        $transaction->notes .= "\n Ditolak oleh Staff: " . Auth::user()->name . " pada " . now()->format('d M Y H:i');
+        $transaction->processed_by_user_id = Auth::id();
+        $transaction->save();
+        
+        // Redirect ke halaman PUSAT TUGAS setelah menolak
+        return redirect()->route('staff.tasks.index')->with('success', 'Tugas barang keluar berhasil ditolak.');
     }
 }

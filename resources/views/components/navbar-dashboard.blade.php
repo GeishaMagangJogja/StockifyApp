@@ -44,12 +44,13 @@
                                 <x-navbar.shortcut-link :href="route('admin.products.create')" icon="fas fa-box" color="green">Produk Baru</x-navbar.shortcut-link>
                                 <x-navbar.shortcut-link :href="route('admin.suppliers.create')" icon="fas fa-truck" color="blue">Supplier</x-navbar.shortcut-link>
                             @elseif($userRole === 'Manajer Gudang')
-                                <x-navbar.shortcut-link :href="route('manajergudang.stock.in')" icon="fas fa-arrow-down" color="green">Barang Masuk</x-navbar.shortcut-link>
-                                <x-navbar.shortcut-link :href="route('manajergudang.stock.out')" icon="fas fa-arrow-up" color="red">Barang Keluar</x-navbar.shortcut-link>
-                                <x-navbar.shortcut-link :href="route('manajergudang.stock.opname')" icon="fas fa-tasks" color="yellow">Stock Opname</x-navbar.shortcut-link>
+                                <x-navbar.shortcut-link :href="route('manajergudang.transactions.create.in')" icon="fas fa-arrow-down" color="green">Barang Masuk</x-navbar.shortcut-link>
+                                <x-navbar.shortcut-link :href="route('manajergudang.transactions.create.out')" icon="fas fa-arrow-up" color="red">Barang Keluar</x-navbar.shortcut-link>
+                                <x-navbar.shortcut-link :href="route('manajergudang.stock.history')" icon="fas fa-history" color="yellow">Histori Stok</x-navbar.shortcut-link>
                             @elseif($userRole === 'Staff Gudang')
-                                <x-navbar.shortcut-link :href="route('staff.stock.incoming.list')" icon="fas fa-dolly" color="sky">Tugas Masuk</x-navbar.shortcut-link>
-                                <x-navbar.shortcut-link :href="route('staff.stock.outgoing.list')" icon="fas fa-truck-loading" color="orange">Tugas Keluar</x-navbar.shortcut-link>
+                                {{-- KODE INI SUDAH BENAR DENGAN PERBAIKAN SEBELUMNYA, TIDAK PERLU DIUBAH --}}
+                                <x-navbar.shortcut-link :href="route('staff.tasks.incoming.list')" icon="fas fa-dolly" color="sky">Tugas Masuk</x-navbar.shortcut-link>
+                                <x-navbar.shortcut-link :href="route('staff.tasks.outgoing.list')" icon="fas fa-truck-loading" color="orange">Tugas Keluar</x-navbar.shortcut-link>
                             @endif
                         </div>
                     </div>
