@@ -9,6 +9,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class StockTransaction extends Model
 {
     use HasFactory;
+    const TYPE_MASUK = 'masuk';
+    const TYPE_KELUAR = 'keluar';
+
+    const STATUS_PENDING = 'pending';
+    const STATUS_COMPLETED = 'completed';
+    const STATUS_REJECTED = 'rejected';
 
     protected $fillable = [
         'product_id',
@@ -46,4 +52,24 @@ class StockTransaction extends Model
     {
         return $this->belongsTo(User::class, 'processed_by_user_id');
     }
+    // Di StockTransaction model
+  public function isTypeMasuk()
+    {
+        return strtolower($this->type) === self::TYPE_MASUK;
+    }
+
+    public function isPending()
+    {
+        return strtolower($this->status) === self::STATUS_PENDING;
+    }
+
+public function isCompleted(): bool
+{
+    return strtolower($this->status) === self::STATUS_COMPLETED;
+}
+
+public function isRejected(): bool
+{
+    return strtolower($this->status) === self::STATUS_REJECTED;
+}
 }

@@ -207,11 +207,11 @@ Route::middleware(['auth', 'role:Staff Gudang'])->prefix('staff')->name('staff.'
 
         // Incoming Tasks
         Route::prefix('incoming')->name('incoming.')->group(function () {
-            Route::get('/', [StaffTaskController::class, 'listIncoming'])->name('list');
-            Route::get('/{transaction}/confirm', [StaffTaskController::class, 'showIncomingConfirmationForm'])->name('confirm');
-            Route::post('/{transaction}/approve', [StaffTaskController::class, 'approveIncomingTask'])->name('approve');
-            Route::post('/{transaction}/reject', [StaffTaskController::class, 'rejectIncomingTask'])->name('reject');
-        });
+        Route::get('/', [StaffTaskController::class, 'listIncoming'])->name('list');
+        Route::get('/{transaction}/confirm', [StaffTaskController::class, 'showIncomingConfirmationForm'])->name('confirm');
+        Route::post('/{transaction}/complete', [StaffTaskController::class, 'processIncomingConfirmation'])->name('complete'); // Diubah dari approve ke complete
+        Route::post('/{transaction}/reject', [StaffTaskController::class, 'rejectIncomingTask'])->name('reject');
+    });
 
         // Outgoing Tasks
         Route::prefix('outgoing')->name('outgoing.')->group(function () {

@@ -290,7 +290,7 @@ public function userDestroy(User $user)
         return view('pages.admin.products.create', compact('categories', 'suppliers'));
     }
 
-    public function productStore(Request $request)
+        public function productStore(Request $request)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -300,7 +300,7 @@ public function userDestroy(User $user)
             'description' => 'nullable|string',
             'purchase_price' => 'required|numeric|min:0',
             'selling_price' => 'required|numeric|min:0',
-            'current_stock' => 'required|integer|min:0',
+            'current_stock' => 'nullable|integer|min:0', // Ubah dari required ke nullable
             'min_stock' => 'required|integer|min:0',
             'unit' => 'required|string|max:20',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
@@ -310,8 +310,12 @@ public function userDestroy(User $user)
             $validated['image'] = $request->file('image')->store('product_images', 'public');
         }
 
+        // Set default current_stock jika tidak diisi
+        $validated['current_stock'] = $validated['current_stock'] ?? 0;
+
         $product = Product::create($validated);
 
+        // Hanya buat transaksi stok jika current_stock > 0
         if ($validated['current_stock'] > 0) {
             StockTransaction::create([
                 'product_id' => $product->id,
