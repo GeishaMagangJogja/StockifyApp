@@ -8,28 +8,30 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     *
-     * @return void
      */
     public function up(): void
     {
         Schema::create('stock_transactions', function (Blueprint $table) {
             $table->id();
-            
+
             // Relasi ke produk, user, dan supplier
             $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
             $table->foreignId('user_id')->comment('User yang mengajukan permintaan')->constrained('users')->onDelete('cascade');
             $table->foreignId('supplier_id')->nullable()->constrained('suppliers')->onDelete('set null');
-            
+
             // Detail transaksi
-            $table->enum('type', ['Masuk', 'Keluar']);
+            $table->enum('type', ['masuk', 'keluar']);
             $table->unsignedInteger('quantity');
-            $table->timestamp('date');
+            $table->date('date');
             $table->text('notes')->nullable();
 
             // Kolom untuk alur kerja approval
-            $table->string('status')->default('Pending')->comment('Status: Pending, Diterima, Dikeluarkan, Ditolak');
-            $table->foreignId('processed_by')->nullable()->comment('User (Staff) yang memproses')->constrained('users')->onDelete('set null');
+            $table->string('status')->default('pending')->comment('Status: pending, completed, rejected');
+            $table->foreignId('processed_by_user_id')
+                  ->nullable()
+                  ->comment('User (Staff) yang memproses')
+                  ->constrained('users')
+                  ->onDelete('set null');
 
             $table->timestamps();
         });
@@ -37,8 +39,6 @@ return new class extends Migration
 
     /**
      * Reverse the migrations.
-     *
-     * @return void
      */
     public function down(): void
     {
