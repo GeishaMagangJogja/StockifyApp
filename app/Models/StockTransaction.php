@@ -19,10 +19,11 @@ class StockTransaction extends Model
         'date',
         'status',
         'notes',
+        'processed_by_user_id', // Tambahan field untuk tracking siapa yang memproses
     ];
+
     protected $casts = [
-    'date' => 'date',  // This will automatically cast the date field to a Carbon instance
-    // ... your other casts
+        'date' => 'date',
     ];
 
     public function product(): BelongsTo
@@ -38,5 +39,11 @@ class StockTransaction extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    // Relasi untuk user yang memproses transaksi
+    public function processedByUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'processed_by_user_id');
     }
 }
