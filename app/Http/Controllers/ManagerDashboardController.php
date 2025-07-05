@@ -146,27 +146,19 @@ class ManagerDashboardController extends Controller
         ]);
 
         try {
-            DB::transaction(function () use ($validatedData) {
-                // 1. Cari produk yang akan diupdate
-                $product = Product::findOrFail($validatedData['product_id']);
+            StockTransaction::create([
+                'product_id' => $validatedData['product_id'],
+                'user_id' => Auth::id(), // User yang mengajukan (Manajer)
+                'supplier_id' => $validatedData['supplier_id'],
+                'type' => 'Masuk',
+                'quantity' => $validatedData['quantity'],
+                'notes' => $validatedData['notes'],
+                'date' => Carbon::parse($validatedData['transaction_date'])->setTimeFrom(now()),
+                'status' => 'Pending', // <-- PASTIKAN BARIS INI ADA DAN BENAR
+            ]);
 
-                // 2. Buat catatan transaksi
-                StockTransaction::create([
-                    'product_id' => $validatedData['product_id'],
-                    'user_id' => Auth::id(),
-                    'supplier_id' => $validatedData['supplier_id'],
-                    'type' => 'Masuk',
-                    'quantity' => $validatedData['quantity'],
-                    'notes' => $validatedData['notes'],
-                    'date' => Carbon::parse($validatedData['transaction_date'])->setTimeFrom(now()),
-                    'status' => 'Diterima',
-                ]);
-
-                // 3. [FIX] Update stok di tabel products menggunakan increment
-                $product->increment('current_stock', $validatedData['quantity']);
-            });
-
-            return redirect()->route('manajergudang.dashboard')->with('success', 'Transaksi barang masuk berhasil dicatat.');
+            return redirect()->route('manajergudang.dashboard')
+                ->with('success', 'Permintaan barang masuk berhasil dibuat dan menunggu konfirmasi Staff.');
 
         } catch (\Exception $e) {
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage())->withInput();
@@ -191,32 +183,18 @@ class ManagerDashboardController extends Controller
         ]);
         
         try {
-            DB::transaction(function () use ($validatedData) {
-                // 1. Cari produk
-                $product = Product::findOrFail($validatedData['product_id']);
+            StockTransaction::create([
+                'product_id' => $validatedData['product_id'],
+                'user_id' => Auth::id(), // User yang mengajukan (Manajer)
+                'type' => 'Keluar',
+                'quantity' => $validatedData['quantity'],
+                'notes' => $validatedData['notes'],
+                'date' => Carbon::parse($validatedData['transaction_date'])->setTimeFrom(now()),
+                'status' => 'Pending', // <-- PASTIKAN BARIS INI ADA DAN BENAR
+            ]);
 
-                // 2. Validasi stok sebelum melanjutkan
-                if ($validatedData['quantity'] > $product->current_stock) {
-                    // Melemparkan exception akan otomatis me-rollback transaksi DB
-                    throw new \Exception('Stok tidak mencukupi. Stok tersedia: ' . $product->current_stock);
-                }
-
-                // 3. Buat catatan transaksi keluar
-                StockTransaction::create([
-                    'product_id' => $validatedData['product_id'],
-                    'user_id' => Auth::id(),
-                    'type' => 'Keluar',
-                    'quantity' => $validatedData['quantity'],
-                    'notes' => $validatedData['notes'],
-                    'date' => Carbon::parse($validatedData['transaction_date'])->setTimeFrom(now()),
-                    'status' => 'Dikeluarkan',
-                ]);
-
-                // 4. [FIX] Update stok di tabel products menggunakan decrement
-                $product->decrement('current_stock', $validatedData['quantity']);
-            });
-
-            return redirect()->route('manajergudang.dashboard')->with('success', 'Transaksi barang keluar berhasil dicatat.');
+            return redirect()->route('manajergudang.dashboard')
+                ->with('success', 'Permintaan barang keluar berhasil dibuat dan menunggu konfirmasi Staff.');
         
         } catch (\Exception $e) {
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage())->withInput();
