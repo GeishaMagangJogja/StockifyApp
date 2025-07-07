@@ -143,7 +143,6 @@
                                     <div class="text-xs text-gray-500 dark:text-gray-400">Prioritas</div>
                                     <div class="text-sm font-medium text-green-600">Normal</div>
                                 </div>
-                                {{-- PERBAIKAN DI SINI: Gunakan route 'tasks' --}}
                                 <a href="{{ route('staff.tasks.incoming.confirm', $task->id) }}" 
                                    class="px-4 py-2 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors duration-200 shadow-md hover:shadow-lg transform hover:scale-105">
                                     <i class="fas fa-check mr-1"></i>
@@ -195,7 +194,6 @@
                                     <div class="text-xs text-gray-500 dark:text-gray-400">Status</div>
                                     <div class="text-sm font-medium text-orange-600">Pending</div>
                                 </div>
-                                {{-- PERBAIKAN DI SINI: Gunakan route 'tasks' --}}
                                 <a href="{{ route('staff.tasks.outgoing.prepare', $task->id) }}" 
                                    class="px-4 py-2 bg-orange-500 text-white rounded-full hover:bg-orange-600 transition-colors duration-200 shadow-md hover:shadow-lg transform hover:scale-105">
                                     <i class="fas fa-cogs mr-1"></i>
@@ -264,21 +262,22 @@
                 </div>
                 <div class="p-6">
                     @forelse ($recentTransactions as $transaction)
+                        {{-- BLOK INI TELAH DIPERBAIKI --}}
                         <div class="flex items-center space-x-4 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors duration-200 mb-3">
-                            <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-full {{ $transaction->type == 'incoming' ? 'bg-green-100 dark:bg-green-900' : 'bg-red-100 dark:bg-red-900' }}">
-                                <i class="fas {{ $transaction->type == 'incoming' ? 'fa-arrow-down text-green-600 dark:text-green-400' : 'fa-arrow-up text-red-600 dark:text-red-400' }}"></i>
+                            <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-full {{ $transaction->isTypeMasuk() ? 'bg-green-100 dark:bg-green-900' : 'bg-red-100 dark:bg-red-900' }}">
+                                <i class="fas {{ $transaction->isTypeMasuk() ? 'fa-arrow-down text-green-600 dark:text-green-400' : 'fa-arrow-up text-red-600 dark:text-red-400' }}"></i>
                             </div>
                             <div class="flex-1 min-w-0">
                                 <p class="text-sm font-semibold text-gray-900 dark:text-white truncate">
                                     {{ optional($transaction->product)->name ?? 'Produk Dihapus' }}
                                 </p>
                                 <p class="text-xs text-gray-500 dark:text-gray-400">
-                                    {{ $transaction->type == 'incoming' ? 'Masuk' : 'Keluar' }} • {{ $transaction->updated_at->diffForHumans() }}
+                                    {{ $transaction->isTypeMasuk() ? 'Masuk' : 'Keluar' }} • {{ $transaction->updated_at->diffForHumans() }}
                                 </p>
                             </div>
                             <div class="text-right">
-                                <span class="text-sm font-medium {{ $transaction->type == 'incoming' ? 'text-green-600' : 'text-red-600' }}">
-                                    {{ $transaction->type == 'incoming' ? '+' : '-' }}{{ $transaction->quantity ?? 0 }}
+                                <span class="text-sm font-medium {{ $transaction->isTypeMasuk() ? 'text-green-600' : 'text-red-600' }}">
+                                    {{ $transaction->isTypeMasuk() ? '+' : '-' }}{{ $transaction->quantity ?? 0 }}
                                 </span>
                             </div>
                         </div>
