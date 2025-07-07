@@ -185,6 +185,7 @@
 
         <!-- Right Column - Recent Activities -->
         <div class="space-y-6">
+            {{-- BLOK INI TELAH DIPERBAIKI --}}
             <!-- Recent Transactions Card -->
             <div class="overflow-hidden bg-white shadow-xl rounded-2xl dark:bg-gray-800">
                 <div class="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800">
@@ -198,15 +199,17 @@
                 <div class="p-6">
                     @forelse ($recentTransactions as $transaction)
                         <div class="flex items-center py-3 space-x-4 border-b border-gray-200 last:border-0 dark:border-gray-700">
-                            <div class="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full {{ $transaction->type == 'Masuk' ? 'bg-green-100 dark:bg-green-900/20' : 'bg-red-100 dark:bg-red-900/20' }}">
-                                <i class="{{ $transaction->type == 'Masuk' ? 'text-green-600 dark:text-green-400 fas fa-arrow-down' : 'text-red-600 dark:text-red-400 fas fa-arrow-up' }}"></i>
+                            <div class="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full {{ $transaction->isTypeMasuk() ? 'bg-green-100 dark:bg-green-900/20' : 'bg-red-100 dark:bg-red-900/20' }}">
+                                <i class="fas {{ $transaction->isTypeMasuk() ? 'fa-arrow-down text-green-600 dark:text-green-400' : 'fa-arrow-up text-red-600 dark:text-red-400' }}"></i>
                             </div>
                             <div class="flex-1 min-w-0">
-                                <p class="text-sm font-medium text-gray-900 truncate dark:text-white">{{ $transaction->product->name ?? 'Produk Dihapus' }}</p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ $transaction->date->format('d M Y') }}</p>
+                                <p class="text-sm font-medium text-gray-900 truncate dark:text-white">{{ optional($transaction->product)->name ?? 'Produk Dihapus' }}</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">
+                                    {{ $transaction->isTypeMasuk() ? 'Masuk' : 'Keluar' }} • {{ $transaction->date->diffForHumans() }}
+                                </p>
                             </div>
-                            <div class="text-sm font-semibold {{ $transaction->type == 'Masuk' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
-                                {{ $transaction->type == 'Masuk' ? '+' : '-' }}{{ $transaction->quantity }}
+                            <div class="text-sm font-semibold {{ $transaction->isTypeMasuk() ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
+                                {{ $transaction->isTypeMasuk() ? '+' : '-' }}{{ number_format($transaction->quantity) }}
                             </div>
                         </div>
                     @empty
