@@ -9,9 +9,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class StockTransaction extends Model
 {
     use HasFactory;
-    const TYPE_MASUK = 'masuk';
-    const TYPE_KELUAR = 'keluar';
+    
+    // PERUBAHAN: Konstanta diseragamkan ke huruf kapital agar konsisten dengan controller
+    const TYPE_MASUK = 'Masuk';
+    const TYPE_KELUAR = 'Keluar';
 
+    // Konstanta status tetap
     const STATUS_PENDING = 'pending';
     const STATUS_COMPLETED = 'completed';
     const STATUS_REJECTED = 'rejected';
@@ -25,11 +28,15 @@ class StockTransaction extends Model
         'date',
         'status',
         'notes',
-        'processed_by_user_id', // Tambahan field untuk tracking siapa yang memproses
+        'processed_by_user_id',
+        // PERUBAHAN: Menambahkan field stock sebelum dan sesudah untuk audit yang lebih baik
+        'previous_stock',
+        'current_stock',
     ];
 
     protected $casts = [
-        'date' => 'date',
+        // PERUBAHAN: Cast 'date' ke datetime untuk presisi waktu
+        'date' => 'datetime',
     ];
 
     public function product(): BelongsTo
@@ -46,30 +53,31 @@ class StockTransaction extends Model
     {
         return $this->belongsTo(User::class);
     }
-
-    // Relasi untuk user yang memproses transaksi
+    
     public function processedByUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'processed_by_user_id');
     }
-    // Di StockTransaction model
-  public function isTypeMasuk()
+
+    // PERUBAHAN: Method ini dibuat lebih robust, tidak terpengaruh huruf besar/kecil.
+    // Ini menjadi satu-satunya cara untuk memeriksa apakah transaksi adalah "Masuk".
+    public function isTypeMasuk(): bool
     {
-        return strtolower($this->type) === self::TYPE_MASUK;
+        return strtolower($this->type) === 'masuk';
     }
 
-    public function isPending()
+    public function isPending(): bool
     {
         return strtolower($this->status) === self::STATUS_PENDING;
     }
 
-public function isCompleted(): bool
-{
-    return strtolower($this->status) === self::STATUS_COMPLETED;
-}
+    public function isCompleted(): bool
+    {
+        return strtolower($this->status) === self::STATUS_COMPLETED;
+    }
 
-public function isRejected(): bool
-{
-    return strtolower($this->status) === self::STATUS_REJECTED;
-}
+    public function isRejected(): bool
+    {
+        return strtolower($this->status) === self::STATUS_REJECTED;
+    }
 }
