@@ -172,12 +172,14 @@
                                     </div>
                                     <div class="flex items-center">
                                         <i class="fas fa-warehouse mr-1 text-blue-600"></i>
-                                        <span>Stok: {{ optional($task->product)->stock ?? 0 }}</span>
+                                        {{-- PERBAIKAN DI SINI: Mengubah 'stock' menjadi 'current_stock' --}}
+                                        <span>Stok: {{ optional($task->product)->current_stock ?? 0 }}</span>
                                     </div>
                                 </div>
                                 {{-- Stock availability indicator --}}
                                 @php
-                                    $stockAvailable = optional($task->product)->stock ?? 0;
+                                    // PERBAIKAN DI SINI: Mengubah 'stock' menjadi 'current_stock'
+                                    $stockAvailable = optional($task->product)->current_stock ?? 0;
                                     $isLowStock = $stockAvailable < $task->quantity;
                                 @endphp
                                 <div class="flex items-center mt-2">
