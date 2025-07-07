@@ -85,22 +85,46 @@ class ReportController extends Controller
     /**
      * Display the transactions report (Umum).
      */
-    public function transactions(Request $request)
-    {
-        $query = StockTransaction::with(['product', 'user'])->orderBy('date', 'desc');
+ public function transactions(Request $request)
+{
+    // Get products for the filter dropdown
+    $products = Product::orderBy('name')->get(['id', 'name', 'sku']);
 
-        if ($request->filled('type')) {
-            $query->where('type', $request->type);
-        }
+    $query = StockTransaction::with(['product', 'user'])
+        ->orderBy('date', 'desc');
 
-        if ($request->filled('from') && $request->filled('to')) {
-            $query->whereBetween('date', [$request->from, $request->to]);
-        }
-
-        $transactions = $query->paginate(20);
-
-        return view('pages.admin.reports.transactions', compact('transactions'));
+    // Filter by transaction type - perbaikan konsistensi penamaan
+    if ($request->filled('type')) {
+        $query->where('type', ucfirst($request->type)); // Pastikan format konsisten
     }
+
+    // Filter by product
+    if ($request->filled('product_id')) {
+        $query->where('product_id', $request->product_id);
+    }
+
+    // Filter by date range
+    if ($request->filled('from')) {
+        $query->whereDate('date', '>=', $request->from);
+    }
+
+    if ($request->filled('to')) {
+        $query->whereDate('date', '<=', $request->to);
+    }
+
+    // Calculate totals for summary
+    $totalIncoming = (clone $query)->where('type', 'Masuk')->sum('quantity');
+    $totalOutgoing = (clone $query)->where('type', 'Keluar')->sum('quantity');
+
+    $transactions = $query->paginate(20);
+
+    return view('pages.admin.reports.transactions', compact(
+        'transactions',
+        'totalIncoming',
+        'totalOutgoing',
+        'products'
+    ));
+}
 
     // ===================================================================
     // == METHOD BARU: LAPORAN BARANG KELUAR ==
@@ -195,28 +219,26 @@ class ReportController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Symfony\Component\HttpFoundation\BinaryFileResponse|\Illuminate\Http\RedirectResponse
      */
-    public function export(Request $request)
-    {
-        $reportType = $request->query('report_type'); // Hapus default agar lebih eksplisit
-        $format = $request->query('format', 'excel');
+public function export(Request $request)
+{
+    $reportType = $request->query('report_type');
+    $format = $request->query('format', 'excel');
 
-        if ($format === 'excel') {
-            switch ($reportType) {
-                case 'incoming_goods':
-                    $fileName = 'laporan-barang-masuk-' . now()->format('Y-m-d') . '.xlsx';
-                    return Excel::download(new IncomingReportExport($request), $fileName);
+    if ($format === 'excel') {
+        switch ($reportType) {
+            case 'incoming_goods':
+                $fileName = 'laporan-barang-masuk-' . now()->format('Y-m-d') . '.xlsx';
+                return Excel::download(new IncomingReportExport($request), $fileName);
 
-                // <-- PERUBAHAN 2: Tambahkan case untuk outgoing_goods -->
-                case 'outgoing_goods':
-                    $fileName = 'laporan-barang-keluar-' . now()->format('Y-m-d') . '.xlsx';
-                    return Excel::download(new OutgoingReportExport($request), $fileName);
+            case 'outgoing_goods':
+                $fileName = 'laporan-barang-keluar-' . now()->format('Y-m-d') . '.xlsx';
+                return Excel::download(new OutgoingReportExport($request), $fileName);
 
-                default:
-                    // Memberikan pesan error yang lebih jelas
-                    return redirect()->back()->with('error', "Jenis laporan '{$reportType}' untuk ekspor tidak valid.");
-            }
+            default:
+                return redirect()->back()->with('error', "Jenis laporan '{$reportType}' untuk ekspor tidak valid.");
         }
-
-        return redirect()->back()->with('error', 'Format ekspor tidak didukung.');
     }
+
+    return redirect()->back()->with('error', 'Format ekspor tidak didukung.');
+}
 }
