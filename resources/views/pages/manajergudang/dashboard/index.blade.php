@@ -198,17 +198,17 @@
                 <div class="p-6">
                     @forelse ($recentTransactions as $transaction)
                         <div class="flex items-center py-3 space-x-4 border-b border-gray-200 last:border-0 dark:border-gray-700">
-                            <div class="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full {{ $transaction->type == 'Masuk' ? 'bg-green-100 dark:bg-green-900/20' : 'bg-red-100 dark:bg-red-900/20' }}">
-                                <i class="{{ $transaction->type == 'Masuk' ? 'text-green-600 dark:text-green-400 fas fa-arrow-down' : 'text-red-600 dark:text-red-400 fas fa-arrow-up' }}"></i>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <p class="text-sm font-medium text-gray-900 truncate dark:text-white">{{ $transaction->product->name ?? 'Produk Dihapus' }}</p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ $transaction->date->format('d M Y') }}</p>
-                            </div>
-                            <div class="text-sm font-semibold {{ $transaction->type == 'Masuk' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
-                                {{ $transaction->type == 'Masuk' ? '+' : '-' }}{{ $transaction->quantity }}
-                            </div>
-                        </div>
+    <div class="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full {{ strtolower($transaction->type) == 'masuk' ? 'bg-green-100 dark:bg-green-900/20' : 'bg-red-100 dark:bg-red-900/20' }}">
+        <i class="{{ strtolower($transaction->type) == 'masuk' ? 'text-green-600 dark:text-green-400 fas fa-arrow-down' : 'text-red-600 dark:text-red-400 fas fa-arrow-up' }}"></i>
+    </div>
+    <div class="flex-1 min-w-0">
+        <p class="text-sm font-medium text-gray-900 truncate dark:text-white">{{ $transaction->product->name ?? 'Produk Dihapus' }}</p>
+        <p class="text-xs text-gray-500 dark:text-gray-400">{{ $transaction->date->format('d M Y') }}</p>
+    </div>
+    <div class="text-sm font-semibold {{ strtolower($transaction->type) == 'masuk' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
+        {{ strtolower($transaction->type) == 'masuk' ? '+' : '-' }}{{ $transaction->quantity }}
+    </div>
+</div>
                     @empty
                         <div class="py-8 text-center">
                             <i class="mx-auto mb-4 text-5xl text-gray-400 fas fa-exchange-alt"></i>
